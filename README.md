@@ -45,8 +45,14 @@ Skor saat ini tersimpan hanya pada browser host; untuk scoreboard bersama lintas
 Repo ini menyiapkan deployment pada branch `arena/e041ca7d-virtuallive`. Di VPS Debian/Ubuntu dengan **Git, Node.js 20+, npm, dan systemd**, jalankan dari SSH/console VPS:
 
 ```bash
-git clone --depth 1 --branch arena/e041ca7d-virtuallive https://github.com/jajangking/VirtualLive.git /tmp/virtuallive-setup
-sudo bash /tmp/virtuallive-setup/deploy/instabox-setup.sh
+git clone --depth 1 --branch arena/e041ca7d-virtuallive https://github.com/jajangking/VirtualLive.git /tmp/virtuallive-bootstrap
+sudo bash /tmp/virtuallive-bootstrap/deploy/deploy-vps.sh
+```
+
+Script `deploy-vps.sh` adalah entry point tunggal: jika `/opt/virtuallive` belum ada, script meng-clone branch; jika checkout sudah ada, script mengambil pembaruan dan me-restart service. Jika service belum dipasang, script menjalankan installer lengkap. Script menolak menimpa direktori non-Git yang berisi file. Untuk menjalankan sync manual pada VPS yang sudah terpasang:
+
+```bash
+sudo bash /opt/virtuallive/deploy/deploy-vps.sh
 ```
 
 Setup memasang dependency dari lockfile, mengaktifkan listener tidak resmi untuk `@disepillya` melalui konfigurasi systemd (`TIKTOK_BRIDGE_ENABLED=true`), menjalankan server di port 3000, lalu membuat timer yang memeriksa branch tersebut setiap 60 detik. Saat ada commit baru di branch, VPS mengambil commit itu dan me-restart service otomatis. Cek status dengan:

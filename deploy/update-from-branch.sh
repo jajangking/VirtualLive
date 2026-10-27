@@ -8,6 +8,11 @@ if [[ ! -d "$APP_DIR/.git" ]]; then
   echo "Not a git checkout: $APP_DIR" >&2
   exit 1
 fi
+actual_remote="$(git -C "$APP_DIR" remote get-url origin)"
+if [[ "$actual_remote" != "https://github.com/jajangking/VirtualLive.git" && "$actual_remote" != "git@github.com:jajangking/VirtualLive.git" ]]; then
+  echo "Unexpected origin: $actual_remote" >&2
+  exit 1
+fi
 
 git -C "$APP_DIR" fetch --quiet origin "$BRANCH"
 current="$(git -C "$APP_DIR" rev-parse HEAD)"
