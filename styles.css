@@ -190,3 +190,131 @@ body.broadcast-mode .app-shell{max-width:920px;padding:0 28px}body.broadcast-mod
 @media(max-width:700px){.topbar-right{gap:4px}.utility-button{width:28px;padding:0;font-size:13px}.gift-reaction{top:12vh;width:calc(100vw - 36px);padding:11px 13px;gap:9px}.gift-reaction-icon{width:42px;height:42px;flex-basis:42px;font-size:24px}.gift-reaction-copy strong{font-size:15px}}
 body.broadcast-mode .gift-reaction{top:17vh}
 @media(prefers-reduced-motion:reduce){.gift-reaction.is-visible,.gift-sparkle{animation:none!important}.gift-reaction.is-visible{opacity:1;visibility:visible;transform:translate(-50%,0) scale(1)}}
+
+/* Cleaner, higher-contrast UI with fewer decorative effects and larger type. */
+:root{--bg:#0b1220;--panel:#111b2a;--panel2:#172335;--line:#2a394d;--muted:#a7b4c5;--text:#f4f7fb;--cyan:#63dfc5;--orange:#f4c26b;--pink:#ff8298;--green:#72dfaa}
+body{background:#0b1220;color:#f4f7fb}
+.app-shell{max-width:1680px}
+.topbar{border-color:#2a394d}
+.brand-copy small,.topbar-center,.top-status,.eyebrow,.panel-kicker,.stat-card small,.stat-foot,.question-number,.question-prompt,.command-hint,.quick-answers>span,.table-head,.chat-time{letter-spacing:.2px}
+.brand-copy strong{letter-spacing:1px}
+.brand-copy small{font-size:10px}
+.topbar-center{font-size:11px}
+.demo-tag{font-size:10px;padding:5px 8px;border-radius:5px;color:#f7d997;background:#2b2418;border:1px solid #54452c}
+.top-status{font-size:10px;color:#c3cfdd}
+.eyebrow,.panel-kicker{font-size:11px;letter-spacing:.6px}
+h1{letter-spacing:-.7px;font-weight:700}
+.button{font-size:11px;letter-spacing:.2px}
+.panel{background:#111b2a;border:1px solid #2a394d;border-radius:9px}
+.stat-card{background:#111b2a;border-color:#2a394d;border-radius:8px}
+.stat-card:after{display:none}
+.stat-icon{border-radius:7px}
+.stat-card small{font-size:10px;letter-spacing:.25px;color:#aab7c7}
+.stat-card strong{font-size:19px;color:#f5f8fb}
+.stat-foot{font-size:9px;letter-spacing:0;color:#a1afbf}
+.panel-heading{border-color:#2a394d}
+.panel-heading h2,.chat-header h2,.bottom-heading h2,.how-panel h2{font-size:17px;letter-spacing:0}
+.question-badge{color:#c6d0dd;background:#1c2939;border:1px solid #39485b;border-radius:5px;font-size:10px;letter-spacing:.2px}
+.badge-star{display:none}
+.quiz-stage{background:#142031}
+.quiz-stage:before,.stage-decoration{display:none}
+.question-prompt{font-size:10px;letter-spacing:.5px;color:#8fe6d5}
+.question-content h3{font-size:clamp(22px,2.3vw,30px);line-height:1.22;letter-spacing:0;margin-bottom:16px;font-weight:700}
+.answer-grid{gap:10px}
+.answer-option{min-height:52px;background:#1a2839;border:1px solid #3a4a5f;border-radius:7px;padding:9px 12px;gap:11px}
+.answer-option:hover{background:#203249;border-color:#72849a}
+.answer-letter{width:29px;height:29px;flex-basis:29px;border-radius:6px;background:#26374b;border-color:#52657a;color:#f4f7fb;font-size:12px;font-weight:700}
+.answer-text{font-size:14px;color:#f0f4f9;line-height:1.35}
+.answer-option.correct{background:#183c35;border-color:#67d6ad;box-shadow:none}
+.answer-option.correct .answer-letter{background:#63dfc5;color:#06231e;border-color:#63dfc5}
+.winner-banner{background:#132a27;border-color:#63dfc5;border-radius:10px;box-shadow:0 12px 35px #0006}
+.winner-banner small{font-size:10px;color:#b8d6cb;letter-spacing:.4px}
+.winner-banner strong{font-size:22px}
+.winner-points{font-size:19px}
+.timer-row{border-color:#2a394d;background:#111b2a}
+.timer-track{height:6px;background:#344458}
+.timer-fill{background:#63dfc5}
+.timer-row>span{font-size:12px;color:#e3eaf2}
+.quiz-footer{border-color:#2a394d}
+.answer-instruction b,.auto-advance b{font-size:10px;letter-spacing:.15px;color:#e1e8f0}
+.answer-instruction small,.auto-advance small{font-size:10px;color:#aab7c7}
+.instruction-icon,.auto-advance{color:#63dfc5}
+.chat-header{border-color:#2a394d}
+.chat-online{font-size:9px;letter-spacing:0;color:#f4c26b;background:#2b2418}
+.chat-notice{background:#192638;border-color:#35465b;border-radius:6px}
+.chat-notice p{font-size:10px;line-height:1.4;color:#c0ccda}
+.notice-icon{display:none}
+.chat-feed{scrollbar-color:#52657a transparent}
+.chat-message{border-color:#ffffff10}
+.chat-name{font-size:11px;color:#f0f4f9}
+.chat-time{font-size:9px;color:#90a0b2}
+.chat-text{font-size:11px;color:#c2ccda}
+.chat-avatar{background:#2a3a4e;color:#edf3f8;font-size:10px}
+.chat-avatar.is-system{background:#1c3a37;color:#a4edda}
+.chat-avatar.is-winner{background:#45391f;color:#ffdc8a}
+.chat-composer-wrap{background:#111b2a;border-color:#2a394d}
+.quick-answers>span,.command-hint{font-size:9px;letter-spacing:.2px;color:#9eacbd}
+.quick-answers button{font-size:11px;color:#e8eef5;background:#1b293a;border-color:#40536a}
+.quick-answers button:hover{border-color:#63dfc5;color:#63dfc5}
+.chat-composer{background:#0d1623;border-color:#41536a}
+.chat-composer input{font-size:12px}
+.chat-composer input::placeholder{color:#9aa9bb}
+.chat-composer button{background:#63dfc5;color:#0b201c}
+.score-saved{font-size:9px;letter-spacing:0;color:#92ddb4}
+.table-head{font-size:9px;color:#9eacbd}
+.score-row{font-size:11px;border-color:#ffffff10}
+.score-pos,.score-correct{font-size:10px;color:#c0cad7}
+.score-name{font-size:11px;color:#f1f5fa}
+.score-points{font-size:11px;color:#ffdc8a}
+.leaderboard-empty{font-size:11px;color:#aab7c7}
+.how-panel{background:#121f2e}
+.how-steps p,.ai-note p{font-size:10px;color:#c0cad7}
+.how-steps>div>span{font-size:10px}
+.ai-note{border-color:#35465b}
+.ai-note>span{background:#26354a;color:#d1c4ff}
+.ai-note b{font-size:9px;color:#d8cbff}
+.utility-button{height:31px;border-radius:6px;background:#172437;border-color:#3a4c63;color:#e1e8f0;font-size:10px;letter-spacing:.1px}
+.utility-button.is-on,.utility-button[aria-pressed=true]{color:#8aecd8;border-color:#63dfc5;background:#18322f}
+.gift-reaction{border-color:#e2bd70;background:#1b2430;box-shadow:0 12px 36px #0007;border-radius:10px}
+.gift-reaction-icon{box-shadow:none}
+.gift-reaction-copy small{font-size:10px;letter-spacing:.3px}
+.gift-reaction-copy strong{font-size:20px}
+.gift-reaction-copy>span{font-size:10px;color:#c1cad6}
+.gift-sparkle{animation:none}
+@keyframes gift-pop{0%{opacity:0;transform:translate(-50%,-8px)}12%,78%{opacity:1;transform:translate(-50%,0)}100%{opacity:0;visibility:hidden;transform:translate(-50%,-4px)}}
+@media (min-width:701px){
+  .question-content h3{font-size:clamp(22px,2vw,28px)}
+  .answer-option{min-height:48px}
+  .answer-text{font-size:13px}
+  .chat-name,.chat-text{font-size:10px}
+  .chat-time{font-size:9px}
+  .stat-card strong{font-size:17px}
+  .panel-heading h2,.chat-header h2,.bottom-heading h2,.how-panel h2{font-size:15px}
+}
+@media (max-width:980px){
+  .utility-button{height:30px;font-size:13px}
+  .topbar-right{gap:5px}
+}
+@media (max-width:700px) and (min-height:640px){
+  .intro-row h1{font-size:20px}
+  .automation-pill{font-size:8px;padding:6px 7px}
+  .stat-card small{font-size:8px;letter-spacing:0}
+  .stat-card strong{font-size:12px}
+  .panel-kicker{font-size:9px;letter-spacing:.2px}
+  .panel-heading h2,.chat-header h2{font-size:14px}
+  .question-content h3{font-size:18px;line-height:1.2}
+  .answer-option{min-height:36px;padding:5px 6px}
+  .answer-letter{height:22px;width:22px;flex-basis:22px;font-size:10px}
+  .answer-text{font-size:11px}
+  .chat-notice p{font-size:9px}
+  .chat-name,.chat-text{font-size:9px}
+  .answer-instruction b,.auto-advance b{font-size:8px}
+  .answer-instruction small,.auto-advance small{font-size:8px}
+  .utility-button{height:28px;width:28px}
+}
+@media (max-width:700px) and (max-height:639px){
+  .question-content h3{font-size:16px;line-height:1.15}
+  .answer-option{min-height:31px}
+  .answer-text{font-size:10px}
+  .chat-name,.chat-text{font-size:9px}
+}
