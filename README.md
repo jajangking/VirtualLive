@@ -23,8 +23,8 @@ Jangan set `TIKTOK_BRIDGE_ENABLED=true` jika tidak ingin server membuat koneksi 
 
 ## Tampilan live dan uji simulator
 
-- Mode dashboard: buka `/` untuk melihat soal, papan skor, status listener, dan simulator komentar.
-- Mode siaran bersih: buka `/?live=1` sebagai browser source/layar portrait; panel simulator disembunyikan, sehingga yang terlihat hanya kuis dan papan skor.
+- Mode dashboard: buka `/` untuk melihat soal, status listener, chat, dan simulator komentar. Layout desktop/mobile dipadatkan agar muat satu viewport; pada layar sempit papan peringkat/cara main disembunyikan.
+- Mode siaran bersih: buka `/?live=1` sebagai browser source portrait; chat/simulator disembunyikan dan layout memberi buffer atas, kanan, dan bawah untuk UI LIVE TikTok. Safe area TikTok tidak punya satu ukuran tetap untuk semua perangkat/format, jadi preview di aplikasi tetap perlu dicek.
 - Untuk mencoba simulator, kirim `Budi: A`, `@Budi: jawab A`, atau `jawab A` pada panel chat. Tombol A–D juga mensimulasikan penonton `KAMU`.
 - Tidak perlu menekan tombol untuk mengganti soal. Timer berjalan otomatis, hasil muncul setelah timer selesai, lalu soal baru dimulai sendiri.
 

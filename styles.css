@@ -6,3 +6,177 @@ body.broadcast-mode .app-shell{max-width:920px;padding:0 28px}body.broadcast-mod
 @media(max-width:700px){.automation-pill{font-size:7px;padding:8px}.auto-advance small{font-size:7px}.timer-row>span{min-width:84px;font-size:8px}body.broadcast-mode .app-shell{padding:0 13px}body.broadcast-mode main{padding:8px 0}body.broadcast-mode .topbar{height:48px}body.broadcast-mode .topbar-center{display:flex}body.broadcast-mode .topbar-center .demo-tag,body.broadcast-mode .topbar-center>i{display:none}body.broadcast-mode .intro-row{margin-bottom:9px}body.broadcast-mode .intro-row h1{font-size:22px}body.broadcast-mode .eyebrow{font-size:8px}body.broadcast-mode .automation-pill{font-size:6px;gap:5px;padding:7px}body.broadcast-mode .stats-row{grid-template-columns:repeat(2,minmax(0,1fr));gap:6px;margin-bottom:8px}body.broadcast-mode .stat-card{min-height:53px;padding:7px;gap:7px}body.broadcast-mode .stat-icon{height:24px;width:24px}body.broadcast-mode .stat-card small{font-size:7px}body.broadcast-mode .stat-card strong{font-size:13px}body.broadcast-mode .stat-foot{display:none}body.broadcast-mode .panel-heading{height:54px;padding:0 11px}body.broadcast-mode .panel-heading h2{font-size:14px}body.broadcast-mode .quiz-stage{min-height:clamp(330px,47vh,560px);padding:20px 13px}body.broadcast-mode .question-content h3{font-size:clamp(22px,5.4vw,32px);margin-bottom:16px}body.broadcast-mode .answer-grid{gap:7px}body.broadcast-mode .answer-option{min-height:58px;padding:8px;gap:8px}body.broadcast-mode .answer-letter{height:27px;width:27px;flex-basis:27px;font-size:10px}body.broadcast-mode .answer-text{font-size:clamp(11px,3.3vw,15px)}body.broadcast-mode .winner-banner{width:calc(100% - 24px);padding:12px;min-height:76px;gap:8px}body.broadcast-mode .winner-banner strong{font-size:20px}body.broadcast-mode .quiz-footer{padding:8px 10px;min-height:55px}body.broadcast-mode .answer-instruction b{font-size:7px}body.broadcast-mode .answer-instruction small{font-size:8px}body.broadcast-mode .auto-advance b{font-size:7px}body.broadcast-mode .auto-advance small{max-width:112px;line-height:1.3}body.broadcast-mode .score-row:nth-child(n+4){display:none}body.broadcast-mode .leaderboard-panel{padding:10px 9px}body.broadcast-mode .bottom-heading{margin-bottom:8px}body.broadcast-mode .bottom-heading h2{font-size:13px}body.broadcast-mode .score-saved{font-size:6px}body.broadcast-mode .table-head,body.broadcast-mode .score-row{grid-template-columns:24px minmax(70px,1fr) 76px 43px;gap:4px}body.broadcast-mode .table-head{font-size:7px}body.broadcast-mode .score-row{font-size:8px}}
 /* Live connector state is shown separately from the local comment simulator. */
 .chat-online.is-connected{color:#6dd8ac;background:#6dd8ac12}.chat-online.is-connected i{background:#6dd8ac;box-shadow:0 0 7px #6dd8ac88}.chat-online.is-error{color:#ff8ba0;background:#ff678a12}.chat-online.is-error i{background:#ff678a}.demo-tag{white-space:nowrap}
+
+/* Compact dashboard: keep the full quiz, chat, status, and a short leaderboard in one viewport. */
+@media (min-width: 701px) {
+  html, body { height: 100%; }
+  body { height: 100dvh; min-height: 0; overflow: hidden; }
+  .app-shell { height: 100%; display: flex; flex-direction: column; }
+  .topbar { height: 52px; flex: 0 0 52px; }
+  main { height: auto; flex: 1; min-height: 0; overflow: hidden; display: flex; flex-direction: column; gap: 8px; padding: 8px 0 5px; }
+  .intro-row { flex: 0 0 auto; min-height: 48px; margin: 0; align-items: center; }
+  .eyebrow { margin-bottom: 4px; font-size: 8px; }
+  h1 { font-size: 23px; }
+  .intro-copy { display: none; }
+  .host-controls { margin-bottom: 0; }
+  .stats-row { flex: 0 0 52px; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; margin: 0; }
+  .stat-card { min-height: 52px; padding: 6px 10px; gap: 8px; }
+  .stat-icon { width: 26px; height: 26px; }
+  .stat-card small { font-size: 8px; }
+  .stat-card strong { font-size: 15px; }
+  .stat-foot { font-size: 7px; }
+  .main-grid { flex: 1 1 0; min-height: 0; grid-template-columns: minmax(0, 1fr) 290px; gap: 10px; }
+  .quiz-panel, .chat-panel { height: 100%; min-height: 0; }
+  .quiz-panel { display: flex; flex-direction: column; }
+  .panel-heading { height: 48px; flex: 0 0 48px; padding: 0 13px; }
+  .panel-heading h2, .chat-header h2 { font-size: 14px; }
+  .quiz-stage { flex: 1 1 0; min-height: 0; padding: 12px 18px; }
+  .question-content h3 { font-size: clamp(17px, 1.7vw, 22px); margin-bottom: 12px; }
+  .answer-grid { gap: 7px; }
+  .answer-option { min-height: 39px; padding: 6px 9px; gap: 8px; }
+  .answer-letter { width: 23px; height: 23px; flex-basis: 23px; }
+  .answer-text { font-size: 10px; }
+  .timer-row { height: 26px; flex: 0 0 26px; padding: 0 12px; }
+  .quiz-footer { min-height: 43px; flex: 0 0 43px; padding: 5px 12px; }
+  .answer-instruction small { font-size: 8px; }
+  .chat-header { height: 48px; flex: 0 0 48px; padding: 0 11px; }
+  .chat-notice { margin: 6px 8px 2px; padding: 6px; }
+  .chat-notice p { font-size: 8px; }
+  .chat-feed { flex: 1 1 0; min-height: 0; max-height: none; padding: 3px 9px 6px; }
+  .chat-message { padding: 5px 0; }
+  .chat-composer-wrap { flex: 0 0 auto; padding: 6px 8px; }
+  .quick-answers { margin-bottom: 5px; }
+  .chat-composer { height: 30px; }
+  .command-hint { display: none; }
+  .bottom-grid { flex: 0 0 112px; min-height: 112px; grid-template-columns: minmax(0, 1.45fr) minmax(250px, 1fr); gap: 10px; margin: 0; }
+  .leaderboard-panel, .how-panel { min-height: 0; padding: 8px 11px; }
+  .bottom-heading { margin-bottom: 5px; }
+  .bottom-heading h2, .how-panel h2 { font-size: 13px; margin: 3px 0 5px; }
+  .table-head { padding-bottom: 4px; }
+  .score-row { padding: 4px 8px; }
+  #leaderboardRows .score-row:nth-child(n+3) { display: none; }
+  .leaderboard-empty { padding: 7px 4px; font-size: 9px; }
+  .how-steps { gap: 4px; }
+  .how-steps p { font-size: 8px; }
+  .ai-note { display: none; }
+  footer { flex: 0 0 13px; padding: 0; font-size: 7px; }
+  body.broadcast-mode .quiz-stage { min-height: 0; }
+  body.broadcast-mode .bottom-grid { display: none; }
+}
+@media (min-width: 701px) and (max-height: 680px) {
+  main { gap: 5px; padding-top: 5px; }
+  .intro-row { min-height: 38px; }
+  h1 { font-size: 19px; }
+  .eyebrow { margin-bottom: 2px; }
+  .stats-row { flex-basis: 44px; }
+  .stat-card { min-height: 44px; padding: 4px 8px; }
+  .stat-icon { width: 22px; height: 22px; }
+  .bottom-grid, footer { display: none; }
+  body.broadcast-mode .bottom-grid { display: none; }
+}
+@media (max-width: 700px) and (min-height: 640px) {
+  html, body { height: 100%; }
+  body { height: 100dvh; min-height: 0; overflow: hidden; }
+  .app-shell { height: 100%; display: flex; flex-direction: column; padding: 0 10px; }
+  .topbar { height: 44px; flex: 0 0 44px; }
+  .topbar-center { gap: 6px; font-size: 7px; }
+  .demo-tag { padding: 4px; font-size: 7px; }
+  main { height: auto; flex: 1; min-height: 0; overflow: hidden; display: flex; flex-direction: column; gap: 5px; padding: 5px 0; }
+  .intro-row { flex: 0 0 auto; flex-direction: row; align-items: center; gap: 4px; margin: 0; }
+  .eyebrow, .intro-copy { display: none; }
+  .intro-row h1 { font-size: 18px; line-height: .95; }
+  .host-controls { align-self: center; margin: 0; }
+  .automation-pill { padding: 6px 7px; font-size: 6px; }
+  .stats-row { flex: 0 0 43px; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 4px; margin: 0; }
+  .stat-card { min-height: 43px; padding: 4px 5px; gap: 4px; }
+  .stat-icon { width: 20px; height: 20px; font-size: 11px; }
+  .stat-card small { font-size: 6px; letter-spacing: 0; }
+  .stat-card strong { max-width: 72px; font-size: 11px; }
+  .stat-foot { display: none; }
+  .main-grid { flex: 1 1 0; min-height: 0; display: grid; grid-template-columns: minmax(0, 1fr); grid-template-rows: minmax(0, 1.12fr) minmax(0, .88fr); gap: 5px; }
+  .quiz-panel, .chat-panel { min-height: 0; height: 100%; }
+  .quiz-panel { display: flex; flex-direction: column; }
+  .panel-heading { height: 37px; flex: 0 0 37px; padding: 0 8px; }
+  .panel-kicker { font-size: 7px; letter-spacing: .8px; }
+  .panel-heading h2, .chat-header h2 { font-size: 12px; margin-top: 2px; }
+  .question-badge { padding: 4px; font-size: 6px; }
+  .quiz-stage { flex: 1 1 0; min-height: 0; padding: 8px; }
+  .question-prompt { margin-bottom: 5px; font-size: 7px; }
+  .question-content h3 { font-size: 16px; line-height: 1.15; margin-bottom: 8px; }
+  .answer-grid { gap: 5px; }
+  .answer-option { min-height: 32px; padding: 4px 5px; gap: 5px; }
+  .answer-letter { width: 19px; height: 19px; flex-basis: 19px; font-size: 8px; }
+  .answer-text { font-size: 9px; }
+  .timer-row { height: 22px; flex: 0 0 22px; padding: 0 8px; }
+  .quiz-footer { min-height: 34px; flex: 0 0 34px; padding: 4px 7px; }
+  .instruction-icon { font-size: 14px; }
+  .answer-instruction { gap: 5px; }
+  .answer-instruction b, .auto-advance b { font-size: 6px; }
+  .answer-instruction small, .auto-advance small { font-size: 7px; }
+  .auto-advance { gap: 5px; }
+  .auto-spinner { font-size: 13px; }
+  .chat-header { height: 37px; flex: 0 0 37px; padding: 0 8px; }
+  .chat-notice { margin: 4px 5px 1px; padding: 4px 5px; }
+  .chat-notice p { font-size: 7px; line-height: 1.25; }
+  .notice-icon { font-size: 11px; }
+  .chat-feed { flex: 1 1 0; min-height: 0; max-height: none; padding: 1px 7px 3px; }
+  .chat-message { padding: 3px 0; gap: 5px; }
+  .chat-avatar { width: 18px; height: 18px; flex-basis: 18px; }
+  .chat-name, .chat-text { font-size: 8px; }
+  .chat-composer-wrap { flex: 0 0 auto; padding: 4px 6px; }
+  .quick-answers { margin-bottom: 3px; }
+  .quick-answers>span { font-size: 6px; }
+  .quick-answers button { width: 21px; height: 19px; }
+  .chat-composer { height: 27px; }
+  .command-hint { display: none; }
+  .bottom-grid, main>footer { display: none; }
+  body.broadcast-mode .app-shell { padding: 0 10px; }
+  body.broadcast-mode .intro-row { display: none; }
+  body.broadcast-mode .stats-row { flex-basis: 38px; }
+  body.broadcast-mode .main-grid { grid-template-rows: minmax(0, 1fr); }
+  body.broadcast-mode .quiz-stage { min-height: 0; }
+  body.broadcast-mode .bottom-grid { display: none; }
+}
+@media (max-width: 700px) and (max-height: 639px) {
+  html, body { height: 100%; }
+  body { height: 100dvh; min-height: 0; overflow: hidden; }
+  .app-shell { height: 100%; display: flex; flex-direction: column; padding: 0 9px; }
+  .topbar { height: 38px; flex: 0 0 38px; }
+  .topbar-center, .intro-row, .stats-row, .bottom-grid, main>footer { display: none; }
+  main { height: auto; flex: 1; min-height: 0; overflow: hidden; display: flex; padding: 4px 0; }
+  .main-grid { flex: 1; min-height: 0; display: grid; grid-template-columns: minmax(0, 1fr); grid-template-rows: minmax(0, 1.05fr) minmax(0, .95fr); gap: 4px; }
+  .quiz-panel, .chat-panel { height: 100%; min-height: 0; }
+  .quiz-panel { display: flex; flex-direction: column; }
+  .panel-heading, .chat-header { height: 32px; flex: 0 0 32px; padding: 0 7px; }
+  .quiz-stage { flex: 1; min-height: 0; padding: 6px; }
+  .question-prompt { display: none; }
+  .question-content h3 { font-size: 14px; margin-bottom: 5px; }
+  .answer-grid { gap: 3px; }
+  .answer-option { min-height: 27px; padding: 3px; gap: 4px; }
+  .answer-letter { width: 17px; height: 17px; flex-basis: 17px; }
+  .answer-text { font-size: 8px; }
+  .timer-row { height: 19px; flex: 0 0 19px; }
+  .quiz-footer { min-height: 29px; flex: 0 0 29px; padding: 3px 5px; }
+  .answer-instruction small, .auto-advance small { display: none; }
+  .chat-notice { margin: 3px; padding: 3px; }
+  .chat-notice p { font-size: 6px; }
+  .chat-feed { flex: 1; min-height: 0; max-height: none; }
+  .chat-composer-wrap { padding: 3px 4px; }
+  .quick-answers { margin-bottom: 2px; }
+  .quick-answers>span, .command-hint { display: none; }
+  .chat-composer { height: 24px; }
+  body.broadcast-mode .chat-panel, body.broadcast-mode .intro-row, body.broadcast-mode .bottom-grid { display: none; }
+  body.broadcast-mode .main-grid { grid-template-rows: minmax(0, 1fr); }
+  body.broadcast-mode .quiz-stage { min-height: 0; }
+}
+
+/* Portrait LIVE browser sources: reserve room for TikTok's header, action rail, and comment tray. */
+@media (orientation: portrait) {
+  body.broadcast-mode .app-shell {
+    max-width: 1080px;
+    padding-top: clamp(42px, 7.5vh, 150px);
+    padding-right: clamp(36px, 14vw, 155px);
+    padding-bottom: clamp(150px, 24vh, 465px);
+    padding-left: clamp(24px, 6vw, 66px);
+  }
+}
