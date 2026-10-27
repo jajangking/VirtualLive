@@ -195,27 +195,48 @@
     return { width, height };
   }
 
-  function trackPoint(cx,cy,rx,ry,theta,lateral=0,raised=true) {
-    const dx=rx*Math.cos(theta),dy=2*ry*Math.cos(theta*2),length=Math.hypot(dx,dy)||1;
-    const nx=-dy/length,ny=dx/length;
-    const wrapped=Math.atan2(Math.sin(theta),Math.cos(theta));
-    const distance=Math.abs(wrapped),halfSpan=.58;
-    const lift=raised&&distance<halfSpan?60*(.5+.5*Math.cos(Math.PI*distance/halfSpan)):0;
-    return {x:cx+rx*Math.sin(theta)+nx*lateral,y:cy+ry*Math.sin(theta*2)+ny*lateral-lift,dx,dy,nx,ny};
+  function trackPoint(cx,cy,rx,ry,theta,lateral=0) {
+    // A hand-designed radial course: broad sweepers mixed with tighter S-bends and chicanes.
+    const r=.78+.10*Math.cos(3*theta+.25)+.035*Math.sin(5*theta-.6)+.012*Math.cos(7*theta+.8);
+    const dr=-.30*Math.sin(3*theta+.25)+.175*Math.cos(5*theta-.6)-.084*Math.sin(7*theta+.8);
+    const dx=rx*(dr*Math.cos(theta)-r*Math.sin(theta));
+    const dy=ry*(dr*Math.sin(theta)+r*Math.cos(theta));
+    const length=Math.hypot(dx,dy)||1,nx=-dy/length,ny=dx/length;
+    return {x:cx+rx*r*Math.cos(theta)+nx*lateral,y:cy+ry*r*Math.sin(theta)+ny*lateral,dx,dy,nx,ny};
   }
 
-  function traceTrackPath(cx,cy,rx,ry,road,lateral=0,raised=true,start=-Math.PI,end=Math.PI,steps=420) {
+  function traceTrackPath(cx,cy,rx,ry,road,lateral=0,start=-Math.PI,end=Math.PI,steps=520) {
     ctx.beginPath();
     for(let i=0;i<=steps;i++){
-      const p=trackPoint(cx,cy,rx,ry,start+(end-start)*i/steps,lateral,raised);
+      const p=trackPoint(cx,cy,rx,ry,start+(end-start)*i/steps,lateral);
       if(i===0)ctx.moveTo(p.x,p.y);else ctx.lineTo(p.x,p.y);
     }
+  }
+
+  let arcLengthCache=null;
+  function getArcLengthTable(rx,ry) {
+    if(arcLengthCache&&arcLengthCache.rx===rx&&arcLengthCache.ry===ry)return arcLengthCache;
+    const points=[],steps=1200;let total=0,previous=null;
+    for(let i=0;i<=steps;i++){
+      const theta=-Math.PI+Math.PI*2*i/steps,p=trackPoint(0,0,rx,ry,theta);
+      if(previous)total+=Math.hypot(p.x-previous.x,p.y-previous.y);
+      points.push({theta,distance:total});previous=p;
+    }
+    arcLengthCache={rx,ry,points,total};return arcLengthCache;
+  }
+
+  function angleAtProgress(progress,rx,ry) {
+    const table=getArcLengthTable(rx,ry),target=clamp(progress,0,1)*table.total;
+    let low=0,high=table.points.length-1;
+    while(high-low>1){const mid=(low+high)>>1;if(table.points[mid].distance<target)low=mid;else high=mid;}
+    const a=table.points[low],b=table.points[high],span=b.distance-a.distance;
+    return a.theta+(b.theta-a.theta)*(span?(target-a.distance)/span:0);
   }
 
   function drawTrack() {
     const {width:w,height:h}=dimensions();ctx.clearRect(0,0,w,h);
     const cx=w/2,cy=h/2+2,rx=Math.min(w*.335,h*.42,w/2-58),ry=Math.min(h*.31,w*.26,h/2-65),road=47;
-    // A crossing figure-eight: the bridge lifts above the lower crossover.
+    // Custom technical circuit with a deliberately uneven rhythm of sweepers and chicanes.
     // Soft shadow and a deep orange edge make the plastic track feel raised off the tabletop.
     traceTrackPath(cx,cy,rx,ry,road);
     ctx.save();ctx.shadowColor='#000b';ctx.shadowBlur=18;ctx.shadowOffsetY=12;ctx.strokeStyle='#101820';ctx.lineWidth=road+15;ctx.lineCap='round';ctx.lineJoin='round';ctx.stroke();ctx.restore();
@@ -240,20 +261,13 @@
       const a=trackPoint(cx,cy,rx,ry,t,-road/2+5),b=trackPoint(cx,cy,rx,ry,t,road/2-5);
       ctx.beginPath();ctx.moveTo(a.x,a.y);ctx.lineTo(b.x,b.y);ctx.strokeStyle=i%5===0?'#ffe09a88':'#9c3c156b';ctx.lineWidth=i%5===0?1.2:.7;ctx.stroke();
     }
-    // Infield islands sit inside the two lobes of the figure-eight.
-    for(const side of [-1,1]){
-      const ix=cx+side*rx*.53,iy=cy;
-      const island=ctx.createRadialGradient(ix,iy,2,ix,iy,ry*.5);
-      island.addColorStop(0,'#25313a');island.addColorStop(1,'#17232b');ctx.fillStyle=island;
-      ctx.beginPath();ctx.ellipse(ix,iy,rx*.29,ry*.46,0,0,Math.PI*2);ctx.fill();
-      ctx.strokeStyle='#e8a54826';ctx.lineWidth=1;ctx.setLineDash([3,5]);ctx.beginPath();ctx.ellipse(ix,iy,rx*.27,ry*.43,0,0,Math.PI*2);ctx.stroke();ctx.setLineDash([]);
-      ctx.fillStyle='#aeb9c066';ctx.font='7px "DM Mono",monospace';ctx.textAlign='center';ctx.fillText(side<0?'LOOP A':'LOOP B',ix,iy+3);
-    }
-    // A short elevated deck makes the crossover legible as an actual bridge.
-    const bridge=trackPoint(cx,cy,rx,ry,0);
-    ctx.save();ctx.translate(bridge.x,bridge.y);ctx.rotate(Math.atan2(bridge.dy,bridge.dx));ctx.globalAlpha=.8;
-    ctx.fillStyle='#ffbd59';roundedRect(-2.5,-road/2+3,5,road-6,2);ctx.fill();
-    ctx.fillStyle='#fff1c4';ctx.fillRect(-1.3,-road/2+6,2.6,4);ctx.fillRect(-1.3,road/2-10,2.6,4);ctx.restore();
+    // Compact center island leaves plenty of room for the multiple bends around it.
+    const island=ctx.createRadialGradient(cx,cy,2,cx,cy,ry*.42);
+    island.addColorStop(0,'#25313a');island.addColorStop(1,'#17232b');ctx.fillStyle=island;
+    ctx.beginPath();ctx.ellipse(cx,cy,rx*.32,ry*.34,0,0,Math.PI*2);ctx.fill();
+    ctx.strokeStyle='#e8a54826';ctx.lineWidth=1;ctx.setLineDash([3,5]);ctx.beginPath();ctx.ellipse(cx,cy,rx*.30,ry*.32,0,0,Math.PI*2);ctx.stroke();ctx.setLineDash([]);
+    ctx.fillStyle='#ffb454';ctx.font='700 8px "DM Mono",monospace';ctx.textAlign='center';ctx.fillText('TWIST RUN',cx,cy-4);
+    ctx.fillStyle='#aeb9c088';ctx.font='6px "DM Mono",monospace';ctx.fillText('S-BENDS  ·  HAIRPINS',cx,cy+9);
     // Blue snap-in booster pads on each lobe's fast straight.
     for(const t of [-Math.PI/2,Math.PI/2]){
       const p=trackPoint(cx,cy,rx,ry,t),angle=Math.atan2(p.dy,p.dx);
@@ -265,7 +279,7 @@
       }
       ctx.restore();
     }
-    // Start / finish checker strip at the lower crossover.
+    // Start / finish checker strip at the launch point used by the lap counter.
     const theta=-Math.PI,start=trackPoint(cx,cy,rx,ry,theta),angle=Math.atan2(start.dy,start.dx);
     ctx.save();ctx.translate(start.x,start.y);ctx.rotate(angle);
     for(let n=0;n<10;n++){ctx.fillStyle=n%2?'#60300f':'#fff0cf';ctx.fillRect(-3,-road/2+n*road/10,6,road/10+1)}
@@ -279,7 +293,7 @@
 
   function carPosition(car) {
     const {width:w,height:h}=dimensions();const cx=w/2,cy=h/2+2,rx=Math.min(w*.335,h*.42,w/2-58),ry=Math.min(h*.31,w*.26,h/2-65),road=47;
-    const theta=-Math.PI+car.progress*Math.PI*2;
+    const theta=angleAtProgress(car.progress,rx,ry);
     const laneOffset=(car.lane-1)*road/3;
     const point=trackPoint(cx,cy,rx,ry,theta,laneOffset);
     const ahead=trackPoint(cx,cy,rx,ry,theta+.002,laneOffset);

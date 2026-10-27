@@ -1,6 +1,6 @@
 # VirtualLive — Neon Circuit
 
-Prototype browser untuk ide balapan interaktif TikTok Live: sirkuit angka delapan dengan crossover bridge dan gaya lintasan mobil mainan plastik oranye. Penonton mengirim `/spawn nama`, namanya muncul pada mobil sendiri, lalu mobil dikemudikan AI Q-learning. Gift bisa disimulasikan dengan `/gift nama` (atau `/boost nama`).
+Prototype browser untuk ide balapan interaktif TikTok Live: sirkuit custom berkelok-kelok dengan S-bends, chicane, dan hairpin, bergaya lintasan mobil mainan plastik oranye. Penonton mengirim `/spawn nama`, namanya muncul pada mobil sendiri, lalu mobil dikemudikan AI Q-learning. Gift bisa disimulasikan dengan `/gift nama` (atau `/boost nama`).
 
 ## Jalankan lokal
 
