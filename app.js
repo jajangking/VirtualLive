@@ -33,7 +33,8 @@
   let lastFrame=performance.now(),toastTimer;
   let audioContext=null,masterGain=null,bgmGain=null,sfxGain=null,bgmTimer=null,bgmStep=0,audioEnabled=false,lastCountdownSecond=ROUND_SECONDS,giftTimer=null;
 
-  if(new URLSearchParams(location.search).get('live')==='1')document.body.classList.add('broadcast-mode');
+  const pageParams=new URLSearchParams(location.search);
+  if(pageParams.get('live')==='1'||pageParams.get('edit')==='1')document.body.classList.add('broadcast-mode');
 
   function cleanName(value){
     return String(value||'').replace(/[\u0000-\u001f\u007f]/g,'').replace(/^@/,'').trim().replace(/\s+/g,' ').slice(0,20)||'PENONTON';
@@ -363,6 +364,70 @@
   $('#collapseChat').addEventListener('click',()=>setChatCollapsed(!$('#chatPanel').classList.contains('is-collapsed')));
   $('#moderatorChatToggle').addEventListener('click',()=>setChatCollapsed(!$('#chatPanel').classList.contains('is-collapsed')));
   if(document.body.classList.contains('broadcast-mode')&&window.innerWidth<561&&window.innerHeight<1000)setChatCollapsed(true);
+
+  const layoutStorageKey='virtuallive.broadcast-layout.v1',layoutPanels=[...document.querySelectorAll('[data-layout-panel]')],appShell=$('.app-shell');
+  const minPanelSize={header:[160,54],leaderboard:[145,72],quiz:[220,165],chat:[145,64],moderator:[145,64],donors:[145,110]};
+  function layoutBounds(){const rect=appShell.getBoundingClientRect();return {left:rect.left,top:rect.top,width:rect.width,height:rect.height};}
+  function applyPanelRect(panel,x,y,width,height){
+    const bounds=layoutBounds(),min=minPanelSize[panel.dataset.layoutPanel]||[120,64];
+    width=Math.max(Math.min(min[0],bounds.width),Math.min(width,bounds.width));height=Math.max(Math.min(min[1],bounds.height),Math.min(height,bounds.height));
+    x=Math.max(0,Math.min(x,bounds.width-width));y=Math.max(0,Math.min(y,bounds.height-height));
+    panel.style.position='absolute';panel.style.left=`${x/bounds.width*100}%`;panel.style.top=`${y/bounds.height*100}%`;
+    panel.style.right='auto';panel.style.bottom='auto';panel.style.width=`${width/bounds.width*100}%`;panel.style.height=`${height/bounds.height*100}%`;
+  }
+  function restoreLayout(){
+    if(!document.body.classList.contains('broadcast-mode'))return;
+    try{
+      const saved=JSON.parse(localStorage.getItem(layoutStorageKey)||'{}');
+      for(const panel of layoutPanels){const item=saved[panel.dataset.layoutPanel];if(item&&[item.x,item.y,item.w,item.h].every(Number.isFinite)){
+        const bounds=layoutBounds();applyPanelRect(panel,item.x*bounds.width,item.y*bounds.height,item.w*bounds.width,item.h*bounds.height);
+      }}
+    }catch(_){/* Ignore invalid local layout data. */}
+  }
+  function saveLayout(){
+    const bounds=layoutBounds(),saved={};
+    for(const panel of layoutPanels){const rect=panel.getBoundingClientRect();saved[panel.dataset.layoutPanel]={x:(rect.left-bounds.left)/bounds.width,y:(rect.top-bounds.top)/bounds.height,w:rect.width/bounds.width,h:rect.height/bounds.height};}
+    try{localStorage.setItem(layoutStorageKey,JSON.stringify(saved));}catch(_){notify('Layout tampil, tetapi tidak bisa disimpan browser.',true);}
+  }
+  function installLayoutHandles(){
+    for(const panel of layoutPanels){
+      if(panel.querySelector('.layout-drag-grip'))continue;
+      const grip=document.createElement('button');grip.type='button';grip.className='layout-drag-grip';grip.textContent='⠿';grip.setAttribute('aria-label',`Geser panel ${panel.dataset.layoutPanel}`);
+      const resize=document.createElement('button');resize.type='button';resize.className='layout-resize-handle';resize.textContent='◢';resize.setAttribute('aria-label',`Ubah ukuran panel ${panel.dataset.layoutPanel}`);
+      grip.addEventListener('pointerdown',event=>startLayoutGesture(event,panel,'move'));
+      resize.addEventListener('pointerdown',event=>startLayoutGesture(event,panel,'resize'));
+      panel.append(grip,resize);
+    }
+  }
+  let layoutGesture=null;
+  function startLayoutGesture(event,panel,mode){
+    if(event.button!==undefined&&event.button!==0)return;
+    event.preventDefault();event.stopPropagation();
+    const bounds=layoutBounds(),rect=panel.getBoundingClientRect();
+    for(const item of layoutPanels)item.classList.toggle('is-selected',item===panel);
+    layoutGesture={panel,mode,pointerId:event.pointerId,startX:event.clientX,startY:event.clientY,x:rect.left-bounds.left,y:rect.top-bounds.top,width:rect.width,height:rect.height,bounds};
+    event.currentTarget.setPointerCapture?.(event.pointerId);
+  }
+  document.addEventListener('pointermove',event=>{
+    const gesture=layoutGesture;if(!gesture||event.pointerId!==gesture.pointerId)return;
+    const dx=event.clientX-gesture.startX,dy=event.clientY-gesture.startY,{width,height}=gesture.bounds;
+    if(gesture.mode==='move')applyPanelRect(gesture.panel,gesture.x+dx,gesture.y+dy,gesture.width,gesture.height);
+    else applyPanelRect(gesture.panel,gesture.x,gesture.y,gesture.width+dx,gesture.height+dy);
+  });
+  function endLayoutGesture(event){if(!layoutGesture||(event?.pointerId!==undefined&&event.pointerId!==layoutGesture.pointerId))return;layoutGesture=null;saveLayout();}
+  document.addEventListener('pointerup',endLayoutGesture);document.addEventListener('pointercancel',endLayoutGesture);
+  function setLayoutEditing(enabled){
+    if(!document.body.classList.contains('broadcast-mode'))return;
+    document.body.classList.toggle('layout-editing',enabled);
+    $('#editLayoutToggle').setAttribute('aria-pressed',String(enabled));
+    $('#layoutEditToolbar').setAttribute('aria-hidden',String(!enabled));
+    if(enabled)installLayoutHandles();else{for(const panel of layoutPanels)panel.classList.remove('is-selected');saveLayout();}
+  }
+  restoreLayout();
+  $('#editLayoutToggle').addEventListener('click',()=>setLayoutEditing(!document.body.classList.contains('layout-editing')));
+  $('#layoutDone').addEventListener('click',()=>setLayoutEditing(false));
+  $('#layoutReset').addEventListener('click',()=>{try{localStorage.removeItem(layoutStorageKey);}catch(_){}location.reload();});
+  if(pageParams.get('edit')==='1')setLayoutEditing(true);
   $('#audioToggle').addEventListener('click',toggleAudio);
   $('#fullscreenToggle').addEventListener('click',toggleFullscreen);
   $('#giftTest').addEventListener('click',()=>showGiftReaction({username:'TESTER',giftName:'Rose',repeatCount:1}));

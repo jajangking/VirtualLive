@@ -13,14 +13,15 @@
   </head>
   <body>
     <div class="app-shell">
-      <header class="topbar">
+      <header class="topbar" data-layout-panel="header">
         <a class="brand" href="#" aria-label="VirtualLive Quiz Arena">
           <span class="brand-mark" aria-hidden="true"><svg viewBox="0 0 48 48" role="presentation"><defs><linearGradient id="brandGlow" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#72ffe0"/><stop offset="1" stop-color="#6fa8ff"/></linearGradient></defs><path d="M24 3 42 11v13c0 10.4-7.4 17.8-18 21C13.4 41.8 6 34.4 6 24V11L24 3Z" fill="url(#brandGlow)"/><path d="M17.3 17.2a9.1 9.1 0 1 1 14.1 7.6l3.3 3.3-3.2 3.2-3.4-3.4a9.1 9.1 0 0 1-10.8-10.7Zm5.1 0a4 4 0 1 0 8 0 4 4 0 0 0-8 0Z" fill="#08131e" fill-rule="evenodd"/><path d="m34.7 8 1.2 2.7 2.8 1.1-2.8 1.2-1.2 2.7-1.1-2.7-2.8-1.2 2.8-1.1L34.7 8Z" fill="#ffe08a"/></svg></span>
-          <span class="brand-copy"><strong>QUIZ <em>ARENA</em></strong><small>LIVE · KNOWLEDGE SHOW</small></span>
+          <span class="brand-copy"><strong><span>QUIZ</span><em>ARENA</em></strong><small>LIVE · KNOWLEDGE SHOW</small></span>
         </a>
         <div class="topbar-center"><span class="live-pulse"></span><span>LIVE QUIZ <b>01</b></span><i></i><span class="demo-tag" id="bridgeTopStatus">MEMUAT STATUS LIVE</span></div>
         <div class="topbar-right">
           <button class="utility-button" id="audioToggle" type="button" aria-pressed="false" title="Aktifkan musik dan efek suara">♫ <span>AUDIO OFF</span></button>
+          <button class="utility-button" id="editLayoutToggle" type="button" aria-pressed="false" title="Atur posisi dan ukuran panel">⠿ <span>ATUR</span></button>
           <button class="utility-button" id="fullscreenToggle" type="button" title="Tampilkan layar penuh">⛶ <span>LAYAR PENUH</span></button>
           <span class="top-status"><i></i> SIAP MAIN</span>
         </div>
@@ -44,15 +45,15 @@
         </section>
 
         <section class="bottom-grid">
-          <div class="panel leaderboard-panel">
+          <div class="panel leaderboard-panel" data-layout-panel="leaderboard">
             <div class="bottom-heading"><div><span class="panel-kicker">TERKUMPUL ANTARSOAL</span><h2>Papan skor</h2></div><span class="score-saved"><i></i> TERSIMPAN OTOMATIS</span></div>
             <div class="leaderboard-table"><div class="table-head"><span>POS</span><span>NAMA PENONTON</span><span>JAWAB BENAR</span><span>POIN</span></div><div id="leaderboardRows"></div><div id="leaderboardEmpty" class="leaderboard-empty">Belum ada poin. Jawab benar pertama untuk masuk ke papan skor!</div></div>
           </div>
-          <aside class="panel how-panel moderator-panel" aria-label="Panel moderator"><div class="moderator-heading"><div><span class="panel-kicker">PANEL MODERATOR</span><h2>Kontrol LIVE</h2></div><span class="moderator-indicator" id="moderatorBridgeStatus">MEMUAT STATUS</span></div><div class="moderator-controls"><span id="moderatorChatState">Chat sedang ditampilkan</span><button id="moderatorChatToggle" class="more-button" type="button" aria-controls="chatPanel" aria-expanded="true" aria-label="Ciutkan live chat">−</button></div></aside>
+          <aside class="panel how-panel moderator-panel" data-layout-panel="moderator" aria-label="Panel moderator"><div class="moderator-heading"><div><span class="panel-kicker">PANEL MODERATOR</span><h2>Kontrol LIVE</h2></div><span class="moderator-indicator" id="moderatorBridgeStatus">MEMUAT STATUS</span></div><div class="moderator-controls"><span id="moderatorChatState">Chat sedang ditampilkan</span><button id="moderatorChatToggle" class="more-button" type="button" aria-controls="chatPanel" aria-expanded="true" aria-label="Ciutkan live chat">−</button></div></aside>
         </section>
 
         <section class="main-grid">
-          <div class="quiz-panel panel">
+          <div class="quiz-panel panel" data-layout-panel="quiz">
             <div class="panel-heading">
               <div><span class="panel-kicker">PERTANYAAN UNTUK CHAT</span><h2><span id="questionTag">Pengetahuan Umum</span> <span class="question-number" id="questionNumber">SOAL 01</span></h2></div>
             </div>
@@ -76,7 +77,7 @@
             </div>
           </div>
 
-          <aside class="chat-panel panel" id="chatPanel">
+          <aside class="chat-panel panel" id="chatPanel" data-layout-panel="chat">
             <div class="chat-header"><div class="chat-title"><h2>Jawaban LIVE <span class="chat-online" id="bridgeStatus"><i></i> STATUS SERVER</span></h2><span class="answer-count" id="answerCount">0 jawaban · 1 per orang</span></div><button id="collapseChat" class="more-button" type="button" aria-controls="chatFeed" aria-expanded="true" aria-label="Ciutkan live chat">−</button></div>
             <div class="gift-reaction" id="giftReaction" aria-live="polite" aria-hidden="true">
         <span class="gift-reaction-icon" id="giftReactionIcon">🎁</span>
@@ -97,7 +98,8 @@
 
         <footer><span>VIRTUALLIVE <i>×</i> QUIZ ARENA</span><span>SIMULATOR LOKAL <i>·</i> BRIDGE TIKTOK NONRESMI</span></footer>
       </main>
-      <aside class="panel donor-panel" aria-label="Peringkat donatur gift LIVE"><div class="donor-heading"><div><span class="panel-kicker">DONATUR · SPONSOR</span><h2>Gift LIVE</h2></div><span class="donor-total" id="donorTotal">0 gift</span></div><div class="donor-table-head"><span>#</span><span>NAMA</span><span>GIFT</span></div><div class="donor-rows" id="donorRows" aria-live="polite"><p class="donor-empty">Belum ada gift LIVE.</p></div></aside>
+      <aside class="panel donor-panel" data-layout-panel="donors" aria-label="Peringkat donatur gift LIVE"><div class="donor-heading"><div><span class="panel-kicker">DONATUR · SPONSOR</span><h2>Gift LIVE</h2></div><span class="donor-total" id="donorTotal">0 gift</span></div><div class="donor-table-head"><span>#</span><span>NAMA</span><span>GIFT</span></div><div class="donor-rows" id="donorRows" aria-live="polite"><p class="donor-empty">Belum ada gift LIVE.</p></div></aside>
+      <div class="layout-edit-toolbar" id="layoutEditToolbar" aria-hidden="true"><span><b>MODE EDIT</b> · Seret handle untuk pindah, tarik sudut untuk ubah ukuran</span><button id="layoutReset" type="button">RESET</button><button id="layoutDone" type="button">SELESAI</button></div>
     </div>
     <div class="toast" id="toast" role="status"></div>
     <script src="answer-gate.js"></script>

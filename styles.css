@@ -798,9 +798,86 @@ body.broadcast-mode .toast{bottom:36vh}
   body.broadcast-mode .brand-copy strong{font-size:clamp(12px,3.4vw,16px)}
   body.broadcast-mode .brand-copy small{display:none}
   body.broadcast-mode .topbar-right{gap:3px}
-  body.broadcast-mode .utility-button{min-width:27px;height:29px;padding:0 4px;font-size:15px}
+  body.broadcast-mode .utility-button{width:24px;min-width:24px;height:27px;padding:0 2px;font-size:14px}
   body.broadcast-mode .question-content h3{font-size:clamp(16px,4.2vw,20px)}
   body.broadcast-mode .answer-option{min-height:clamp(26px,3.2vh,32px);padding:2px 6px}
   body.broadcast-mode .answer-letter{width:20px;height:20px;flex-basis:20px}
   body.broadcast-mode .answer-text{font-size:clamp(12px,3.1vw,14px)}
+}
+
+/* Drag/resize editor for the portrait broadcast panels. */
+#editLayoutToggle{display:none}
+body.broadcast-mode #editLayoutToggle{display:flex}
+body.broadcast-mode [data-layout-panel]{container-type:size}
+body.broadcast-mode .topbar[data-layout-panel]{container-name:topbar}
+body.broadcast-mode .leaderboard-panel[data-layout-panel]{container-name:leaderboard}
+body.broadcast-mode .quiz-panel[data-layout-panel]{container-name:quiz}
+body.broadcast-mode .chat-panel[data-layout-panel]{container-name:chat}
+body.broadcast-mode .moderator-panel[data-layout-panel]{container-name:moderator}
+body.broadcast-mode .donor-panel[data-layout-panel]{container-name:donors}
+body.broadcast-mode .brand-copy strong{font-size:clamp(13px,5cqw,22px)}
+body.broadcast-mode .brand-copy small{font-size:clamp(7px,2.3cqw,10px)}
+body.broadcast-mode .utility-button{font-size:clamp(14px,4.3cqw,22px)}
+body.broadcast-mode .leaderboard-panel .bottom-heading h2{font-size:clamp(13px,4.8cqw,22px)}
+body.broadcast-mode .leaderboard-panel .score-row{font-size:clamp(9px,3.1cqw,14px)}
+body.broadcast-mode .leaderboard-panel .table-head{font-size:clamp(7px,2.4cqw,11px)}
+body.broadcast-mode .quiz-panel .panel-heading h2{font-size:clamp(14px,3.3cqw,24px)}
+body.broadcast-mode .quiz-panel .question-content h3{font-size:clamp(14px,4.1cqw,30px)}
+body.broadcast-mode .quiz-panel .answer-text{font-size:clamp(11px,2.5cqw,18px)}
+body.broadcast-mode .quiz-panel .answer-option{min-height:clamp(25px,11cqh,52px)}
+body.broadcast-mode .chat-panel .chat-header h2{font-size:clamp(10px,3.1cqw,17px)}
+body.broadcast-mode .chat-panel .chat-name,body.broadcast-mode .chat-panel .chat-text{font-size:clamp(9px,2.2cqw,13px)}
+body.broadcast-mode .moderator-panel .moderator-heading h2{font-size:clamp(12px,4.2cqw,20px)}
+body.broadcast-mode .moderator-panel .moderator-controls{font-size:clamp(9px,2.8cqw,14px)}
+body.broadcast-mode .donor-panel .donor-heading h2{font-size:clamp(13px,4.6cqw,22px)}
+body.broadcast-mode .donor-panel .donor-row{font-size:clamp(10px,3.1cqw,15px)}
+body.broadcast-mode .donor-panel .donor-gift{font-size:clamp(9px,2.7cqw,13px)}
+.layout-edit-toolbar{display:none}
+body.broadcast-mode.layout-editing .layout-edit-toolbar{position:fixed;z-index:1000;top:max(8px,env(safe-area-inset-top));left:50%;transform:translateX(-50%);display:flex;align-items:center;gap:8px;max-width:calc(100vw - 16px);padding:7px 9px;border:1px solid #68d9c1;border-radius:10px;background:#0b1724f2;box-shadow:0 8px 30px #0009;color:#eaf5ff;font:10px 'DM Mono',monospace;white-space:nowrap}
+.layout-edit-toolbar[aria-hidden="true"]{display:none!important}
+.layout-edit-toolbar span{overflow:hidden;text-overflow:ellipsis}
+.layout-edit-toolbar span b{color:#77f1d5}
+.layout-edit-toolbar button{border:1px solid #486076;border-radius:6px;background:#17283a;color:#f2f7fc;padding:7px 9px;font:600 9px 'DM Mono',monospace;cursor:pointer}
+.layout-edit-toolbar button:last-child{background:#64dfc3;border-color:#64dfc3;color:#06221d}
+body.broadcast-mode.layout-editing .app-shell{position:relative}
+body.broadcast-mode.layout-editing [data-layout-panel]{position:absolute!important;margin:0!important;min-width:0;min-height:0;outline:2px dashed #79e8d1;outline-offset:2px;z-index:20;transition:none!important}
+body.broadcast-mode.layout-editing [data-layout-panel].is-selected{outline:3px solid #ffd27b;outline-offset:3px;z-index:30;box-shadow:0 0 0 9999px #02071025,0 0 28px #ffd27b45}
+.layout-drag-grip,.layout-resize-handle{display:none}
+body.broadcast-mode.layout-editing .layout-drag-grip,body.broadcast-mode.layout-editing .layout-resize-handle{position:absolute;z-index:50;display:grid;place-items:center;width:30px;height:30px;padding:0;border:1px solid #d7fff4;border-radius:7px;background:#0c2631ed;color:#eafff9;box-shadow:0 3px 12px #0008;font:18px/1 sans-serif;touch-action:none;user-select:none;cursor:grab}
+body.broadcast-mode.layout-editing .layout-drag-grip{top:4px;left:50%;transform:translateX(-50%)}
+body.broadcast-mode.layout-editing .layout-drag-grip:active{cursor:grabbing}
+body.broadcast-mode.layout-editing .layout-resize-handle{right:3px;bottom:3px;width:27px;height:27px;border-color:#ffe4ad;background:#40341feb;color:#ffe4ad;cursor:nwse-resize}
+body.broadcast-mode.layout-editing [data-layout-panel]{user-select:none}
+body.broadcast-mode.layout-editing [data-layout-panel] input,body.broadcast-mode.layout-editing [data-layout-panel] button:not(.layout-drag-grip):not(.layout-resize-handle){user-select:auto}
+@container quiz (max-height: 250px){
+  .panel-heading{flex-basis:16%!important;height:16%!important}
+  .quiz-footer{flex-basis:8%!important;height:8%!important;padding:0 2%!important}
+  .timer-row{flex-basis:8%!important;height:8%!important}
+  .question-content h3{margin-bottom:4px!important}
+  .answer-option{min-height:clamp(22px,9cqh,34px)!important;padding:2px 6px!important}
+  .answer-grid{gap:2px!important}
+  .answer-instruction small,.auto-advance small{display:none!important}
+}
+@container leaderboard (max-width: 240px){
+  .table-head span:nth-child(3),.score-correct{display:none!important}
+  .table-head,.score-row{grid-template-columns:12% minmax(0,1fr) 24%!important;gap:3px!important}
+}
+@container chat (max-height: 120px){
+  .chat-notice{display:none!important}
+  .chat-header{flex-basis:36%!important;height:36%!important}
+  .chat-feed{padding:1px 3%!important}
+}
+@container donors (max-height: 180px){
+  .donor-table-head{display:none!important}
+  .donor-row{padding:3px!important}
+  .donor-row:nth-child(n+4){display:none!important}
+}
+.brand-copy strong span{color:inherit}
+@media (orientation:portrait) and (max-width:380px){
+  body.broadcast-mode .brand-copy strong span{display:none}
+  body.broadcast-mode .brand-mark{width:22px;height:22px;flex-basis:22px}
+  body.broadcast-mode .brand{gap:4px}
+  body.broadcast-mode .topbar{padding-inline:1vw}
+  body.broadcast-mode .utility-button{width:21px;min-width:21px;font-size:12px}
+  body.broadcast-mode .topbar-right{gap:2px}
 }
