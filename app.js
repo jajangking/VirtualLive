@@ -195,78 +195,95 @@
     return { width, height };
   }
 
+  function trackPoint(cx,cy,rx,ry,theta,lateral=0,raised=true) {
+    const dx=rx*Math.cos(theta),dy=2*ry*Math.cos(theta*2),length=Math.hypot(dx,dy)||1;
+    const nx=-dy/length,ny=dx/length;
+    const wrapped=Math.atan2(Math.sin(theta),Math.cos(theta));
+    const distance=Math.abs(wrapped),halfSpan=.58;
+    const lift=raised&&distance<halfSpan?60*(.5+.5*Math.cos(Math.PI*distance/halfSpan)):0;
+    return {x:cx+rx*Math.sin(theta)+nx*lateral,y:cy+ry*Math.sin(theta*2)+ny*lateral-lift,dx,dy,nx,ny};
+  }
+
+  function traceTrackPath(cx,cy,rx,ry,road,lateral=0,raised=true,start=-Math.PI,end=Math.PI,steps=420) {
+    ctx.beginPath();
+    for(let i=0;i<=steps;i++){
+      const p=trackPoint(cx,cy,rx,ry,start+(end-start)*i/steps,lateral,raised);
+      if(i===0)ctx.moveTo(p.x,p.y);else ctx.lineTo(p.x,p.y);
+    }
+  }
+
   function drawTrack() {
-    const {width:w,height:h} = dimensions(); ctx.clearRect(0,0,w,h);
-    const cx=w/2, cy=h/2+3, rx=Math.min(w*.335,h*.42,w/2-58), ry=Math.min(h*.31,w*.26,h/2-65), road=47;
-    const centerX=rx+road/2, centerY=ry+road/2;
-    const ellipse=(xRadius,yRadius)=>{ctx.beginPath();ctx.ellipse(cx,cy,xRadius,yRadius,0,0,Math.PI*2);};
-    // Soft shadow grounds the molded plastic circuit on the dark tabletop.
-    ctx.save();ctx.shadowColor='#000b';ctx.shadowBlur=20;ctx.shadowOffsetY=13;
-    ellipse(centerX,centerY);ctx.strokeStyle='#111a22';ctx.lineWidth=road+13;ctx.stroke();ctx.restore();
-    // Raised orange track base and satin plastic running surface.
-    ellipse(centerX,centerY);ctx.lineCap='round';ctx.strokeStyle='#963604';ctx.lineWidth=road+9;ctx.stroke();
-    const plastic=ctx.createLinearGradient(0,cy-centerY-25,0,cy+centerY+25);
-    plastic.addColorStop(0,'#ffad32');plastic.addColorStop(.20,'#ff8618');plastic.addColorStop(.52,'#f66b0b');plastic.addColorStop(.82,'#e95708');plastic.addColorStop(1,'#bf4106');
-    ellipse(centerX,centerY);ctx.strokeStyle=plastic;ctx.lineWidth=road;ctx.stroke();
-    // A soft specular edge makes the curved track read as molded, slightly banked plastic.
-    ellipse(centerX,centerY);ctx.strokeStyle='#ffd16c80';ctx.lineWidth=1.5;ctx.stroke();
-    // Recessed lane grooves on the three-lane toy track.
-    for(let lane=1;lane<3;lane++){
-      const offset=(lane-1)*road/6;
-      ellipse(centerX+offset,centerY+offset);ctx.strokeStyle='#9f390c99';ctx.lineWidth=1.4;ctx.stroke();
-      ellipse(centerX+offset-1,centerY+offset-1);ctx.strokeStyle='#ffc05b55';ctx.lineWidth=.75;ctx.stroke();
+    const {width:w,height:h}=dimensions();ctx.clearRect(0,0,w,h);
+    const cx=w/2,cy=h/2+2,rx=Math.min(w*.335,h*.42,w/2-58),ry=Math.min(h*.31,w*.26,h/2-65),road=47;
+    // A crossing figure-eight: the bridge lifts above the lower crossover.
+    // Soft shadow and a deep orange edge make the plastic track feel raised off the tabletop.
+    traceTrackPath(cx,cy,rx,ry,road);
+    ctx.save();ctx.shadowColor='#000b';ctx.shadowBlur=18;ctx.shadowOffsetY=12;ctx.strokeStyle='#101820';ctx.lineWidth=road+15;ctx.lineCap='round';ctx.lineJoin='round';ctx.stroke();ctx.restore();
+    traceTrackPath(cx,cy,rx,ry,road);ctx.strokeStyle='#963604';ctx.lineWidth=road+9;ctx.lineCap='round';ctx.lineJoin='round';ctx.stroke();
+    const plastic=ctx.createLinearGradient(0,cy-ry-50,0,cy+ry+50);
+    plastic.addColorStop(0,'#ffad32');plastic.addColorStop(.2,'#ff8618');plastic.addColorStop(.52,'#f66b0b');plastic.addColorStop(.82,'#e95708');plastic.addColorStop(1,'#bf4106');
+    traceTrackPath(cx,cy,rx,ry,road);ctx.strokeStyle=plastic;ctx.lineWidth=road;ctx.stroke();
+    traceTrackPath(cx,cy,rx,ry,road);ctx.strokeStyle='#ffd16c80';ctx.lineWidth=1.5;ctx.stroke();
+    // Embossed grooves divide the roadway into three lanes.
+    for(const offset of [-road/6,road/6]){
+      traceTrackPath(cx,cy,rx,ry,road,offset);ctx.strokeStyle='#9f390cbb';ctx.lineWidth=1.6;ctx.stroke();
+      traceTrackPath(cx,cy,rx,ry,road,offset-1);ctx.strokeStyle='#ffc05b66';ctx.lineWidth=.7;ctx.stroke();
     }
-    // Raised inner and outer guard rails with a bright molded rim.
-    ellipse(rx+road-3,ry+road-3);ctx.strokeStyle='#a93d08';ctx.lineWidth=5;ctx.stroke();
-    ellipse(rx+road-3,ry+road-3);ctx.strokeStyle='#ffb844';ctx.lineWidth=2;ctx.stroke();
-    ellipse(rx+3,ry+3);ctx.strokeStyle='#a83e0a';ctx.lineWidth=5;ctx.stroke();
-    ellipse(rx+3,ry+3);ctx.strokeStyle='#ffc45a';ctx.lineWidth=2;ctx.stroke();
-    // Repeating molded joints and tiny fastener marks give the circuit a physical toy-track feel.
-    for(let i=0;i<32;i++){
-      const t=i*Math.PI*2/32;
-      const outerX=cx+Math.cos(t)*(rx+road-7),outerY=cy+Math.sin(t)*(ry+road-7);
-      const innerX=cx+Math.cos(t)*(rx+7),innerY=cy+Math.sin(t)*(ry+7);
-      ctx.beginPath();ctx.moveTo(innerX,innerY);ctx.lineTo(outerX,outerY);
-      ctx.strokeStyle=i%4===0?'#ffd27975':'#a83d1266';ctx.lineWidth=i%4===0?1.2:.7;ctx.stroke();
+    // Twin raised guard rails follow the whole non-oval route.
+    for(const offset of [-road/2+3,road/2-3]){
+      traceTrackPath(cx,cy,rx,ry,road,offset);ctx.strokeStyle='#a83e0a';ctx.lineWidth=5;ctx.stroke();
+      traceTrackPath(cx,cy,rx,ry,road,offset);ctx.strokeStyle='#ffc45a';ctx.lineWidth=2;ctx.stroke();
     }
-    // Infield: a little tabletop podium under the surrounding raceway.
-    const infield=ctx.createRadialGradient(cx,cy,4,cx,cy,ry);
-    infield.addColorStop(0,'#20303a');infield.addColorStop(.72,'#17232c');infield.addColorStop(1,'#111b24');
-    ctx.fillStyle=infield;ctx.beginPath();ctx.ellipse(cx,cy,rx-2,ry-2,0,0,Math.PI*2);ctx.fill();
-    ctx.strokeStyle='#e8a54825';ctx.lineWidth=1;ctx.beginPath();ctx.ellipse(cx,cy,rx*.72,ry*.72,0,0,Math.PI*2);ctx.stroke();
-    ctx.fillStyle='#ffb454';ctx.font='700 8px "DM Mono",monospace';ctx.textAlign='center';ctx.fillText('NEON CIRCUIT',cx,cy-5);
-    ctx.fillStyle='#a9b4bc88';ctx.font='7px "DM Mono",monospace';ctx.fillText('3 LAPS  ·  AI RACE',cx,cy+9);
-    // Blue booster pads, laid over the orange track like a snap-in toy accessory.
+    // Molded snap joints across the toy track.
+    for(let i=0;i<40;i++){
+      const t=-Math.PI+i*Math.PI*2/40;
+      const a=trackPoint(cx,cy,rx,ry,t,-road/2+5),b=trackPoint(cx,cy,rx,ry,t,road/2-5);
+      ctx.beginPath();ctx.moveTo(a.x,a.y);ctx.lineTo(b.x,b.y);ctx.strokeStyle=i%5===0?'#ffe09a88':'#9c3c156b';ctx.lineWidth=i%5===0?1.2:.7;ctx.stroke();
+    }
+    // Infield islands sit inside the two lobes of the figure-eight.
+    for(const side of [-1,1]){
+      const ix=cx+side*rx*.53,iy=cy;
+      const island=ctx.createRadialGradient(ix,iy,2,ix,iy,ry*.5);
+      island.addColorStop(0,'#25313a');island.addColorStop(1,'#17232b');ctx.fillStyle=island;
+      ctx.beginPath();ctx.ellipse(ix,iy,rx*.29,ry*.46,0,0,Math.PI*2);ctx.fill();
+      ctx.strokeStyle='#e8a54826';ctx.lineWidth=1;ctx.setLineDash([3,5]);ctx.beginPath();ctx.ellipse(ix,iy,rx*.27,ry*.43,0,0,Math.PI*2);ctx.stroke();ctx.setLineDash([]);
+      ctx.fillStyle='#aeb9c066';ctx.font='7px "DM Mono",monospace';ctx.textAlign='center';ctx.fillText(side<0?'LOOP A':'LOOP B',ix,iy+3);
+    }
+    // A short elevated deck makes the crossover legible as an actual bridge.
+    const bridge=trackPoint(cx,cy,rx,ry,0);
+    ctx.save();ctx.translate(bridge.x,bridge.y);ctx.rotate(Math.atan2(bridge.dy,bridge.dx));ctx.globalAlpha=.8;
+    ctx.fillStyle='#ffbd59';roundedRect(-2.5,-road/2+3,5,road-6,2);ctx.fill();
+    ctx.fillStyle='#fff1c4';ctx.fillRect(-1.3,-road/2+6,2.6,4);ctx.fillRect(-1.3,road/2-10,2.6,4);ctx.restore();
+    // Blue snap-in booster pads on each lobe's fast straight.
     for(const t of [-Math.PI/2,Math.PI/2]){
-      const x=cx+Math.cos(t)*centerX,y=cy+Math.sin(t)*centerY;
-      const tangent=Math.atan2(Math.cos(t)*centerY,-Math.sin(t)*centerX);
-      ctx.save();ctx.translate(x,y);ctx.rotate(tangent);
+      const p=trackPoint(cx,cy,rx,ry,t),angle=Math.atan2(p.dy,p.dx);
+      ctx.save();ctx.translate(p.x,p.y);ctx.rotate(angle);
       for(let lane=0;lane<3;lane++){
-        const laneY=(lane-1)*road*.27;
+        const laneY=(lane-1)*road/3;
         ctx.fillStyle='#0b4051';roundedRect(-13,laneY-5,26,10,2);ctx.fill();
         ctx.fillStyle='#29dafa';ctx.fillRect(-9,laneY-3,2,6);ctx.fillRect(-3,laneY-3,2,6);ctx.fillRect(3,laneY-3,2,6);
       }
       ctx.restore();
     }
-    // Start / finish checker strip across the lanes.
-    const theta=-Math.PI;const x=cx+Math.cos(theta)*centerX,y=cy+Math.sin(theta)*centerY;
-    const tangent=Math.atan2(Math.cos(theta)*centerY,-Math.sin(theta)*centerX);
-    ctx.save();ctx.translate(x,y);ctx.rotate(tangent);
+    // Start / finish checker strip at the lower crossover.
+    const theta=-Math.PI,start=trackPoint(cx,cy,rx,ry,theta),angle=Math.atan2(start.dy,start.dx);
+    ctx.save();ctx.translate(start.x,start.y);ctx.rotate(angle);
     for(let n=0;n<10;n++){ctx.fillStyle=n%2?'#60300f':'#fff0cf';ctx.fillRect(-3,-road/2+n*road/10,6,road/10+1)}
     ctx.restore();
-    // Tiny orange pylon lights around the outside edge.
-    for(let i=0;i<20;i++){
-      const t=i*Math.PI*2/20;const px=cx+Math.cos(t)*(rx+road+8),py=cy+Math.sin(t)*(ry+road+8);
-      ctx.beginPath();ctx.arc(px,py,i%5===0?2:1.2,0,Math.PI*2);ctx.fillStyle=i%5===0?'#ff9c36aa':'#ffbf5944';ctx.fill();
+    // Small trackside pylons emphasize the scale-model tabletop setting.
+    for(let i=0;i<24;i++){
+      const t=-Math.PI+i*Math.PI*2/24,p=trackPoint(cx,cy,rx,ry,t,road/2+9);
+      ctx.beginPath();ctx.arc(p.x,p.y,i%6===0?2:1.2,0,Math.PI*2);ctx.fillStyle=i%6===0?'#ff9c36aa':'#ffbf5944';ctx.fill();
     }
   }
 
   function carPosition(car) {
-    const {width:w,height:h}=dimensions();const cx=w/2,cy=h/2+3,rx=Math.min(w*.335,h*.42,w/2-58),ry=Math.min(h*.31,w*.26,h/2-65),road=47;
+    const {width:w,height:h}=dimensions();const cx=w/2,cy=h/2+2,rx=Math.min(w*.335,h*.42,w/2-58),ry=Math.min(h*.31,w*.26,h/2-65),road=47;
     const theta=-Math.PI+car.progress*Math.PI*2;
-    const laneOffset=(car.lane-1)*road*.27;
-    const scaleX=(rx+road/2+laneOffset)/rx,scaleY=(ry+road/2+laneOffset)/ry;
-    return {x:cx+Math.cos(theta)*(rx+road/2+laneOffset),y:cy+Math.sin(theta)*(ry+road/2+laneOffset),angle:Math.atan2(Math.cos(theta)*(ry+road/2+laneOffset),-Math.sin(theta)*(rx+road/2+laneOffset)),scaleX,scaleY};
+    const laneOffset=(car.lane-1)*road/3;
+    const point=trackPoint(cx,cy,rx,ry,theta,laneOffset);
+    const ahead=trackPoint(cx,cy,rx,ry,theta+.002,laneOffset);
+    return {x:point.x,y:point.y,angle:Math.atan2(ahead.y-point.y,ahead.x-point.x)};
   }
 
   function drawCar(car) {
