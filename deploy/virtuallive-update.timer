@@ -1,0 +1,11 @@
+[Unit]
+Description=Check the VirtualLive deployment branch regularly
+
+[Timer]
+OnBootSec=45s
+OnUnitActiveSec=60s
+Persistent=true
+Unit=virtuallive-update.service
+
+[Install]
+WantedBy=timers.target

@@ -1,0 +1,7 @@
+[Unit]
+Description=Update VirtualLive from its deployment branch
+
+[Service]
+Type=oneshot
+Environment=APP_DIR=/opt/virtuallive
+ExecStart=/opt/virtuallive/deploy/update-from-branch.sh
