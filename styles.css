@@ -170,14 +170,14 @@ body.broadcast-mode .app-shell{max-width:920px;padding:0 28px}body.broadcast-mod
   body.broadcast-mode .quiz-stage { min-height: 0; }
 }
 
-/* Portrait LIVE browser sources: reserve room for TikTok's header, action rail, and comment tray. */
+/* Portrait LIVE browser sources: fit all content inside the green safe area supplied by the user. */
 @media (orientation: portrait) {
   body.broadcast-mode .app-shell {
     max-width: 1080px;
-    padding-top: clamp(42px, 7.5vh, 150px);
-    padding-right: clamp(36px, 14vw, 155px);
-    padding-bottom: clamp(150px, 24vh, 465px);
-    padding-left: clamp(24px, 6vw, 66px);
+    padding-top: clamp(42px, 15.3vh, 300px);
+    padding-right: clamp(12px, 3vw, 42px);
+    padding-bottom: clamp(150px, 35vh, 690px);
+    padding-left: clamp(12px, 3vw, 42px);
   }
 }
 
@@ -597,3 +597,39 @@ body.broadcast-mode .gift-reaction{top:17vh}
 }
 body.broadcast-mode .chat-panel.is-collapsed{height:46px;flex-basis:46px}
 @media(max-width:700px){body.broadcast-mode .chat-panel.is-collapsed{height:42px;flex-basis:42px}}
+body.broadcast-mode .chat-composer-wrap{display:none!important}
+@media (orientation:portrait) and (min-width:561px) and (max-width:700px) and (min-height:1000px){
+  body.broadcast-mode .main-grid{display:grid;grid-template-columns:minmax(0,1fr) minmax(180px,31%);grid-template-rows:minmax(0,1fr);align-items:stretch;gap:8px}
+  body.broadcast-mode .quiz-panel{grid-column:1;grid-row:1;}
+  body.broadcast-mode .chat-panel{grid-column:2;grid-row:1;align-self:end;height:clamp(175px,20vh,240px);flex:none;width:100%}
+}
+@media (orientation:portrait) and (max-width:560px) and (max-height:999px){
+  body.broadcast-mode main{gap:4px;padding:3px 0}
+  body.broadcast-mode .topbar{height:36px;flex-basis:36px}
+  body.broadcast-mode .bottom-grid{flex-basis:52px;min-height:52px}
+  body.broadcast-mode .leaderboard-panel{padding:3px 5px}
+  body.broadcast-mode .bottom-heading{margin:0}
+  body.broadcast-mode .bottom-heading h2{font-size:11px}
+  body.broadcast-mode .table-head{display:none}
+  body.broadcast-mode #leaderboardRows .score-row:nth-child(n+2){display:none}
+  body.broadcast-mode .score-row{padding:1px 4px}
+  body.broadcast-mode .main-grid{gap:4px}
+  body.broadcast-mode .panel-heading{height:30px;flex-basis:30px}
+  body.broadcast-mode .panel-heading h2{font-size:13px}
+  body.broadcast-mode .quiz-stage{padding:5px}
+  body.broadcast-mode .question-content h3{font-size:15px;line-height:1.12;margin-bottom:4px}
+  body.broadcast-mode .answer-grid{grid-template-columns:1fr;gap:2px}
+  body.broadcast-mode .answer-option{min-height:25px;padding:2px 4px}
+  body.broadcast-mode .answer-letter{height:18px;width:18px;flex-basis:18px}
+  body.broadcast-mode .answer-text{font-size:10px}
+  body.broadcast-mode .timer-row{height:19px;flex-basis:19px}
+  body.broadcast-mode .quiz-footer{min-height:25px;flex-basis:25px;padding:2px 4px}
+  body.broadcast-mode .answer-instruction b{font-size:8px}
+  body.broadcast-mode .answer-instruction small{display:none}
+  body.broadcast-mode .chat-panel{height:38px;flex-basis:38px}
+  body.broadcast-mode .chat-panel.is-collapsed{height:38px;flex-basis:38px}
+  body.broadcast-mode .chat-header{height:38px;flex-basis:38px}
+}
+body.broadcast-mode{background:transparent}
+body.broadcast-mode .app-shell{background:transparent}
+body.broadcast-mode .toast{bottom:36vh}

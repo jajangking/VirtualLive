@@ -337,6 +337,9 @@
     const panel=$('#chatPanel'),button=event.currentTarget,isCollapsed=panel.classList.toggle('is-collapsed');
     button.setAttribute('aria-expanded',String(!isCollapsed));button.setAttribute('aria-label',isCollapsed?'Buka live chat':'Ciutkan live chat');button.textContent=isCollapsed?'+':'−';
   });
+  if(document.body.classList.contains('broadcast-mode')&&window.innerWidth<561&&window.innerHeight<1000){
+    $('#chatPanel').classList.add('is-collapsed');$('#collapseChat').setAttribute('aria-expanded','false');$('#collapseChat').setAttribute('aria-label','Buka live chat');$('#collapseChat').textContent='+';
+  }
   $('#audioToggle').addEventListener('click',toggleAudio);
   $('#fullscreenToggle').addEventListener('click',toggleFullscreen);
   $('#giftTest').addEventListener('click',()=>showGiftReaction({username:'TESTER',giftName:'Rose',repeatCount:1}));
