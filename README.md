@@ -4,33 +4,52 @@ Kuis pengetahuan umum otomatis untuk tampilan live. Setiap soal menampilkan pili
 
 ## Jalankan lokal
 
-Butuh Node.js 18+, tanpa dependency eksternal:
+Butuh Node.js 22+ dan npm (dependency tree yang terpasang memakai `got@15`, yang mensyaratkan Node.js 22+):
 
 ```bash
+npm ci
 npm start
 ```
 
-Buka `http://localhost:3000`. Server mendengarkan di `0.0.0.0`, jadi bisa diproxy oleh hosting/VPS di port 3000.
+Buka `http://localhost:3000`. Server mendengarkan di `0.0.0.0`, jadi bisa diproxy oleh hosting/VPS di port 3000. Secara default konektor TikTok **dinonaktifkan**; simulator komentar lokal tetap dapat digunakan.
+
+Untuk mengaktifkan listener LIVE publik `@disepillya`:
+
+```bash
+TIKTOK_BRIDGE_ENABLED=true TIKTOK_USERNAME=disepillya npm start
+```
+
+Jangan set `TIKTOK_BRIDGE_ENABLED=true` jika tidak ingin server membuat koneksi LIVE. Status di UI membedakan bridge nonaktif, mencoba koneksi, menunggu LIVE, error, dan tersambung. Label tersambung hanya muncul setelah konektor melaporkan koneksi berhasil.
 
 ## Tampilan live dan uji simulator
 
-- Mode dashboard: buka `/` untuk melihat soal, papan skor, dan simulator komentar.
+- Mode dashboard: buka `/` untuk melihat soal, papan skor, status listener, dan simulator komentar.
 - Mode siaran bersih: buka `/?live=1` sebagai browser source/layar portrait; panel simulator disembunyikan, sehingga yang terlihat hanya kuis dan papan skor.
 - Untuk mencoba simulator, kirim `Budi: A`, `@Budi: jawab A`, atau `jawab A` pada panel chat. Tombol A–D juga mensimulasikan penonton `KAMU`.
 - Tidak perlu menekan tombol untuk mengganti soal. Timer berjalan otomatis, hasil muncul setelah timer selesai, lalu soal baru dimulai sendiri.
 
 Bank 20 pertanyaan pengetahuan umum diacak dan diulang setelah semua pertanyaan terpakai. Pemenang adalah komentar benar pertama yang diterima pada sesi soal itu; satu soal memberi maksimal satu poin.
 
+## Listener komentar TikTok: status dan batasan
+
+Server memakai [`tiktok-live-connector`](https://github.com/zerodytrash/TikTok-Live-Connector) versi 2.5.0 untuk membaca komentar dari LIVE publik. **Ini library pihak ketiga yang tidak resmi, reverse-engineered, dan bukan API/SDK resmi atau integrasi yang disetujui TikTok.** Koneksi dapat berhenti bekerja jika implementasi Webcast TikTok berubah; ketersediaan stream dan koneksi tidak dijamin. Bridge hanya mencoba menyambung ke username yang dikonfigurasi dan menunggu saat akun tidak sedang LIVE. Uji simulator lokal tidak membuktikan koneksi TikTok berfungsi.
+
+Komentar disalurkan dari server ke browser melalui Server-Sent Events (`/api/events`) lalu ke hook kuis `window.VirtualLiveQuiz.receiveComment(username, comment)`. Endpoint `/api/status` dan indikator UI melaporkan status koneksi. Tidak ada cookie atau kredensial TikTok yang disimpan di frontend.
+
+Paket `tiktok-live-connector@2.5.0` sendiri menyatakan Node.js 20+, tetapi aplikasi ini menetapkan Node.js 22+ karena dependency `got@15` pada lockfile mensyaratkan Node.js 22+. Paket connector berlisensi **AGPL-3.0-only**. Tinjau atribusi dan kewajiban lisensi yang berlaku sebelum mendistribusikan atau menyediakan aplikasi ini sebagai layanan. Kode aplikasi ini tidak boleh digambarkan sebagai API resmi TikTok.
+
+Skor saat ini tersimpan hanya pada browser host; untuk scoreboard bersama lintas perangkat, pindahkan penyimpanan ke backend/database.
+
 ## Deploy otomatis ke VPS Instabox
 
-Repo ini menyiapkan deployment pada branch `arena/e041ca7d-virtuallive`. Di VPS Debian/Ubuntu dengan **Git, Node.js 18+, systemd**, jalankan dari SSH/console VPS:
+Repo ini menyiapkan deployment pada branch `arena/e041ca7d-virtuallive`. Di VPS Debian/Ubuntu dengan **Git, Node.js 20+, npm, dan systemd**, jalankan dari SSH/console VPS:
 
 ```bash
 git clone --depth 1 --branch arena/e041ca7d-virtuallive https://github.com/jajangking/VirtualLive.git /tmp/virtuallive-setup
 sudo bash /tmp/virtuallive-setup/deploy/instabox-setup.sh
 ```
 
-Setup memasang app ke `/opt/virtuallive`, menjalankan server di port 3000 sebagai service systemd, lalu membuat timer yang memeriksa branch tersebut setiap 60 detik. Saat ada commit baru di branch, VPS mengambil commit itu dan me-restart service otomatis. Cek status dengan:
+Setup memasang dependency dari lockfile, mengaktifkan listener tidak resmi untuk `@disepillya` melalui konfigurasi systemd (`TIKTOK_BRIDGE_ENABLED=true`), menjalankan server di port 3000, lalu membuat timer yang memeriksa branch tersebut setiap 60 detik. Saat ada commit baru di branch, VPS mengambil commit itu dan me-restart service otomatis. Cek status dengan:
 
 ```bash
 sudo systemctl status virtuallive.service
@@ -39,7 +58,3 @@ sudo journalctl -u virtuallive.service -n 50 --no-pager
 ```
 
 Pastikan port 3000 tersedia sebelum setup. Jika ada service lama yang masih menggunakan port itu, hentikan service tersebut melalui systemd/console VPS terlebih dahulu; setup sengaja tidak membunuh proses tak dikenal. Repo saat ini publik sehingga VPS dapat menarik branch melalui HTTPS tanpa token.
-
-## Integrasi komentar TikTok
-
-Alur soal, timer, pengumuman hasil, pergantian soal, dan pembaruan skor berjalan otomatis. Namun komentar pada prototype masih simulator lokal—belum tersambung ke komentar TikTok sungguhan. `window.VirtualLiveQuiz.receiveComment(username, comment)` adalah hook untuk adapter event TikTok. Integrasi berikutnya perlu service backend yang menerima komentar secara berurutan dan mengirimkannya ke browser melalui WebSocket/SSE. Skor di prototype tersimpan pada browser host; untuk penyimpanan yang dibagikan lintas perangkat, pindahkan scoreboard ke backend/database. Jangan letakkan cookie atau credential TikTok di frontend.

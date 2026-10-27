@@ -18,7 +18,7 @@
           <span class="brand-mark"><span></span><span></span><span></span></span>
           <span class="brand-copy"><strong>VIRTUAL<span>LIVE</span></strong><small>QUIZ ARENA</small></span>
         </a>
-        <div class="topbar-center"><span class="live-pulse"></span><span>LIVE QUIZ <b>01</b></span><i></i><span class="demo-tag">SIMULASI KOMENTAR</span></div>
+        <div class="topbar-center"><span class="live-pulse"></span><span>LIVE QUIZ <b>01</b></span><i></i><span class="demo-tag" id="bridgeTopStatus">MEMUAT STATUS LIVE</span></div>
         <div class="topbar-right"><span class="top-status"><i></i> SIAP MAIN</span></div>
       </header>
 
@@ -66,8 +66,8 @@
           </div>
 
           <aside class="chat-panel panel">
-            <div class="chat-header"><div><span class="panel-kicker">TIKTOK LIVE</span><h2>Live chat <span class="chat-online"><i></i> SIMULASI</span></h2></div><button id="clearChat" class="more-button" aria-label="Bersihkan chat">···</button></div>
-            <div class="chat-notice"><span class="notice-icon">⌁</span><p>Prototype ini belum tersambung ke komentar TikTok. Ketik <b>nama: jawaban</b> untuk mencoba.</p></div>
+            <div class="chat-header"><div><span class="panel-kicker">TIKTOK LIVE</span><h2>Live chat <span class="chat-online" id="bridgeStatus"><i></i> STATUS SERVER</span></h2></div><button id="clearChat" class="more-button" aria-label="Bersihkan chat">···</button></div>
+            <div class="chat-notice"><span class="notice-icon">⌁</span><p id="bridgeNotice">Status koneksi LIVE @disepillya dimuat dari server. Komentar A, B, C, atau D diteruskan otomatis ke kuis.</p></div>
             <div class="chat-feed" id="chatFeed" aria-live="polite"></div>
             <div class="chat-composer-wrap">
               <div class="quick-answers"><span>SIMULASI JAWABAN</span><div><button data-answer="A">A</button><button data-answer="B">B</button><button data-answer="C">C</button><button data-answer="D">D</button></div></div>
@@ -84,7 +84,7 @@
           </div>
           <div class="panel how-panel"><span class="panel-kicker">CARA MAIN</span><h2>Satu soal. Satu pemenang.</h2><div class="how-steps"><div><span>01</span><p>Lihat pertanyaan &amp; pilihan A–D</p></div><div><span>02</span><p>Ketik huruf jawaban di komentar</p></div><div><span>03</span><p>Jawaban benar tercepat dapat poin</p></div></div><div class="ai-note"><span>✦</span><p><b>SKOR BERLANJUT</b><br />Poin tetap tersimpan saat soal berganti atau halaman dimuat ulang.</p></div></div>
         </section>
-        <footer><span>VIRTUALLIVE <i>×</i> QUIZ ARENA</span><span>PROTOTYPE v0.2 <i>·</i> MODE SIMULASI</span></footer>
+        <footer><span>VIRTUALLIVE <i>×</i> QUIZ ARENA</span><span>SIMULATOR LOKAL <i>·</i> BRIDGE TIKTOK NONRESMI</span></footer>
       </main>
     </div>
     <div class="toast" id="toast" role="status"></div>

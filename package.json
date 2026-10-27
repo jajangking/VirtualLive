@@ -1,12 +1,16 @@
 {
-  "name": "virtuallive-neon-circuit",
-  "version": "0.1.0",
+  "name": "virtuallive-quiz-arena",
+  "version": "0.2.0",
   "private": true,
-  "description": "TikTok Live interactive racing prototype",
+  "description": "Automated TikTok LIVE quiz with an unofficial comment bridge",
   "scripts": {
-    "start": "node server.js"
+    "start": "node server.js",
+    "test": "node --test"
   },
   "engines": {
-    "node": ">=18"
+    "node": ">=22"
+  },
+  "dependencies": {
+    "tiktok-live-connector": "2.5.0"
   }
 }

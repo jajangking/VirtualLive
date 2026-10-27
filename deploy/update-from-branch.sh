@@ -23,5 +23,6 @@ if ! git -C "$APP_DIR" merge-base --is-ancestor "$current" "$target"; then
 fi
 
 git -C "$APP_DIR" reset --hard "$target"
+npm --prefix "$APP_DIR" ci --omit=dev
 systemctl restart virtuallive.service
 echo "Deployed $BRANCH at ${target:0:12}"

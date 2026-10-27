@@ -1,5 +1,5 @@
 [Unit]
-Description=VirtualLive Neon Circuit web app
+Description=VirtualLive Quiz Arena web app
 After=network.target
 
 [Service]
@@ -9,6 +9,8 @@ Group=www-data
 WorkingDirectory=/opt/virtuallive
 Environment=NODE_ENV=production
 Environment=PORT=3000
+Environment=TIKTOK_BRIDGE_ENABLED=true
+Environment=TIKTOK_USERNAME=disepillya
 ExecStart=@NODE_BIN@ /opt/virtuallive/server.js
 Restart=on-failure
 RestartSec=3

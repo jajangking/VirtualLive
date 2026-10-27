@@ -215,12 +215,40 @@
     updateTimer();requestAnimationFrame(frame);
   }
 
+  function updateBridgeStatus(data){
+    const status=data?.status||'connecting',username=String(data?.username||'disepillya').replace(/^@/,'').toUpperCase();
+    const labels={disabled:'BRIDGE NONAKTIF',starting:'MEMULAI BRIDGE',connecting:'MENGHUBUNGKAN',connected:`LIVE @${username}`,waiting:`MENUNGGU @${username}`,error:'KONEKSI ERROR',reconnecting:'SERVER TERPUTUS'};
+    const label=labels[status]||'STATUS TIDAK DIKETAHUI';
+    $('#bridgeStatus').textContent=label;$('#bridgeTopStatus').textContent=label;
+    const badge=$('#bridgeStatus');badge.classList.toggle('is-connected',status==='connected');badge.classList.toggle('is-error',status==='error'||status==='disabled'||status==='reconnecting');
+    const notices={
+      disabled:'Bridge komentar TikTok dinonaktifkan di server. Simulator lokal tetap bisa digunakan.',
+      starting:'Bridge TikTok sedang dimulai. Status ini bukan konfirmasi bahwa komentar sudah terhubung.',
+      connecting:`Mencoba menghubungkan LIVE publik @${username}. Simulator lokal tetap tersedia.`,
+      connected:`Terhubung ke LIVE publik @${username}. Komentar masuk diteruskan ke kuis; bridge ini tidak resmi dan dapat terputus.`,
+      waiting:`Menunggu LIVE @${username} aktif atau mencoba sambung ulang. Komentar belum diterima saat ini.`,
+      error:'Bridge gagal tersambung. Periksa log server; komentar TikTok belum diterima.',
+      reconnecting:'Sambungan ke server kuis terputus. Browser akan mencoba menyambung kembali.'
+    };
+    $('#bridgeNotice').textContent=notices[status]||notices.connecting;
+  }
+  function connectTikTokEventStream(){
+    if(typeof EventSource==='undefined'){updateBridgeStatus({status:'error'});return;}
+    const stream=new EventSource('/api/events');
+    stream.addEventListener('status',event=>{try{updateBridgeStatus(JSON.parse(event.data));}catch(_){updateBridgeStatus({status:'error'});}});
+    stream.addEventListener('comment',event=>{
+      try{const message=JSON.parse(event.data);receiveComment(message.username,message.comment);}catch(_){/* Ignore malformed server events. */}
+    });
+    stream.onerror=()=>updateBridgeStatus({status:'reconnecting'});
+  }
+
   $('#commentForm').addEventListener('submit',event=>{event.preventDefault();handleInput(input.value);input.value='';input.focus();});
   document.querySelectorAll('[data-answer]').forEach(button=>button.addEventListener('click',()=>receiveComment('KAMU',button.dataset.answer)));
   $('#clearChat').addEventListener('click',()=>{feed.replaceChildren();addMessage('QUIZ MASTER','Chat dibersihkan. Kuis tetap berjalan otomatis.','system');});
 
   // Add ?live=1 for a clean portrait-friendly broadcast screen (question, timer and scoreboard only).
   window.VirtualLiveQuiz={receiveComment};
+  connectTikTokEventStream();
   deck=shuffle(QUESTIONS.map((_,index)=>index));nextQuestion();
   addMessage('QUIZ MASTER','Quiz Arena berjalan otomatis. Jawab A, B, C, atau D sebelum timer habis.','system');
   updateTimer();requestAnimationFrame(frame);

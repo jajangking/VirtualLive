@@ -14,12 +14,16 @@ if ! command -v git >/dev/null 2>&1; then
   exit 1
 fi
 if ! command -v node >/dev/null 2>&1; then
-  echo "Node.js 18+ is required. Install Node.js first, then rerun this setup." >&2
+  echo "Node.js 22+ and npm are required. Install Node.js first, then rerun this setup." >&2
   exit 1
 fi
 node_major="$(node -p 'Number(process.versions.node.split(".")[0])')"
-if (( node_major < 18 )); then
-  echo "Node.js 18+ required; found $(node --version)." >&2
+if (( node_major < 22 )); then
+  echo "Node.js 22+ required; found $(node --version)." >&2
+  exit 1
+fi
+if ! command -v npm >/dev/null 2>&1; then
+  echo "npm is required to install the TikTok LIVE connector dependency." >&2
   exit 1
 fi
 if ! command -v systemctl >/dev/null 2>&1; then
@@ -42,6 +46,8 @@ if [[ -e "$APP_DIR" ]]; then
 else
   git clone --single-branch --branch "$BRANCH" "$REPO_URL" "$APP_DIR"
 fi
+
+npm --prefix "$APP_DIR" ci --omit=dev
 
 node_bin="$(command -v node)"
 sed "s|@NODE_BIN@|$node_bin|g" "$APP_DIR/deploy/virtuallive.service" > /etc/systemd/system/virtuallive.service
