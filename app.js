@@ -197,33 +197,72 @@
 
   function drawTrack() {
     const {width:w,height:h} = dimensions(); ctx.clearRect(0,0,w,h);
-    const cx=w/2, cy=h/2+2, rx=Math.min(w*.335,h*.42), ry=Math.min(h*.39,w*.26), road=47;
-    // subtle orbit and circuit boundaries
-    ctx.save(); ctx.setLineDash([2,8]); ctx.lineWidth=1; ctx.strokeStyle='#5b7a8b22';
-    ctx.beginPath(); ctx.ellipse(cx,cy,rx+road+10,ry+road+10,0,0,Math.PI*2); ctx.stroke(); ctx.restore();
-    ctx.beginPath(); ctx.ellipse(cx,cy,rx+road/2,ry+road/2,0,0,Math.PI*2); ctx.strokeStyle='#1a2a37'; ctx.lineWidth=road+2; ctx.stroke();
-    ctx.beginPath(); ctx.ellipse(cx,cy,rx+road/2,ry+road/2,0,0,Math.PI*2); ctx.strokeStyle='#293844'; ctx.lineWidth=road; ctx.stroke();
-    ctx.beginPath(); ctx.ellipse(cx,cy,rx+road/2,ry+road/2,0,0,Math.PI*2); ctx.strokeStyle='#dce4e422'; ctx.lineWidth=1; ctx.setLineDash([8,10]); ctx.stroke(); ctx.setLineDash([]);
+    const cx=w/2, cy=h/2+3, rx=Math.min(w*.335,h*.42,w/2-58), ry=Math.min(h*.31,w*.26,h/2-65), road=47;
+    const centerX=rx+road/2, centerY=ry+road/2;
+    const ellipse=(xRadius,yRadius)=>{ctx.beginPath();ctx.ellipse(cx,cy,xRadius,yRadius,0,0,Math.PI*2);};
+    // Soft shadow grounds the molded plastic circuit on the dark tabletop.
+    ctx.save();ctx.shadowColor='#000b';ctx.shadowBlur=20;ctx.shadowOffsetY=13;
+    ellipse(centerX,centerY);ctx.strokeStyle='#111a22';ctx.lineWidth=road+13;ctx.stroke();ctx.restore();
+    // Raised orange track base and satin plastic running surface.
+    ellipse(centerX,centerY);ctx.lineCap='round';ctx.strokeStyle='#963604';ctx.lineWidth=road+9;ctx.stroke();
+    const plastic=ctx.createLinearGradient(0,cy-centerY-25,0,cy+centerY+25);
+    plastic.addColorStop(0,'#ffad32');plastic.addColorStop(.20,'#ff8618');plastic.addColorStop(.52,'#f66b0b');plastic.addColorStop(.82,'#e95708');plastic.addColorStop(1,'#bf4106');
+    ellipse(centerX,centerY);ctx.strokeStyle=plastic;ctx.lineWidth=road;ctx.stroke();
+    // A soft specular edge makes the curved track read as molded, slightly banked plastic.
+    ellipse(centerX,centerY);ctx.strokeStyle='#ffd16c80';ctx.lineWidth=1.5;ctx.stroke();
+    // Recessed lane grooves on the three-lane toy track.
     for(let lane=1;lane<3;lane++){
-      const laneOffset=(lane-1)*road/6;
-      ctx.beginPath();ctx.ellipse(cx,cy,rx+road/2+laneOffset,ry+road/2+laneOffset,0,0,Math.PI*2);ctx.strokeStyle='#dce4e414';ctx.lineWidth=1;ctx.setLineDash([5,8]);ctx.stroke();ctx.setLineDash([]);
+      const offset=(lane-1)*road/6;
+      ellipse(centerX+offset,centerY+offset);ctx.strokeStyle='#9f390c99';ctx.lineWidth=1.4;ctx.stroke();
+      ellipse(centerX+offset-1,centerY+offset-1);ctx.strokeStyle='#ffc05b55';ctx.lineWidth=.75;ctx.stroke();
     }
-    // inner infield glow
-    const grad=ctx.createRadialGradient(cx,cy,5,cx,cy,ry);
-    grad.addColorStop(0,'#112b32');grad.addColorStop(1,'#10232d');ctx.fillStyle=grad;
-    ctx.beginPath();ctx.ellipse(cx,cy,rx,ry,0,0,Math.PI*2);ctx.fill();
-    ctx.strokeStyle='#58f5d21b';ctx.lineWidth=1;ctx.beginPath();ctx.ellipse(cx,cy,rx*.72,ry*.72,0,0,Math.PI*2);ctx.stroke();
-    ctx.fillStyle='#d6e6e817';ctx.font='8px "DM Mono",monospace';ctx.textAlign='center';ctx.fillText('NEON CIRCUIT',cx,cy-5);ctx.fillStyle='#8299a733';ctx.font='7px "DM Mono",monospace';ctx.fillText('3 LAPS  ·  AI RACE',cx,cy+9);
-    // start / finish chequered marker
-    const theta=Math.PI; const x=cx+Math.cos(theta)*(rx+road/2),y=cy+Math.sin(theta)*(ry+road/2);
-    ctx.save();ctx.translate(x,y);ctx.rotate(Math.atan2(-ry*Math.cos(theta),-rx*Math.sin(theta)));
-    for(let n=0;n<8;n++){ctx.fillStyle=n%2?'#283b49':'#c4d2da';ctx.fillRect(-3.2,-road/2+n*road/8,6,road/8+1)}ctx.restore();
-    // little trackside indicators
-    for(let i=0;i<16;i++){const t=i/16*Math.PI*2;const px=cx+Math.cos(t)*(rx+road+5),py=cy+Math.sin(t)*(ry+road+5);ctx.fillStyle=i%4===0?'#58f5d277':'#8ca0b21c';ctx.fillRect(px-1,py-1,2,2)}
+    // Raised inner and outer guard rails with a bright molded rim.
+    ellipse(rx+road-3,ry+road-3);ctx.strokeStyle='#a93d08';ctx.lineWidth=5;ctx.stroke();
+    ellipse(rx+road-3,ry+road-3);ctx.strokeStyle='#ffb844';ctx.lineWidth=2;ctx.stroke();
+    ellipse(rx+3,ry+3);ctx.strokeStyle='#a83e0a';ctx.lineWidth=5;ctx.stroke();
+    ellipse(rx+3,ry+3);ctx.strokeStyle='#ffc45a';ctx.lineWidth=2;ctx.stroke();
+    // Repeating molded joints and tiny fastener marks give the circuit a physical toy-track feel.
+    for(let i=0;i<32;i++){
+      const t=i*Math.PI*2/32;
+      const outerX=cx+Math.cos(t)*(rx+road-7),outerY=cy+Math.sin(t)*(ry+road-7);
+      const innerX=cx+Math.cos(t)*(rx+7),innerY=cy+Math.sin(t)*(ry+7);
+      ctx.beginPath();ctx.moveTo(innerX,innerY);ctx.lineTo(outerX,outerY);
+      ctx.strokeStyle=i%4===0?'#ffd27975':'#a83d1266';ctx.lineWidth=i%4===0?1.2:.7;ctx.stroke();
+    }
+    // Infield: a little tabletop podium under the surrounding raceway.
+    const infield=ctx.createRadialGradient(cx,cy,4,cx,cy,ry);
+    infield.addColorStop(0,'#20303a');infield.addColorStop(.72,'#17232c');infield.addColorStop(1,'#111b24');
+    ctx.fillStyle=infield;ctx.beginPath();ctx.ellipse(cx,cy,rx-2,ry-2,0,0,Math.PI*2);ctx.fill();
+    ctx.strokeStyle='#e8a54825';ctx.lineWidth=1;ctx.beginPath();ctx.ellipse(cx,cy,rx*.72,ry*.72,0,0,Math.PI*2);ctx.stroke();
+    ctx.fillStyle='#ffb454';ctx.font='700 8px "DM Mono",monospace';ctx.textAlign='center';ctx.fillText('NEON CIRCUIT',cx,cy-5);
+    ctx.fillStyle='#a9b4bc88';ctx.font='7px "DM Mono",monospace';ctx.fillText('3 LAPS  ·  AI RACE',cx,cy+9);
+    // Blue booster pads, laid over the orange track like a snap-in toy accessory.
+    for(const t of [-Math.PI/2,Math.PI/2]){
+      const x=cx+Math.cos(t)*centerX,y=cy+Math.sin(t)*centerY;
+      const tangent=Math.atan2(Math.cos(t)*centerY,-Math.sin(t)*centerX);
+      ctx.save();ctx.translate(x,y);ctx.rotate(tangent);
+      for(let lane=0;lane<3;lane++){
+        const laneY=(lane-1)*road*.27;
+        ctx.fillStyle='#0b4051';roundedRect(-13,laneY-5,26,10,2);ctx.fill();
+        ctx.fillStyle='#29dafa';ctx.fillRect(-9,laneY-3,2,6);ctx.fillRect(-3,laneY-3,2,6);ctx.fillRect(3,laneY-3,2,6);
+      }
+      ctx.restore();
+    }
+    // Start / finish checker strip across the lanes.
+    const theta=-Math.PI;const x=cx+Math.cos(theta)*centerX,y=cy+Math.sin(theta)*centerY;
+    const tangent=Math.atan2(Math.cos(theta)*centerY,-Math.sin(theta)*centerX);
+    ctx.save();ctx.translate(x,y);ctx.rotate(tangent);
+    for(let n=0;n<10;n++){ctx.fillStyle=n%2?'#60300f':'#fff0cf';ctx.fillRect(-3,-road/2+n*road/10,6,road/10+1)}
+    ctx.restore();
+    // Tiny orange pylon lights around the outside edge.
+    for(let i=0;i<20;i++){
+      const t=i*Math.PI*2/20;const px=cx+Math.cos(t)*(rx+road+8),py=cy+Math.sin(t)*(ry+road+8);
+      ctx.beginPath();ctx.arc(px,py,i%5===0?2:1.2,0,Math.PI*2);ctx.fillStyle=i%5===0?'#ff9c36aa':'#ffbf5944';ctx.fill();
+    }
   }
 
   function carPosition(car) {
-    const {width:w,height:h}=dimensions();const cx=w/2,cy=h/2+2,rx=Math.min(w*.335,h*.42),ry=Math.min(h*.39,w*.26),road=47;
+    const {width:w,height:h}=dimensions();const cx=w/2,cy=h/2+3,rx=Math.min(w*.335,h*.42,w/2-58),ry=Math.min(h*.31,w*.26,h/2-65),road=47;
     const theta=-Math.PI+car.progress*Math.PI*2;
     const laneOffset=(car.lane-1)*road*.27;
     const scaleX=(rx+road/2+laneOffset)/rx,scaleY=(ry+road/2+laneOffset)/ry;
@@ -233,17 +272,21 @@
   function drawCar(car) {
     const p=carPosition(car), {x,y,angle}=p;
     ctx.save();ctx.translate(x,y);ctx.rotate(angle);
-    // speed glow / tail
-    ctx.globalAlpha=car.rewardPulse>0?.25:.14;ctx.fillStyle=car.color;ctx.beginPath();ctx.ellipse(-12,0,12,5,0,0,Math.PI*2);ctx.fill();ctx.globalAlpha=1;
-    ctx.fillStyle='#05090e';roundedRect(-8,-7,16,3,1.5);ctx.fill();roundedRect(-8,4,16,3,1.5);ctx.fill();
-    ctx.fillStyle=car.color;roundedRect(-11,-5,22,10,3);ctx.fill();
-    ctx.fillStyle='#d9f5ff';roundedRect(2,-3.7,6,7.4,2);ctx.fill();
-    ctx.fillStyle='#ffffff';ctx.fillRect(8,-3.2,2,2);ctx.fillRect(8,1.2,2,2);
-    ctx.fillStyle='#ff697e';ctx.fillRect(-10,-3.2,2,2);ctx.fillRect(-10,1.2,2,2);
+    // A glossy little die-cast racer, with speed glow trailing behind it.
+    ctx.globalAlpha=car.rewardPulse>0?.30:.12;ctx.fillStyle=car.color;ctx.beginPath();ctx.ellipse(-13,0,14,5.5,0,0,Math.PI*2);ctx.fill();ctx.globalAlpha=1;
+    ctx.fillStyle='#090d12';roundedRect(-7,-7.1,6,3.5,1.4);ctx.fill();roundedRect(5,-7.1,6,3.5,1.4);ctx.fill();
+    roundedRect(-7,3.6,6,3.5,1.4);ctx.fill();roundedRect(5,3.6,6,3.5,1.4);ctx.fill();
+    ctx.beginPath();ctx.moveTo(-13,-3.2);ctx.lineTo(-9,-4.8);ctx.lineTo(-3,-5.2);ctx.lineTo(1,-4.6);ctx.lineTo(7,-3.7);ctx.lineTo(11,-2.6);ctx.lineTo(13,0);ctx.lineTo(11,2.6);ctx.lineTo(7,3.7);ctx.lineTo(1,4.6);ctx.lineTo(-3,5.2);ctx.lineTo(-9,4.8);ctx.lineTo(-13,3.2);ctx.closePath();
+    const paint=ctx.createLinearGradient(0,-6,0,6);paint.addColorStop(0,'#fff4');paint.addColorStop(.35,car.color);paint.addColorStop(1,'#0006');ctx.fillStyle=paint;ctx.fill();ctx.strokeStyle='#ffe5afaa';ctx.lineWidth=.65;ctx.stroke();
+    // Tinted canopy, bonnet stripe, headlights and rear lamps.
+    ctx.beginPath();ctx.moveTo(-5,-3.6);ctx.lineTo(-2,-4);ctx.lineTo(3,-3.8);ctx.lineTo(6,-2.6);ctx.lineTo(5.5,2.6);ctx.lineTo(2,3.8);ctx.lineTo(-2,4);ctx.lineTo(-5,3.6);ctx.closePath();ctx.fillStyle='#b8e9f1';ctx.globalAlpha=.88;ctx.fill();ctx.globalAlpha=1;ctx.strokeStyle='#263943';ctx.lineWidth=.7;ctx.stroke();
+    ctx.strokeStyle='#fff9';ctx.lineWidth=.7;ctx.beginPath();ctx.moveTo(8,-1.7);ctx.lineTo(11,-1.2);ctx.moveTo(8,1.7);ctx.lineTo(11,1.2);ctx.stroke();
+    ctx.fillStyle='#fff3bf';ctx.fillRect(11,-2.1,1.4,1.1);ctx.fillRect(11,1,1.4,1.1);
+    ctx.fillStyle='#ff344f';ctx.fillRect(-12,-2.5,1.5,1.6);ctx.fillRect(-12,.9,1.5,1.6);
     ctx.restore();
-    // name plate with color line
-    ctx.save();ctx.font='600 8px "DM Mono",monospace';const tw=ctx.measureText(car.name).width;const bw=Math.min(Math.max(38,tw+14),100);const px=x-bw/2,py=y-22;
-    ctx.fillStyle='#07111bdc';roundedRect(px,py,bw,14,3);ctx.fill();ctx.fillStyle=car.color;ctx.fillRect(px+4,py+4,2,6);ctx.fillStyle='#e6eff7';ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText(car.name,x+1,py+7.3,bw-9);ctx.restore();
+    // Name plate floats just above each tiny car.
+    ctx.save();ctx.font='600 8px "DM Mono",monospace';const tw=ctx.measureText(car.name).width;const bw=Math.min(Math.max(38,tw+14),100);const px=x-bw/2,py=y-23;
+    ctx.fillStyle='#111820eF';roundedRect(px,py,bw,14,3);ctx.fill();ctx.strokeStyle='#ffab4544';ctx.lineWidth=.7;ctx.stroke();ctx.fillStyle=car.color;ctx.fillRect(px+4,py+4,2,6);ctx.fillStyle='#fff5e7';ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText(car.name,x+1,py+7.3,bw-9);ctx.restore();
   }
 
   function render() {
