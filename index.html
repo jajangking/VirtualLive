@@ -29,9 +29,7 @@
             <h1>SIAPA PALING<br /><span>CEPAT &amp; TEPAT?</span></h1>
             <p class="intro-copy">Jawab pertanyaan lewat komentar. Jawaban benar pertama dapat poin dan namanya naik ke papan skor.</p>
           </div>
-          <div class="host-controls">
-            <button class="button button-outline" id="nextQuestion"><span class="next-icon">↻</span> SOAL BERIKUTNYA</button>
-          </div>
+          <div class="host-controls"><div class="automation-pill"><i></i> PUTARAN OTOMATIS</div></div>
         </section>
 
         <section class="stats-row" aria-label="Statistik kuis">
@@ -63,7 +61,7 @@
             <div class="timer-row"><div class="timer-track"><div class="timer-fill" id="timerFill"></div></div><span id="timerCaption">00:30</span></div>
             <div class="quiz-footer">
               <div class="answer-instruction"><span class="instruction-icon">↳</span><div><b>KOMENTAR A, B, C, ATAU D</b><small>Yang paling cepat menjawab benar menang!</small></div></div>
-              <button class="button button-primary" id="nextQuestionFooter">SOAL BERIKUTNYA <span>→</span></button>
+              <div class="auto-advance"><span class="auto-spinner">↻</span><div><b>SOAL BERIKUTNYA OTOMATIS</b><small id="autoAdvanceText">Pemenang diumumkan saat timer habis</small></div></div>
             </div>
           </div>
 
@@ -81,7 +79,7 @@
 
         <section class="bottom-grid">
           <div class="panel leaderboard-panel">
-            <div class="bottom-heading"><div><span class="panel-kicker">TERKUMPUL ANTARSOAL</span><h2>Papan skor <span class="score-saved"><i></i> TERSIMPAN</span></h2></div><button class="reset-scores" id="resetScores">RESET SKOR</button></div>
+            <div class="bottom-heading"><div><span class="panel-kicker">TERKUMPUL ANTARSOAL</span><h2>Papan skor</h2></div><span class="score-saved"><i></i> TERSIMPAN OTOMATIS</span></div>
             <div class="leaderboard-table"><div class="table-head"><span>POS</span><span>NAMA PENONTON</span><span>JAWAB BENAR</span><span>POIN</span></div><div id="leaderboardRows"></div><div id="leaderboardEmpty" class="leaderboard-empty">Belum ada poin. Jawab benar pertama untuk masuk ke papan skor!</div></div>
           </div>
           <div class="panel how-panel"><span class="panel-kicker">CARA MAIN</span><h2>Satu soal. Satu pemenang.</h2><div class="how-steps"><div><span>01</span><p>Lihat pertanyaan &amp; pilihan A–D</p></div><div><span>02</span><p>Ketik huruf jawaban di komentar</p></div><div><span>03</span><p>Jawaban benar tercepat dapat poin</p></div></div><div class="ai-note"><span>✦</span><p><b>SKOR BERLANJUT</b><br />Poin tetap tersimpan saat soal berganti atau halaman dimuat ulang.</p></div></div>

@@ -23,11 +23,14 @@
   ];
   const LETTERS=['A','B','C','D'];
   const SCORE_KEY='virtuallive.quiz.scores.v1';
-  const ROUND_SECONDS=30;
+  const ROUND_SECONDS=30,RESULT_SECONDS=7;
   const $=selector=>document.querySelector(selector);
   const feed=$('#chatFeed'),input=$('#commentInput'),toast=$('#toast');
   let scores=loadScores(),deck=[],deckPosition=0,roundNumber=0,currentQuestion=null;
-  let remaining=ROUND_SECONDS,locked=false,winner=null,lastFrame=performance.now(),toastTimer;
+  let phase='question',remaining=ROUND_SECONDS,resultRemaining=RESULT_SECONDS,firstCorrect=null;
+  let lastFrame=performance.now(),toastTimer;
+
+  if(new URLSearchParams(location.search).get('live')==='1')document.body.classList.add('broadcast-mode');
 
   function cleanName(value){
     return String(value||'').replace(/[\u0000-\u001f\u007f]/g,'').replace(/^@/,'').trim().replace(/\s+/g,' ').slice(0,20)||'PENONTON';
@@ -54,6 +57,7 @@
   function sortedScores(){return Object.values(scores).sort((a,b)=>b.points-a.points||a.name.localeCompare(b.name,'id-ID'));}
   function totalCorrect(){return Object.values(scores).reduce((sum,item)=>sum+item.points,0);}
   function timestamp(){return new Date().toLocaleTimeString('id-ID',{hour:'2-digit',minute:'2-digit'});}
+  function formatClock(seconds){const n=Math.max(0,Math.ceil(seconds));return `${String(Math.floor(n/60)).padStart(2,'0')}:${String(n%60).padStart(2,'0')}`;}
 
   function addMessage(name,text,kind='comment',letter=''){
     const row=document.createElement('div');row.className=`chat-message ${kind==='system'?'system':''}`;
@@ -84,13 +88,13 @@
       if(deck.length>1&&deck[0]===previous)[deck[0],deck[1]]=[deck[1],deck[0]];
       deckPosition=0;
     }
-    currentQuestion=QUESTIONS[deck[deckPosition++]];roundNumber++;remaining=ROUND_SECONDS;locked=false;winner=null;
+    currentQuestion=QUESTIONS[deck[deckPosition++]];roundNumber++;phase='question';
+    remaining=ROUND_SECONDS;resultRemaining=RESULT_SECONDS;firstCorrect=null;
     $('#questionText').textContent=currentQuestion.question;
     $('#questionTag').textContent=currentQuestion.category;
     $('#questionNumber').textContent=`/ ${String(roundNumber).padStart(2,'0')}`;
     $('#winnerBanner').classList.remove('visible','no-winner');
-    $('#winnerLabel').textContent='JAWABAN BENAR PERTAMA!';
-    $('#winnerName').textContent='—';
+    $('#winnerLabel').textContent='JAWABAN BENAR PERTAMA!';$('#winnerName').textContent='—';
     $('.winner-points').innerHTML='+1 <small>POIN</small>';
     const grid=$('#answerGrid');grid.replaceChildren();
     currentQuestion.options.forEach((option,index)=>{
@@ -100,6 +104,7 @@
       card.append(letter,text);grid.append(card);
     });
     $('#timerStatus').textContent='MENUNGGU JAWABAN';
+    $('#autoAdvanceText').textContent='Hasil diumumkan saat timer habis';
     $('#timerFill').style.width='100%';$('#timerFill').classList.remove('urgent');
     updateStats();
     if(roundNumber>1)addMessage('QUIZ MASTER',`Soal ${String(roundNumber).padStart(2,'0')} dimulai! Jawab A, B, C, atau D.`, 'system');
@@ -118,48 +123,51 @@
     });
   }
   function processAnswer(name,comment){
-    const letter=parseAnswer(comment);if(!letter)return false;
-    if(locked){return true;}
+    const letter=parseAnswer(comment);if(!letter||phase!=='question')return;
     const selected=LETTERS.indexOf(letter),player=cleanName(name);
     if(selected===currentQuestion.correct){
-      locked=true;winner=player;remaining=Math.max(0,remaining);
-      const key=scoreKey(player),previous=scores[key];
-      scores[key]={name:previous?.name||player,points:(previous?.points||0)+1,correct:(previous?.correct||0)+1};
-      saveScores();revealCorrect();
-      $('#winnerLabel').textContent='JAWABAN BENAR PERTAMA!';$('#winnerName').textContent=player;
-      $('.winner-points').innerHTML='+1 <small>POIN</small>';
-      $('#winnerBanner').classList.remove('no-winner');$('#winnerBanner').classList.add('visible');
-      $('#timerStatus').textContent='PEMENANG DITEMUKAN';
-      addMessage('QUIZ MASTER',`${player} paling cepat menjawab benar! +1 poin.`, 'winner');
-      notify(`🏆 ${player} dapat 1 poin!`);updateStats();return true;
+      if(!firstCorrect){
+        firstCorrect={name:player,letter,elapsed:ROUND_SECONDS-remaining,receivedAt:Date.now()};
+        $('#timerStatus').textContent='JAWABAN BENAR TERCATAT';
+        $('#autoAdvanceText').textContent='Ada jawaban benar — hasil saat timer habis';
+        addMessage('QUIZ MASTER','Jawaban benar sudah tercatat. Pemenang diumumkan setelah waktu habis.','system');
+      }
+      return;
     }
-    addMessage('QUIZ MASTER',`${player}, belum tepat — masih ada waktu!`,'system');
-    $('#timerStatus').textContent='JAWABAN SALAH — COBA LAGI';return true;
+    if(!firstCorrect){addMessage('QUIZ MASTER',`${player}, belum tepat — masih ada waktu!`,'system');$('#timerStatus').textContent='JAWABAN SALAH — COBA LAGI';}
   }
 
+  // Called in arrival order by the simulator or, later, by the TikTok comment adapter.
   function receiveComment(username,comment){
     const author=cleanName(username),text=String(comment||'').trim();if(!text)return;
-    const letter=parseAnswer(text);
-    addMessage(author,text,'comment',letter||'');
-    processAnswer(author,text);
+    const letter=parseAnswer(text);addMessage(author,text,'comment',letter||'');processAnswer(author,text);
   }
   function handleInput(raw){
     const text=raw.trim();if(!text)return;
     const named=text.match(/^@?([\p{L}\p{N}_ .-]{1,20})\s*:\s*(.+)$/u);
-    if(named)receiveComment(named[1],named[2]);
-    else receiveComment('KAMU',text);
+    if(named)receiveComment(named[1],named[2]);else receiveComment('KAMU',text);
   }
 
-  function expireQuestion(){
-    if(locked)return;
-    locked=true;remaining=0;revealCorrect();
-    const correctLetter=LETTERS[currentQuestion.correct],correctText=currentQuestion.options[currentQuestion.correct];
-    $('#winnerLabel').textContent='WAKTU HABIS — JAWABANNYA';
-    $('#winnerName').textContent=`${correctLetter} · ${correctText}`;
-    $('.winner-points').innerHTML='NEXT <small>SOAL</small>';
-    $('#winnerBanner').classList.add('visible','no-winner');
-    $('#timerStatus').textContent='WAKTU HABIS';
-    addMessage('QUIZ MASTER',`Waktu habis. Jawaban yang benar: ${correctLetter} — ${correctText}.`,'system');
+  function finishQuestion(){
+    if(phase!=='question')return;
+    phase='result';remaining=0;resultRemaining=RESULT_SECONDS;revealCorrect();
+    if(firstCorrect){
+      const key=scoreKey(firstCorrect.name),previous=scores[key];
+      scores[key]={name:previous?.name||firstCorrect.name,points:(previous?.points||0)+1,correct:(previous?.correct||0)+1};
+      saveScores();
+      $('#winnerLabel').textContent='YANG PALING DULU MENJAWAB BENAR';$('#winnerName').textContent=firstCorrect.name;
+      $('.winner-points').innerHTML=`+1 <small>${firstCorrect.elapsed.toFixed(1)} DETIK</small>`;
+      $('#winnerBanner').classList.remove('no-winner');$('#winnerBanner').classList.add('visible');
+      $('#timerStatus').textContent='HASIL AKHIR';
+      addMessage('QUIZ MASTER',`🏆 ${firstCorrect.name} paling dulu menjawab benar! +1 poin.`, 'winner');
+    }else{
+      const letter=LETTERS[currentQuestion.correct],answer=currentQuestion.options[currentQuestion.correct];
+      $('#winnerLabel').textContent='WAKTU HABIS — JAWABANNYA';$('#winnerName').textContent=`${letter} · ${answer}`;
+      $('.winner-points').innerHTML='— <small>TANPA PEMENANG</small>';
+      $('#winnerBanner').classList.add('visible','no-winner');$('#timerStatus').textContent='WAKTU HABIS';
+      addMessage('QUIZ MASTER',`Tidak ada jawaban benar kali ini. Jawaban: ${letter} — ${answer}.`,'system');
+    }
+    $('#autoAdvanceText').textContent=`Soal baru otomatis dalam ${RESULT_SECONDS} detik`;
     updateStats();
   }
 
@@ -186,30 +194,34 @@
     renderLeaderboard();
   }
   function updateTimer(){
-    const shown=Math.ceil(remaining),text=`${String(Math.floor(shown/60)).padStart(2,'0')}:${String(shown%60).padStart(2,'0')}`;
-    $('#timeReadout').textContent=text;$('#timerCaption').textContent=text;
-    $('#timerFill').style.width=`${Math.max(0,remaining/ROUND_SECONDS*100)}%`;
-    $('#timerFill').classList.toggle('urgent',remaining<=8);
+    const isQuestion=phase==='question';
+    const text=isQuestion?formatClock(remaining):'HASIL';
+    $('#timeReadout').textContent=text;
+    $('#timerCaption').textContent=isQuestion?text:`SOAL BARU ${String(Math.ceil(resultRemaining)).padStart(2,'0')}`;
+    const pct=isQuestion?remaining/ROUND_SECONDS:resultRemaining/RESULT_SECONDS;
+    $('#timerFill').style.width=`${Math.max(0,pct*100)}%`;
+    $('#timerFill').classList.toggle('urgent',isQuestion&&remaining<=8);
   }
   function frame(now){
     const dt=Math.min((now-lastFrame)/1000,.1);lastFrame=now;
-    if(!locked&&currentQuestion){remaining=Math.max(0,remaining-dt);if(remaining===0)expireQuestion();}
+    if(phase==='question'){
+      remaining=Math.max(0,remaining-dt);
+      if(remaining===0)finishQuestion();
+    }else{
+      resultRemaining=Math.max(0,resultRemaining-dt);
+      $('#autoAdvanceText').textContent=`Soal baru otomatis dalam ${Math.ceil(resultRemaining)} detik`;
+      if(resultRemaining===0)nextQuestion();
+    }
     updateTimer();requestAnimationFrame(frame);
   }
 
   $('#commentForm').addEventListener('submit',event=>{event.preventDefault();handleInput(input.value);input.value='';input.focus();});
   document.querySelectorAll('[data-answer]').forEach(button=>button.addEventListener('click',()=>receiveComment('KAMU',button.dataset.answer)));
-  $('#nextQuestion').addEventListener('click',nextQuestion);
-  $('#nextQuestionFooter').addEventListener('click',nextQuestion);
-  $('#clearChat').addEventListener('click',()=>{feed.replaceChildren();addMessage('QUIZ MASTER','Chat dibersihkan. Soal dan skor tetap berjalan.','system');});
-  $('#resetScores').addEventListener('click',()=>{
-    if(!window.confirm('Hapus seluruh papan skor yang tersimpan di browser ini?'))return;
-    scores={};saveScores();updateStats();addMessage('QUIZ MASTER','Papan skor di-reset. Mulai kumpulkan poin lagi!','system');notify('Papan skor berhasil di-reset.');
-  });
+  $('#clearChat').addEventListener('click',()=>{feed.replaceChildren();addMessage('QUIZ MASTER','Chat dibersihkan. Kuis tetap berjalan otomatis.','system');});
 
-  // Integration hook for a future TikTok event adapter: pass the viewer name and raw comment.
-  window.VirtualLiveQuiz={receiveComment,nextQuestion};
+  // Add ?live=1 for a clean portrait-friendly broadcast screen (question, timer and scoreboard only).
+  window.VirtualLiveQuiz={receiveComment};
   deck=shuffle(QUESTIONS.map((_,index)=>index));nextQuestion();
-  addMessage('QUIZ MASTER','Quiz Arena siap! Kirim jawaban A, B, C, atau D.','system');
+  addMessage('QUIZ MASTER','Quiz Arena berjalan otomatis. Jawab A, B, C, atau D sebelum timer habis.','system');
   updateTimer();requestAnimationFrame(frame);
 })();

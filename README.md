@@ -1,6 +1,6 @@
 # VirtualLive — Quiz Arena
 
-Prototype kuis pengetahuan umum untuk TikTok Live. Pertanyaan ditampilkan bersama pilihan A–D; penonton yang pertama menjawab benar mendapat satu poin. Papan skor tersimpan di `localStorage`, jadi nilainya bertahan saat soal berganti dan halaman dimuat ulang di browser/perangkat yang sama.
+Kuis pengetahuan umum otomatis untuk tampilan live. Setiap soal menampilkan pilihan A–D dan timer 30 detik. Komentar dengan jawaban benar pertama dicatat selama timer berjalan; saat waktu habis, barulah pemenang dan jawabannya ditampilkan. Setelah 7 detik hasil, soal berikutnya mulai otomatis. Papan skor tersimpan di `localStorage` browser host dan bertahan antarsoal serta setelah reload.
 
 ## Jalankan lokal
 
@@ -10,17 +10,16 @@ Butuh Node.js 18+, tanpa dependency eksternal:
 npm start
 ```
 
-Buka `http://localhost:3000`. Server mendengarkan di `0.0.0.0`, jadi bisa diproxy oleh hosting/VPS di port 3000. Alternatif untuk preview statis: `python3 -m http.server 4173 --bind 0.0.0.0`.
+Buka `http://localhost:3000`. Server mendengarkan di `0.0.0.0`, jadi bisa diproxy oleh hosting/VPS di port 3000.
 
-## Cara mencoba kuis
+## Tampilan live dan uji simulator
 
-- Komentar `A`, `B`, `C`, atau `D` untuk menjawab.
-- Di simulator, gunakan format `Budi: A`, `@Budi: jawab A`, atau `jawab A` untuk menguji beberapa nama penonton.
-- Gunakan tombol huruf A–D di panel chat sebagai simulasi cepat.
-- Tombol **Soal Berikutnya** mengganti soal tanpa menghapus papan skor.
-- **Reset Skor** menghapus papan skor yang tersimpan di browser tersebut.
+- Mode dashboard: buka `/` untuk melihat soal, papan skor, dan simulator komentar.
+- Mode siaran bersih: buka `/?live=1` sebagai browser source/layar portrait; panel simulator disembunyikan, sehingga yang terlihat hanya kuis dan papan skor.
+- Untuk mencoba simulator, kirim `Budi: A`, `@Budi: jawab A`, atau `jawab A` pada panel chat. Tombol A–D juga mensimulasikan penonton `KAMU`.
+- Tidak perlu menekan tombol untuk mengganti soal. Timer berjalan otomatis, hasil muncul setelah timer selesai, lalu soal baru dimulai sendiri.
 
-Pemenang dikunci berdasarkan jawaban benar pertama yang diterima untuk tiap soal; maksimal satu poin per soal. Bank soal umum akan diacak dan diulang setelah seluruh soal telah digunakan.
+Bank 20 pertanyaan pengetahuan umum diacak dan diulang setelah semua pertanyaan terpakai. Pemenang adalah komentar benar pertama yang diterima pada sesi soal itu; satu soal memberi maksimal satu poin.
 
 ## Deploy otomatis ke VPS Instabox
 
@@ -41,6 +40,6 @@ sudo journalctl -u virtuallive.service -n 50 --no-pager
 
 Pastikan port 3000 tersedia sebelum setup. Jika ada service lama yang masih menggunakan port itu, hentikan service tersebut melalui systemd/console VPS terlebih dahulu; setup sengaja tidak membunuh proses tak dikenal. Repo saat ini publik sehingga VPS dapat menarik branch melalui HTTPS tanpa token.
 
-## Integrasi TikTok Live
+## Integrasi komentar TikTok
 
-Chat pada prototype masih simulator lokal—belum menerima komentar TikTok sungguhan. `window.VirtualLiveQuiz.receiveComment(username, comment)` adalah hook frontend untuk sebuah adapter event. Integrasi live berikutnya perlu menerima event komentar secara berurutan di backend, memvalidasi/normalisasi nama dan jawaban, lalu mengirimkannya ke halaman lewat WebSocket/SSE. Untuk live sungguhan, scoreboard sebaiknya dipindahkan dari `localStorage` ke backend/database agar nilainya sama di semua browser/perangkat. Jangan meletakkan cookie atau credential TikTok di frontend.
+Alur soal, timer, pengumuman hasil, pergantian soal, dan pembaruan skor berjalan otomatis. Namun komentar pada prototype masih simulator lokal—belum tersambung ke komentar TikTok sungguhan. `window.VirtualLiveQuiz.receiveComment(username, comment)` adalah hook untuk adapter event TikTok. Integrasi berikutnya perlu service backend yang menerima komentar secara berurutan dan mengirimkannya ke browser melalui WebSocket/SSE. Skor di prototype tersimpan pada browser host; untuk penyimpanan yang dibagikan lintas perangkat, pindahkan scoreboard ke backend/database. Jangan letakkan cookie atau credential TikTok di frontend.
