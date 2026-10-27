@@ -50,11 +50,34 @@ function handleTikTokComment(event) {
   const comment = String(event?.content ?? event?.comment ?? '').trim().slice(0, 300);
   if (!comment) return;
   const eventId = event?.common?.msgId || event?.msgId || '';
-  if (duplicateMessage(eventId)) return;
+  if (eventId && duplicateMessage(`comment:${eventId}`)) return;
   broadcast('comment', {
     username,
     userId: String(user.id || user.userId || ''),
     comment,
+    eventId: String(eventId),
+    receivedAt: Date.now(),
+  });
+}
+
+function handleTikTokGift(event) {
+  const user = event?.user || {};
+  const username = String(user.nickname || user.displayId || user.uniqueId || event?.nickname || 'PENONTON').replace(/[\u0000-\u001f\u007f]/g, '').trim().slice(0, 40) || 'PENONTON';
+  const details = event?.giftDetails || event?.extendedGiftInfo || event || {};
+  const giftName = String(details.giftName || event?.giftName || event?.extendedGiftInfo?.name || 'TikTok Gift').replace(/[\u0000-\u001f\u007f]/g, '').trim().slice(0, 50) || 'TikTok Gift';
+  const giftType = Number(details.giftType ?? event?.giftType ?? event?.gift?.gift_type ?? 0);
+  const repeatEnd = event?.repeatEnd === true || Number(event?.repeatEnd) === 1 || event?.gift?.repeat_end === 1;
+  if (giftType === 1 && !repeatEnd) return; // Wait for the end of combo gifts to avoid duplicate bursts.
+  const eventId = event?.common?.msgId || event?.msgId || event?.groupId || '';
+  if (eventId && duplicateMessage(`gift:${eventId}`)) return;
+  const repeatCount = Math.min(9999, Math.max(1, Number(event?.repeatCount ?? event?.gift?.repeat_count ?? 1) || 1));
+  const diamondCount = Math.max(0, Number(details.diamondCount ?? event?.diamondCount ?? 0) || 0);
+  broadcast('gift', {
+    username,
+    giftName,
+    giftId: String(event?.giftId ?? event?.gift?.gift_id ?? ''),
+    repeatCount,
+    diamondCount,
     eventId: String(eventId),
     receivedAt: Date.now(),
   });
@@ -93,6 +116,7 @@ async function runTikTokBridge() {
       console.warn('[TikTok bridge] Connection reported an error; it will retry if disconnected.');
     });
     connection.on(WebcastEvent.CHAT, handleTikTokComment);
+    if (WebcastEvent.GIFT) connection.on(WebcastEvent.GIFT, handleTikTokGift);
 
     setBridgeState('connecting');
     try {
@@ -197,4 +221,4 @@ if (require.main === module) {
   });
 }
 
-module.exports = { server, startServer, handleTikTokComment, eventClients, getBridgeState: () => ({ ...bridgeState }) };
+module.exports = { server, startServer, handleTikTokComment, handleTikTokGift, eventClients, getBridgeState: () => ({ ...bridgeState }) };

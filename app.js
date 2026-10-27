@@ -29,6 +29,7 @@
   let scores=loadScores(),deck=[],deckPosition=0,roundNumber=0,currentQuestion=null;
   let phase='question',remaining=ROUND_SECONDS,resultRemaining=RESULT_SECONDS,firstCorrect=null;
   let lastFrame=performance.now(),toastTimer;
+  let audioContext=null,masterGain=null,bgmGain=null,sfxGain=null,bgmTimer=null,bgmStep=0,audioEnabled=false,lastCountdownSecond=ROUND_SECONDS,giftTimer=null;
 
   if(new URLSearchParams(location.search).get('live')==='1')document.body.classList.add('broadcast-mode');
 
@@ -60,9 +61,9 @@
   function formatClock(seconds){const n=Math.max(0,Math.ceil(seconds));return `${String(Math.floor(n/60)).padStart(2,'0')}:${String(n%60).padStart(2,'0')}`;}
 
   function addMessage(name,text,kind='comment',letter=''){
-    const row=document.createElement('div');row.className=`chat-message ${kind==='system'?'system':''}`;
-    const avatar=document.createElement('span');avatar.className=`chat-avatar ${kind==='system'?'is-system':''} ${kind==='winner'?'is-winner':''}`;
-    avatar.textContent=kind==='system'?'✦':kind==='winner'?'★':cleanName(name).slice(0,1).toUpperCase();
+    const row=document.createElement('div');row.className=`chat-message ${kind==='system'?'system':''} ${kind==='gift'?'gift-message':''}`;
+    const avatar=document.createElement('span');avatar.className=`chat-avatar ${kind==='system'?'is-system':''} ${kind==='winner'?'is-winner':''} ${kind==='gift'?'is-gift':''}`;
+    avatar.textContent=kind==='system'?'✦':kind==='winner'?'★':kind==='gift'?'✧':cleanName(name).slice(0,1).toUpperCase();
     const body=document.createElement('div');body.className='chat-body';
     const meta=document.createElement('div');meta.className='chat-meta';
     const user=document.createElement('span');user.className=`chat-name ${kind==='system'?'system-name':''} ${kind==='winner'?'winner-name':''}`;user.textContent=name;
@@ -76,6 +77,77 @@
   function notify(text,error=false){
     toast.textContent=text;toast.classList.toggle('error',error);toast.classList.add('visible');
     clearTimeout(toastTimer);toastTimer=setTimeout(()=>toast.classList.remove('visible'),2400);
+  }
+  function initAudio(){
+    if(audioContext)return true;
+    const AudioContextClass=window.AudioContext||window.webkitAudioContext;
+    if(!AudioContextClass){notify('Browser ini tidak mendukung Web Audio.',true);return false;}
+    audioContext=new AudioContextClass();masterGain=audioContext.createGain();bgmGain=audioContext.createGain();sfxGain=audioContext.createGain();
+    masterGain.gain.value=.55;bgmGain.gain.value=.17;sfxGain.gain.value=.4;
+    bgmGain.connect(masterGain);sfxGain.connect(masterGain);masterGain.connect(audioContext.destination);
+    return true;
+  }
+  function tone(frequency,duration,when,output,level=.045,wave='sine'){
+    if(!audioContext||!output)return;
+    const oscillator=audioContext.createOscillator(),envelope=audioContext.createGain();
+    oscillator.type=wave;oscillator.frequency.setValueAtTime(frequency,when);
+    envelope.gain.setValueAtTime(.0001,when);envelope.gain.linearRampToValueAtTime(level,when+.025);
+    envelope.gain.exponentialRampToValueAtTime(.0001,when+duration);
+    oscillator.connect(envelope);envelope.connect(output);oscillator.start(when);oscillator.stop(when+duration+.04);
+  }
+  function scheduleBgm(){
+    if(!audioEnabled||!audioContext)return;
+    const motif=[220,261.63,329.63,392,329.63,293.66,349.23,440,392,349.23,261.63,329.63,392,493.88,440,392];
+    const now=audioContext.currentTime,fast=phase==='question'&&remaining<=8;
+    tone(motif[bgmStep%motif.length],.32,now,bgmGain,.018,'triangle');
+    if(bgmStep%4===0)tone(motif[bgmStep%motif.length]/2,.52,now,bgmGain,.014,'sine');
+    bgmStep++;bgmTimer=setTimeout(scheduleBgm,fast?360:500);
+  }
+  function playSfx(kind){
+    if(!audioEnabled||!audioContext)return;
+    const now=audioContext.currentTime;
+    const sounds={
+      correct:[523.25,659.25,783.99],wrong:[220,196],result:[392,523.25,659.25,783.99],start:[392,523.25],gift:[659.25,783.99,987.77],tick:[880]
+    };
+    const notes=sounds[kind]||[];notes.forEach((note,index)=>tone(note,.18,now+index*.085,sfxGain,kind==='tick'?.028:.055,'sine'));
+  }
+  async function toggleAudio(){
+    if(!initAudio())return;
+    try{await audioContext.resume();}catch(_){notify('Audio belum bisa dimulai di browser ini.',true);return;}
+    audioEnabled=!audioEnabled;
+    const button=$('#audioToggle');button.setAttribute('aria-pressed',String(audioEnabled));button.classList.toggle('is-on',audioEnabled);
+    button.querySelector('span').textContent=audioEnabled?'AUDIO ON':'AUDIO OFF';
+    button.title=audioEnabled?'Matikan musik dan efek suara':'Aktifkan musik dan efek suara';
+    if(audioEnabled){bgmGain.gain.setTargetAtTime(.17,audioContext.currentTime,.08);scheduleBgm();}
+    else{clearTimeout(bgmTimer);bgmTimer=null;bgmGain.gain.setTargetAtTime(0,audioContext.currentTime,.12);}
+  }
+  async function toggleFullscreen(){
+    try{
+      if(document.fullscreenElement)await document.exitFullscreen();
+      else await document.documentElement.requestFullscreen({navigationUI:'hide'});
+    }catch(_){notify('Mode layar penuh tidak diizinkan browser.',true);}
+  }
+  function updateFullscreenButton(){
+    const active=Boolean(document.fullscreenElement),button=$('#fullscreenToggle');
+    button.querySelector('span').textContent=active?'KELUAR LAYAR':'LAYAR PENUH';
+    button.title=active?'Keluar dari layar penuh':'Tampilkan layar penuh';button.setAttribute('aria-pressed',String(active));
+  }
+  function giftEmoji(giftName){
+    if(/rose|mawar/i.test(giftName))return '🌹';
+    if(/heart|love|hati/i.test(giftName))return '💖';
+    if(/lion|singa/i.test(giftName))return '🦁';
+    if(/galaxy|universe|planet|cosmos/i.test(giftName))return '🌌';
+    if(/diamond|finger heart/i.test(giftName))return '💎';
+    if(/coffee|kopi/i.test(giftName))return '☕';
+    return '🎁';
+  }
+  function showGiftReaction(data){
+    const sender=cleanName(data?.username),giftName=String(data?.giftName||'TikTok Gift').slice(0,50),count=Math.max(1,Math.floor(Number(data?.repeatCount)||1));
+    const reaction=$('#giftReaction'),emoji=giftEmoji(giftName);
+    $('#giftReactionIcon').textContent=emoji;$('#giftSender').textContent=sender;$('#giftTitle').textContent=`${giftName} × ${count}`;
+    reaction.classList.remove('is-visible');reaction.setAttribute('aria-hidden','false');void reaction.offsetWidth;reaction.classList.add('is-visible');
+    clearTimeout(giftTimer);giftTimer=setTimeout(()=>{reaction.classList.remove('is-visible');reaction.setAttribute('aria-hidden','true');},4200);
+    addMessage(sender,`mengirim ${emoji} ${giftName}${count>1?` × ${count}`:''}`,'gift');playSfx('gift');
   }
   function shuffle(items){
     const array=[...items];
@@ -107,7 +179,8 @@
     $('#autoAdvanceText').textContent='Hasil diumumkan saat timer habis';
     $('#timerFill').style.width='100%';$('#timerFill').classList.remove('urgent');
     updateStats();
-    if(roundNumber>1)addMessage('QUIZ MASTER',`Soal ${String(roundNumber).padStart(2,'0')} dimulai! Jawab A, B, C, atau D.`, 'system');
+    lastCountdownSecond=ROUND_SECONDS;
+    if(roundNumber>1){addMessage('QUIZ MASTER',`Soal ${String(roundNumber).padStart(2,'0')} dimulai! Jawab A, B, C, atau D.`, 'system');playSfx('start');}
   }
 
   function parseAnswer(comment){
@@ -130,7 +203,7 @@
         firstCorrect={name:player,letter,elapsed:ROUND_SECONDS-remaining,receivedAt:Date.now()};
         $('#timerStatus').textContent='JAWABAN BENAR TERCATAT';
         $('#autoAdvanceText').textContent='Ada jawaban benar — hasil saat timer habis';
-        addMessage('QUIZ MASTER','Jawaban benar sudah tercatat. Pemenang diumumkan setelah waktu habis.','system');
+        addMessage('QUIZ MASTER','Jawaban benar sudah tercatat. Pemenang diumumkan setelah waktu habis.','system');playSfx('correct');
       }
       return;
     }
@@ -150,7 +223,7 @@
 
   function finishQuestion(){
     if(phase!=='question')return;
-    phase='result';remaining=0;resultRemaining=RESULT_SECONDS;revealCorrect();
+    phase='result';remaining=0;resultRemaining=RESULT_SECONDS;revealCorrect();playSfx('result');
     if(firstCorrect){
       const key=scoreKey(firstCorrect.name),previous=scores[key];
       scores[key]={name:previous?.name||firstCorrect.name,points:(previous?.points||0)+1,correct:(previous?.correct||0)+1};
@@ -206,6 +279,9 @@
     const dt=Math.min((now-lastFrame)/1000,.1);lastFrame=now;
     if(phase==='question'){
       remaining=Math.max(0,remaining-dt);
+      const countdownSecond=Math.ceil(remaining);
+      if(countdownSecond!==lastCountdownSecond&&countdownSecond<=5&&countdownSecond>0)playSfx('tick');
+      lastCountdownSecond=countdownSecond;
       if(remaining===0)finishQuestion();
     }else{
       resultRemaining=Math.max(0,resultRemaining-dt);
@@ -239,12 +315,20 @@
     stream.addEventListener('comment',event=>{
       try{const message=JSON.parse(event.data);receiveComment(message.username,message.comment);}catch(_){/* Ignore malformed server events. */}
     });
+    stream.addEventListener('gift',event=>{
+      try{showGiftReaction(JSON.parse(event.data));}catch(_){/* Ignore malformed server events. */}
+    });
     stream.onerror=()=>updateBridgeStatus({status:'reconnecting'});
   }
 
   $('#commentForm').addEventListener('submit',event=>{event.preventDefault();handleInput(input.value);input.value='';input.focus();});
   document.querySelectorAll('[data-answer]').forEach(button=>button.addEventListener('click',()=>receiveComment('KAMU',button.dataset.answer)));
   $('#clearChat').addEventListener('click',()=>{feed.replaceChildren();addMessage('QUIZ MASTER','Chat dibersihkan. Kuis tetap berjalan otomatis.','system');});
+  $('#audioToggle').addEventListener('click',toggleAudio);
+  $('#fullscreenToggle').addEventListener('click',toggleFullscreen);
+  $('#giftTest').addEventListener('click',()=>showGiftReaction({username:'TESTER',giftName:'Rose',repeatCount:1}));
+  document.addEventListener('fullscreenchange',updateFullscreenButton);
+  updateFullscreenButton();
 
   // Add ?live=1 for a clean portrait-friendly broadcast screen (question, timer and scoreboard only).
   window.VirtualLiveQuiz={receiveComment};

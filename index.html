@@ -19,8 +19,17 @@
           <span class="brand-copy"><strong>VIRTUAL<span>LIVE</span></strong><small>QUIZ ARENA</small></span>
         </a>
         <div class="topbar-center"><span class="live-pulse"></span><span>LIVE QUIZ <b>01</b></span><i></i><span class="demo-tag" id="bridgeTopStatus">MEMUAT STATUS LIVE</span></div>
-        <div class="topbar-right"><span class="top-status"><i></i> SIAP MAIN</span></div>
+        <div class="topbar-right">
+          <button class="utility-button" id="audioToggle" type="button" aria-pressed="false" title="Aktifkan musik dan efek suara">♫ <span>AUDIO OFF</span></button>
+          <button class="utility-button" id="fullscreenToggle" type="button" title="Tampilkan layar penuh">⛶ <span>LAYAR PENUH</span></button>
+          <span class="top-status"><i></i> SIAP MAIN</span>
+        </div>
       </header>
+      <div class="gift-reaction" id="giftReaction" aria-live="polite" aria-hidden="true">
+        <span class="gift-reaction-icon" id="giftReactionIcon">🎁</span>
+        <div class="gift-reaction-copy"><small>GIFT DARI <b id="giftSender">PENONTON</b></small><strong id="giftTitle">Rose × 1</strong><span>Terima kasih sudah meramaikan LIVE!</span></div>
+        <span class="gift-sparkle">✦</span>
+      </div>
 
       <main>
         <section class="intro-row">
@@ -70,7 +79,7 @@
             <div class="chat-notice"><span class="notice-icon">⌁</span><p id="bridgeNotice">Status koneksi LIVE @disepillya dimuat dari server. Komentar A, B, C, atau D diteruskan otomatis ke kuis.</p></div>
             <div class="chat-feed" id="chatFeed" aria-live="polite"></div>
             <div class="chat-composer-wrap">
-              <div class="quick-answers"><span>SIMULASI JAWABAN</span><div><button data-answer="A">A</button><button data-answer="B">B</button><button data-answer="C">C</button><button data-answer="D">D</button></div></div>
+              <div class="quick-answers"><span>SIMULASI JAWABAN</span><div><button data-answer="A">A</button><button data-answer="B">B</button><button data-answer="C">C</button><button data-answer="D">D</button><button id="giftTest" class="gift-test-button" type="button" title="Tes animasi gift">🎁</button></div></div>
               <form class="chat-composer" id="commentForm"><span class="composer-prompt">›</span><input id="commentInput" type="text" placeholder="Budi: A  /  jawab A" autocomplete="off" maxlength="64" aria-label="Komentar jawaban penonton" /><button type="submit" aria-label="Kirim jawaban">↗</button></form>
               <div class="command-hint">CONTOH: <span>BUDI: A</span> <i>·</i> <span>jawab C</span></div>
             </div>

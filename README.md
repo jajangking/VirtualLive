@@ -25,7 +25,9 @@ Jangan set `TIKTOK_BRIDGE_ENABLED=true` jika tidak ingin server membuat koneksi 
 
 - Mode dashboard: buka `/` untuk melihat soal, status listener, chat, dan simulator komentar. Layout desktop/mobile dipadatkan agar muat satu viewport; pada layar sempit papan peringkat/cara main disembunyikan.
 - Mode siaran bersih: buka `/?live=1` sebagai browser source portrait; chat/simulator disembunyikan dan layout memberi buffer atas, kanan, dan bawah untuk UI LIVE TikTok. Safe area TikTok tidak punya satu ukuran tetap untuk semua perangkat/format, jadi preview di aplikasi tetap perlu dicek.
-- Untuk mencoba simulator, kirim `Budi: A`, `@Budi: jawab A`, atau `jawab A` pada panel chat. Tombol A–D juga mensimulasikan penonton `KAMU`.
+- Untuk mencoba simulator, kirim `Budi: A`, `@Budi: jawab A`, atau `jawab A` pada panel chat. Tombol A–D juga mensimulasikan penonton `KAMU`; tombol 🎁 menguji animasi gift.
+- Tombol `LAYAR PENUH` memperluas kuis ke layar penuh. Tombol `AUDIO OFF` mengaktifkan BGM sintetis orisinal bernuansa kuis tegang dan efek suara; browser meminta klik pengguna sebelum audio bisa diputar. Musik ini terinspirasi suasana acara kuis, bukan salinan musik Who Wants to Be a Millionaire.
+- Event gift LIVE TikTok menampilkan reaksi animasi dan pesan di chat; suara gift diputar jika audio diaktifkan.
 - Tidak perlu menekan tombol untuk mengganti soal. Timer berjalan otomatis, hasil muncul setelah timer selesai, lalu soal baru dimulai sendiri.
 
 Bank 20 pertanyaan pengetahuan umum diacak dan diulang setelah semua pertanyaan terpakai. Pemenang adalah komentar benar pertama yang diterima pada sesi soal itu; satu soal memberi maksimal satu poin.
@@ -42,7 +44,7 @@ Skor saat ini tersimpan hanya pada browser host; untuk scoreboard bersama lintas
 
 ## Deploy otomatis ke VPS Instabox
 
-Repo ini menyiapkan deployment pada branch `arena/e041ca7d-virtuallive`. Di VPS Debian/Ubuntu dengan **Git, Node.js 20+, npm, dan systemd**, jalankan dari SSH/console VPS:
+Repo ini menyiapkan deployment pada branch `arena/e041ca7d-virtuallive`. Di VPS Debian/Ubuntu dengan **Git, Node.js 22+, npm, dan systemd**, jalankan dari SSH/console VPS:
 
 ```bash
 git clone --depth 1 --branch arena/e041ca7d-virtuallive https://github.com/jajangking/VirtualLive.git /tmp/virtuallive-bootstrap
