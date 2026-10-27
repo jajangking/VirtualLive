@@ -11,12 +11,13 @@ const TYPES = {
   '.html': 'text/html; charset=utf-8',
   '.css': 'text/css; charset=utf-8',
   '.js': 'text/javascript; charset=utf-8',
-  '.json': 'application/json; charset=utf-8',
-  '.svg': 'image/svg+xml',
-  '.png': 'image/png',
-  '.jpg': 'image/jpeg',
-  '.ico': 'image/x-icon',
 };
+const PUBLIC_FILES = new Map([
+  ['/', 'index.html'],
+  ['/index.html', 'index.html'],
+  ['/styles.css', 'styles.css'],
+  ['/app.js', 'app.js'],
+]);
 
 const server = http.createServer((req, res) => {
   res.setHeader('X-Content-Type-Options', 'nosniff');
@@ -35,13 +36,12 @@ const server = http.createServer((req, res) => {
     res.writeHead(400).end('Bad Request');
     return;
   }
-  if (pathname === '/') pathname = '/index.html';
-
-  const file = path.resolve(ROOT, `.${pathname}`);
-  if (file !== ROOT && !file.startsWith(`${ROOT}${path.sep}`)) {
-    res.writeHead(403).end('Forbidden');
+  const publicFile = PUBLIC_FILES.get(pathname);
+  if (!publicFile) {
+    res.writeHead(404, { 'Content-Type': 'text/plain; charset=utf-8' }).end('Not Found');
     return;
   }
+  const file = path.join(ROOT, publicFile);
 
   fs.stat(file, (statError, stat) => {
     if (statError || !stat.isFile()) {
