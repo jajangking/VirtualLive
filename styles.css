@@ -633,3 +633,108 @@ body.broadcast-mode .chat-composer-wrap{display:none!important}
 body.broadcast-mode{background:transparent}
 body.broadcast-mode .app-shell{background:transparent}
 body.broadcast-mode .toast{bottom:36vh}
+.donor-panel{display:none}
+
+/* Portrait LIVE composition: proportional zones based on the user's annotated reference. */
+@media (orientation:portrait){
+  body.broadcast-mode{height:100svh;min-height:0;overflow:hidden;background:transparent}
+  body.broadcast-mode .app-shell{position:relative;width:100vw;max-width:none;height:100svh;min-height:0;margin:0;padding:0!important;overflow:hidden;background:transparent}
+  body.broadcast-mode main{position:static;height:0;margin:0;padding:0!important}
+  body.broadcast-mode .intro-row,body.broadcast-mode .stats-row,body.broadcast-mode main>footer{display:none!important}
+  body.broadcast-mode .topbar{position:absolute;top:18vh;left:1.5vw;width:50.5vw;height:13vh;padding:0 2vw;border:1px solid #314357;border-radius:10px;background:#111b2a;z-index:2}
+  body.broadcast-mode .topbar-center,body.broadcast-mode .top-status{display:none!important}
+  body.broadcast-mode .topbar-right{gap:clamp(4px,1vw,10px)}
+  body.broadcast-mode .utility-button{height:clamp(28px,4.2vh,44px);min-width:clamp(32px,6vw,52px);padding:0 clamp(5px,1vw,12px);font-size:clamp(15px,2vw,22px)}
+  body.broadcast-mode .utility-button span{display:none}
+  body.broadcast-mode .brand-mark{transform:scale(.8);transform-origin:left center}
+  body.broadcast-mode .brand-copy strong{font-size:clamp(13px,2.2vw,18px);letter-spacing:.06em}
+  body.broadcast-mode .brand-copy small{font-size:clamp(6px,1.2vw,9px);letter-spacing:.12em}
+  body.broadcast-mode .bottom-grid,body.broadcast-mode .main-grid{display:contents!important}
+  body.broadcast-mode .leaderboard-panel{position:absolute;top:18vh;right:1.5vw;width:47vw;height:13vh;padding:clamp(7px,1vh,14px) clamp(7px,1.2vw,14px);overflow:hidden}
+  body.broadcast-mode .bottom-heading{margin:0 0 clamp(3px,.5vh,8px)}
+  body.broadcast-mode .bottom-heading h2{font-size:clamp(12px,2vw,18px);margin:2px 0}
+  body.broadcast-mode .panel-kicker,body.broadcast-mode .score-saved{font-size:clamp(6px,1vw,9px);letter-spacing:.05em}
+  body.broadcast-mode .leaderboard-empty{padding:clamp(3px,.7vh,10px);font-size:clamp(8px,1.3vw,11px)}
+  body.broadcast-mode .table-head,body.broadcast-mode .score-row{grid-template-columns:7% minmax(0,1fr) 20% 15%;gap:4px}
+  body.broadcast-mode .table-head{padding:0 4px 3px;font-size:clamp(6px,.9vw,8px)}
+  body.broadcast-mode .score-row{padding:clamp(2px,.45vh,6px) 4px;font-size:clamp(7px,1.1vw,10px)}
+  body.broadcast-mode .score-row:nth-child(n+5){display:none}
+  body.broadcast-mode .score-avatar{width:18px;height:18px;flex-basis:18px}
+  body.broadcast-mode .main-grid{position:static}
+  body.broadcast-mode .quiz-panel{position:absolute;top:31.5vh;left:1.5vw;width:97vw;height:24.8vh;min-height:0;display:flex!important;flex-direction:column;overflow:hidden}
+  body.broadcast-mode .panel-heading{height:11%;min-height:0;flex:0 0 11%;padding:0 2%;}
+  body.broadcast-mode .panel-heading h2{font-size:clamp(13px,2.4vw,20px);gap:clamp(5px,1vw,12px)}
+  body.broadcast-mode .panel-kicker{font-size:clamp(6px,1vw,9px)}
+  body.broadcast-mode .question-number{font-size:clamp(8px,1.3vw,11px)}
+  body.broadcast-mode .quiz-stage{min-height:0;flex:1 1 0;padding:1% 2%;display:flex;align-items:center;overflow:hidden}
+  body.broadcast-mode .question-content{width:100%;max-width:none}
+  body.broadcast-mode .question-prompt{font-size:clamp(7px,1.1vw,10px);margin-bottom:clamp(2px,.5vh,8px)}
+  body.broadcast-mode .question-content h3{font-size:clamp(14px,3vw,24px);line-height:1.15;margin:0 0 clamp(4px,.8vh,12px);max-width:none}
+  body.broadcast-mode .answer-grid{grid-template-columns:1fr;gap:clamp(3px,.35vh,5px)}
+  body.broadcast-mode .answer-option{min-height:clamp(25px,2.4vh,38px);padding:clamp(3px,.5vh,8px) clamp(6px,1vw,12px);gap:clamp(5px,.8vw,10px)}
+  body.broadcast-mode .answer-letter{width:clamp(20px,3.4vh,31px);height:clamp(20px,3.4vh,31px);flex-basis:clamp(20px,3.4vh,31px);font-size:clamp(9px,1.5vw,12px)}
+  body.broadcast-mode .answer-text{font-size:clamp(10px,1.8vw,15px);line-height:1.15}
+  body.broadcast-mode .winner-banner{min-height:0;width:70%;padding:clamp(7px,1vh,14px);gap:8px}
+  body.broadcast-mode .winner-banner strong{font-size:clamp(15px,2.6vw,23px)}
+  body.broadcast-mode .winner-banner small{font-size:clamp(7px,1vw,10px)}
+  body.broadcast-mode .timer-row{height:9%;min-height:0;flex:0 0 9%;padding:0 2%}
+  body.broadcast-mode .timer-track{height:clamp(3px,.5vh,6px)}
+  body.broadcast-mode .timer-row>span{font-size:clamp(8px,1.5vw,12px);min-width:0}
+  body.broadcast-mode .quiz-footer{min-height:0;height:12%;flex:0 0 12%;padding:0 2%;gap:5px}
+  body.broadcast-mode .answer-instruction b,body.broadcast-mode .auto-advance b{font-size:clamp(7px,1.1vw,10px)}
+  body.broadcast-mode .answer-instruction small,body.broadcast-mode .auto-advance small{font-size:clamp(6px,.9vw,9px)}
+  body.broadcast-mode .chat-panel{position:absolute;top:58.4vh;left:1.5vw;width:48vw;height:10.8vh;min-height:0;display:flex!important;flex-direction:column;overflow:hidden}
+  body.broadcast-mode .chat-header{height:27%;min-height:0;flex:0 0 27%;padding:0 2.5%}
+  body.broadcast-mode .chat-header h2{font-size:clamp(10px,1.8vw,15px)}
+  body.broadcast-mode .chat-online{font-size:clamp(5px,.8vw,8px)}
+  body.broadcast-mode .answer-count{font-size:clamp(6px,1vw,9px)}
+  body.broadcast-mode .chat-header .more-button{display:none}
+  body.broadcast-mode .chat-notice{display:none}
+  body.broadcast-mode .chat-feed{flex:1 1 0;min-height:0;max-height:none;padding:2px 3%}
+  body.broadcast-mode .chat-message{padding:2px 0;gap:5px}
+  body.broadcast-mode .chat-avatar{width:clamp(16px,2.4vh,24px);height:clamp(16px,2.4vh,24px);flex-basis:clamp(16px,2.4vh,24px)}
+  body.broadcast-mode .chat-name,body.broadcast-mode .chat-text{font-size:clamp(7px,1.2vw,10px)}
+  body.broadcast-mode .chat-time{font-size:clamp(5px,.8vw,7px)}
+  body.broadcast-mode .chat-composer-wrap{display:none!important}
+  body.broadcast-mode .how-panel{position:absolute;top:58.4vh;right:1.5vw;width:47vw;height:10.8vh;padding:3%;display:flex!important;flex-direction:column;justify-content:space-between;overflow:hidden}
+  body.broadcast-mode .moderator-heading{display:flex;align-items:center;justify-content:space-between;gap:5px}
+  body.broadcast-mode .moderator-heading h2{font-size:clamp(11px,1.8vw,16px);margin:3px 0 0}
+  body.broadcast-mode .moderator-indicator{max-width:55%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:#8fe6d5;font:clamp(6px,.9vw,9px) 'DM Mono',monospace}
+  body.broadcast-mode .moderator-controls{display:flex;align-items:center;justify-content:space-between;gap:8px;color:#aab7c7;font-size:clamp(7px,1.2vw,10px)}
+  body.broadcast-mode .moderator-controls .more-button{width:clamp(30px,5vw,44px);height:clamp(30px,5vw,44px);flex:0 0 auto;font-size:clamp(16px,2.4vw,22px)}
+  body.broadcast-mode .donor-panel{position:absolute;top:71.3vh;right:1.5vw;width:47vw;height:28.4vh;padding:clamp(9px,1.5vh,18px) clamp(9px,1.5vw,18px);display:flex;flex-direction:column;overflow:hidden}
+  body.broadcast-mode .donor-heading{display:flex;align-items:center;justify-content:space-between;gap:5px;padding-bottom:clamp(5px,1vh,12px);border-bottom:1px solid #ffffff18}
+  body.broadcast-mode .donor-heading h2{font-size:clamp(12px,2vw,18px);margin:3px 0 0}
+  body.broadcast-mode .donor-total{color:#ffd27b;font:clamp(7px,1vw,10px) 'DM Mono',monospace;white-space:nowrap}
+  body.broadcast-mode .donor-table-head,body.broadcast-mode .donor-row{display:grid;grid-template-columns:12% minmax(0,1fr) 30%;align-items:center;gap:5px}
+  body.broadcast-mode .donor-table-head{padding:clamp(5px,.9vh,11px) 3px;color:#8091a6;font:clamp(6px,.9vw,8px) 'DM Mono',monospace;border-bottom:1px solid #ffffff12}
+  body.broadcast-mode .donor-rows{min-height:0;overflow:hidden}
+  body.broadcast-mode .donor-row{padding:clamp(5px,.9vh,12px) 3px;border-bottom:1px solid #ffffff10;font-size:clamp(8px,1.2vw,11px)}
+  body.broadcast-mode .donor-rank{color:#ffd27b;font:clamp(8px,1.2vw,11px) 'DM Mono',monospace}
+  body.broadcast-mode .donor-name{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  body.broadcast-mode .donor-gift{text-align:right;color:#8fe6d5;font:clamp(7px,1vw,10px) 'DM Mono',monospace;white-space:nowrap}
+  body.broadcast-mode .donor-empty{color:#91a0b3;font-size:clamp(8px,1.3vw,11px);text-align:center;margin:12px 0}
+  body.broadcast-mode .chat-panel.is-collapsed{height:3.8vh;min-height:0;top:65vh}
+  body.broadcast-mode .chat-panel.is-collapsed .chat-feed,body.broadcast-mode .chat-panel.is-collapsed .chat-notice{display:none}
+  body.broadcast-mode .chat-panel.is-collapsed .chat-header{height:100%;flex-basis:100%}
+  body.broadcast-mode .toast{display:none}
+}
+@media (orientation:portrait) and (max-width:560px){
+  body.broadcast-mode .topbar{top:12vh;height:10vh}
+  body.broadcast-mode .leaderboard-panel{top:12vh;height:10vh}
+  body.broadcast-mode .quiz-panel{top:23vh;height:33vh}
+  body.broadcast-mode .chat-panel{top:57vh;height:12vh}
+  body.broadcast-mode .how-panel{top:57vh;height:12vh}
+  body.broadcast-mode .donor-panel{top:70.5vh;height:28.5vh}
+  body.broadcast-mode .panel-heading{height:10%;flex-basis:10%}
+  body.broadcast-mode .quiz-stage{padding:1% 2%}
+  body.broadcast-mode .question-content h3{font-size:clamp(13px,3.8vw,18px);margin-bottom:3px}
+  body.broadcast-mode .answer-grid{gap:2px}
+  body.broadcast-mode .answer-option{min-height:clamp(22px,3.1vh,29px);padding:2px 5px}
+  body.broadcast-mode .answer-letter{width:18px;height:18px;flex-basis:18px}
+  body.broadcast-mode .answer-text{font-size:clamp(9px,2.8vw,11px)}
+  body.broadcast-mode .timer-row{height:8%;flex-basis:8%}
+  body.broadcast-mode .quiz-footer{height:10%;flex-basis:10%}
+  body.broadcast-mode .answer-instruction small,body.broadcast-mode .auto-advance small{display:none}
+  body.broadcast-mode .chat-panel.is-collapsed{top:65vh;height:4vh}
+}

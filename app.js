@@ -28,6 +28,7 @@
   const answerGate=window.VirtualLiveAnswerGate.createFirstAnswerGate();
   const feed=$('#chatFeed'),input=$('#commentInput'),toast=$('#toast');
   let scores=loadScores(),deck=[],deckPosition=0,roundNumber=0,currentQuestion=null;
+  const donorTotals=new Map();
   let phase='question',remaining=ROUND_SECONDS,resultRemaining=RESULT_SECONDS,firstCorrect=null;
   let lastFrame=performance.now(),toastTimer;
   let audioContext=null,masterGain=null,bgmGain=null,sfxGain=null,bgmTimer=null,bgmStep=0,audioEnabled=false,lastCountdownSecond=ROUND_SECONDS,giftTimer=null;
@@ -143,8 +144,27 @@
     if(/coffee|kopi/i.test(giftName))return '☕';
     return '🎁';
   }
+  function renderDonors(){
+    const rows=$('#donorRows'),donors=[...donorTotals.values()].sort((a,b)=>b.diamonds-a.diamonds||b.gifts-a.gifts||a.name.localeCompare(b.name,'id-ID')).slice(0,5);
+    const total=[...donorTotals.values()].reduce((sum,donor)=>sum+donor.gifts,0);
+    $('#donorTotal').textContent=`${total} gift${total===1?'':'s'}`;rows.replaceChildren();
+    if(!donors.length){const empty=document.createElement('p');empty.className='donor-empty';empty.textContent='Belum ada gift LIVE.';rows.append(empty);return;}
+    for(const [index,donor] of donors.entries()){
+      const row=document.createElement('div');row.className='donor-row';
+      const rank=document.createElement('span');rank.className='donor-rank';rank.textContent=String(index+1).padStart(2,'0');
+      const name=document.createElement('span');name.className='donor-name';name.textContent=donor.name;
+      const gift=document.createElement('span');gift.className='donor-gift';gift.textContent=donor.diamonds?`${donor.diamonds} 💎`:`${donor.gifts} gift`;
+      row.append(rank,name,gift);rows.append(row);
+    }
+  }
+  function recordGift(data){
+    const name=cleanName(data?.username),key=name.toLocaleLowerCase('id-ID'),count=Math.max(1,Math.floor(Number(data?.repeatCount)||1));
+    const current=donorTotals.get(key)||{name,gifts:0,diamonds:0};
+    current.gifts+=count;current.diamonds+=Math.max(0,Math.floor(Number(data?.diamondCount)||0))*count;donorTotals.set(key,current);renderDonors();
+  }
   function showGiftReaction(data){
     const sender=cleanName(data?.username),giftName=String(data?.giftName||'TikTok Gift').slice(0,50),count=Math.max(1,Math.floor(Number(data?.repeatCount)||1));
+    if(data?.isLiveGift)recordGift(data);
     const reaction=$('#giftReaction'),emoji=giftEmoji(giftName);
     $('#giftReactionIcon').textContent=emoji;$('#giftSender').textContent=sender;$('#giftTitle').textContent=`${giftName} × ${count}`;
     reaction.classList.remove('is-visible');reaction.setAttribute('aria-hidden','false');void reaction.offsetWidth;reaction.classList.add('is-visible');
@@ -305,8 +325,9 @@
     document.body.classList.toggle('bridge-connected',status==='connected');
     const labels={disabled:'BRIDGE NONAKTIF',starting:'MEMULAI BRIDGE',connecting:'MENGHUBUNGKAN',connected:`LIVE @${username}`,waiting:`MENUNGGU @${username}`,error:'KONEKSI ERROR',reconnecting:'SERVER TERPUTUS'};
     const label=labels[status]||'STATUS TIDAK DIKETAHUI';
-    $('#bridgeStatus').textContent=label;$('#bridgeTopStatus').textContent=label;
+    $('#bridgeStatus').textContent=label;$('#bridgeTopStatus').textContent=label;$('#moderatorBridgeStatus').textContent=label;
     const badge=$('#bridgeStatus');badge.classList.toggle('is-connected',status==='connected');badge.classList.toggle('is-error',status==='error'||status==='disabled'||status==='reconnecting');
+    $('#moderatorBridgeStatus').classList.toggle('is-connected',status==='connected');$('#moderatorBridgeStatus').classList.toggle('is-error',status==='error'||status==='disabled'||status==='reconnecting');
     const notices={
       disabled:'Bridge komentar TikTok dinonaktifkan di server. Simulator lokal tetap bisa digunakan.',
       starting:'Bridge TikTok sedang dimulai. Status ini bukan konfirmasi bahwa komentar sudah terhubung.',
@@ -326,20 +347,22 @@
       try{const message=JSON.parse(event.data);receiveComment(message.username,message.comment,message.userId);}catch(_){/* Ignore malformed server events. */}
     });
     stream.addEventListener('gift',event=>{
-      try{showGiftReaction(JSON.parse(event.data));}catch(_){/* Ignore malformed server events. */}
+      try{showGiftReaction({...JSON.parse(event.data),isLiveGift:true});}catch(_){/* Ignore malformed server events. */}
     });
     stream.onerror=()=>updateBridgeStatus({status:'reconnecting'});
   }
 
   $('#commentForm').addEventListener('submit',event=>{event.preventDefault();handleInput(input.value);input.value='';input.focus();});
   document.querySelectorAll('[data-answer]').forEach(button=>button.addEventListener('click',()=>receiveComment('KAMU',button.dataset.answer)));
-  $('#collapseChat').addEventListener('click',event=>{
-    const panel=$('#chatPanel'),button=event.currentTarget,isCollapsed=panel.classList.toggle('is-collapsed');
-    button.setAttribute('aria-expanded',String(!isCollapsed));button.setAttribute('aria-label',isCollapsed?'Buka live chat':'Ciutkan live chat');button.textContent=isCollapsed?'+':'−';
-  });
-  if(document.body.classList.contains('broadcast-mode')&&window.innerWidth<561&&window.innerHeight<1000){
-    $('#chatPanel').classList.add('is-collapsed');$('#collapseChat').setAttribute('aria-expanded','false');$('#collapseChat').setAttribute('aria-label','Buka live chat');$('#collapseChat').textContent='+';
+  function setChatCollapsed(isCollapsed){
+    $('#chatPanel').classList.toggle('is-collapsed',isCollapsed);
+    const label=isCollapsed?'Buka live chat':'Ciutkan live chat';
+    for(const button of [$('#collapseChat'),$('#moderatorChatToggle')]){button.setAttribute('aria-expanded',String(!isCollapsed));button.setAttribute('aria-label',label);button.textContent=isCollapsed?'+':'−';}
+    $('#moderatorChatState').textContent=isCollapsed?'Chat diciutkan':'Chat sedang ditampilkan';
   }
+  $('#collapseChat').addEventListener('click',()=>setChatCollapsed(!$('#chatPanel').classList.contains('is-collapsed')));
+  $('#moderatorChatToggle').addEventListener('click',()=>setChatCollapsed(!$('#chatPanel').classList.contains('is-collapsed')));
+  if(document.body.classList.contains('broadcast-mode')&&window.innerWidth<561&&window.innerHeight<1000)setChatCollapsed(true);
   $('#audioToggle').addEventListener('click',toggleAudio);
   $('#fullscreenToggle').addEventListener('click',toggleFullscreen);
   $('#giftTest').addEventListener('click',()=>showGiftReaction({username:'TESTER',giftName:'Rose',repeatCount:1}));

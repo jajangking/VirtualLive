@@ -48,7 +48,7 @@
             <div class="bottom-heading"><div><span class="panel-kicker">TERKUMPUL ANTARSOAL</span><h2>Papan skor</h2></div><span class="score-saved"><i></i> TERSIMPAN OTOMATIS</span></div>
             <div class="leaderboard-table"><div class="table-head"><span>POS</span><span>NAMA PENONTON</span><span>JAWAB BENAR</span><span>POIN</span></div><div id="leaderboardRows"></div><div id="leaderboardEmpty" class="leaderboard-empty">Belum ada poin. Jawab benar pertama untuk masuk ke papan skor!</div></div>
           </div>
-          <div class="panel how-panel"><span class="panel-kicker">CARA MAIN</span><h2>Satu soal. Satu pemenang.</h2><div class="how-steps"><div><span>01</span><p>Lihat pertanyaan &amp; pilihan A–D</p></div><div><span>02</span><p>Ketik huruf jawaban di komentar</p></div><div><span>03</span><p>Jawaban benar tercepat dapat poin</p></div></div><div class="ai-note"><span>✦</span><p><b>SKOR BERLANJUT</b><br />Poin tetap tersimpan saat soal berganti atau halaman dimuat ulang.</p></div></div>
+          <aside class="panel how-panel moderator-panel" aria-label="Panel moderator"><div class="moderator-heading"><div><span class="panel-kicker">PANEL MODERATOR</span><h2>Kontrol LIVE</h2></div><span class="moderator-indicator" id="moderatorBridgeStatus">MEMUAT STATUS</span></div><div class="moderator-controls"><span id="moderatorChatState">Chat sedang ditampilkan</span><button id="moderatorChatToggle" class="more-button" type="button" aria-controls="chatPanel" aria-expanded="true" aria-label="Ciutkan live chat">−</button></div></aside>
         </section>
 
         <section class="main-grid">
@@ -97,6 +97,7 @@
 
         <footer><span>VIRTUALLIVE <i>×</i> QUIZ ARENA</span><span>SIMULATOR LOKAL <i>·</i> BRIDGE TIKTOK NONRESMI</span></footer>
       </main>
+      <aside class="panel donor-panel" aria-label="Peringkat donatur gift LIVE"><div class="donor-heading"><div><span class="panel-kicker">DONATUR · SPONSOR</span><h2>Gift LIVE</h2></div><span class="donor-total" id="donorTotal">0 gift</span></div><div class="donor-table-head"><span>#</span><span>NAMA</span><span>GIFT</span></div><div class="donor-rows" id="donorRows" aria-live="polite"><p class="donor-empty">Belum ada gift LIVE.</p></div></aside>
     </div>
     <div class="toast" id="toast" role="status"></div>
     <script src="answer-gate.js"></script>
