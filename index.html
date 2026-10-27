@@ -16,7 +16,7 @@
       <header class="topbar">
         <a class="brand" href="#" aria-label="VirtualLive Quiz Arena">
           <span class="brand-mark"><span></span><span></span><span></span></span>
-          <span class="brand-copy"><strong>VIRTUAL<span>LIVE</span></strong><small>QUIZ ARENA</small></span>
+          <span class="brand-copy"><strong>QUIZ ARENA</strong><small>PENGETAHUAN UMUM LIVE</small></span>
         </a>
         <div class="topbar-center"><span class="live-pulse"></span><span>LIVE QUIZ <b>01</b></span><i></i><span class="demo-tag" id="bridgeTopStatus">MEMUAT STATUS LIVE</span></div>
         <div class="topbar-right">
@@ -48,11 +48,18 @@
           <article class="stat-card stat-leader"><span class="stat-icon icon-cup">✳</span><div><small>PEMIMPIN SKOR</small><strong id="leaderReadout">—</strong></div><span class="stat-foot" id="leaderFoot">BELUM ADA PEMENANG</span></article>
         </section>
 
+        <section class="bottom-grid">
+          <div class="panel leaderboard-panel">
+            <div class="bottom-heading"><div><span class="panel-kicker">TERKUMPUL ANTARSOAL</span><h2>Papan skor</h2></div><span class="score-saved"><i></i> TERSIMPAN OTOMATIS</span></div>
+            <div class="leaderboard-table"><div class="table-head"><span>POS</span><span>NAMA PENONTON</span><span>JAWAB BENAR</span><span>POIN</span></div><div id="leaderboardRows"></div><div id="leaderboardEmpty" class="leaderboard-empty">Belum ada poin. Jawab benar pertama untuk masuk ke papan skor!</div></div>
+          </div>
+          <div class="panel how-panel"><span class="panel-kicker">CARA MAIN</span><h2>Satu soal. Satu pemenang.</h2><div class="how-steps"><div><span>01</span><p>Lihat pertanyaan &amp; pilihan A–D</p></div><div><span>02</span><p>Ketik huruf jawaban di komentar</p></div><div><span>03</span><p>Jawaban benar tercepat dapat poin</p></div></div><div class="ai-note"><span>✦</span><p><b>SKOR BERLANJUT</b><br />Poin tetap tersimpan saat soal berganti atau halaman dimuat ulang.</p></div></div>
+        </section>
+
         <section class="main-grid">
           <div class="quiz-panel panel">
             <div class="panel-heading">
-              <div><span class="panel-kicker">PERTANYAAN UNTUK CHAT</span><h2>Pengetahuan Umum <span class="question-number" id="questionNumber">/ 01</span></h2></div>
-              <div class="question-badge"><span class="badge-star">✳</span> <span id="questionTag">MIXED BAG</span></div>
+              <div><span class="panel-kicker">PERTANYAAN UNTUK CHAT</span><h2><span id="questionTag">Pengetahuan Umum</span> <span class="question-number" id="questionNumber">SOAL 01</span></h2></div>
             </div>
             <div class="quiz-stage">
               <div class="stage-decoration decor-one"></div><div class="stage-decoration decor-two"></div>
@@ -74,9 +81,9 @@
             </div>
           </div>
 
-          <aside class="chat-panel panel">
-            <div class="chat-header"><div><span class="panel-kicker">TIKTOK LIVE</span><h2>Live chat <span class="chat-online" id="bridgeStatus"><i></i> STATUS SERVER</span></h2></div><button id="clearChat" class="more-button" aria-label="Bersihkan chat">···</button></div>
-            <div class="chat-notice"><span class="notice-icon">⌁</span><p id="bridgeNotice">Status koneksi LIVE @disepillya dimuat dari server. Komentar A, B, C, atau D diteruskan otomatis ke kuis.</p></div>
+          <aside class="chat-panel panel" id="chatPanel">
+            <div class="chat-header"><div class="chat-title"><h2>Jawaban LIVE <span class="chat-online" id="bridgeStatus"><i></i> STATUS SERVER</span></h2><span class="answer-count" id="answerCount">0 jawaban · 1 per orang</span></div><button id="collapseChat" class="more-button" type="button" aria-controls="chatFeed" aria-expanded="true" aria-label="Ciutkan live chat">−</button></div>
+            <div class="chat-notice"><span class="notice-icon">⌁</span><p id="bridgeNotice">Status koneksi LIVE @disepillya dimuat dari server.</p></div>
             <div class="chat-feed" id="chatFeed" aria-live="polite"></div>
             <div class="chat-composer-wrap">
               <div class="quick-answers"><span>SIMULASI JAWABAN</span><div><button data-answer="A">A</button><button data-answer="B">B</button><button data-answer="C">C</button><button data-answer="D">D</button><button id="giftTest" class="gift-test-button" type="button" title="Tes animasi gift">🎁</button></div></div>
@@ -86,17 +93,12 @@
           </aside>
         </section>
 
-        <section class="bottom-grid">
-          <div class="panel leaderboard-panel">
-            <div class="bottom-heading"><div><span class="panel-kicker">TERKUMPUL ANTARSOAL</span><h2>Papan skor</h2></div><span class="score-saved"><i></i> TERSIMPAN OTOMATIS</span></div>
-            <div class="leaderboard-table"><div class="table-head"><span>POS</span><span>NAMA PENONTON</span><span>JAWAB BENAR</span><span>POIN</span></div><div id="leaderboardRows"></div><div id="leaderboardEmpty" class="leaderboard-empty">Belum ada poin. Jawab benar pertama untuk masuk ke papan skor!</div></div>
-          </div>
-          <div class="panel how-panel"><span class="panel-kicker">CARA MAIN</span><h2>Satu soal. Satu pemenang.</h2><div class="how-steps"><div><span>01</span><p>Lihat pertanyaan &amp; pilihan A–D</p></div><div><span>02</span><p>Ketik huruf jawaban di komentar</p></div><div><span>03</span><p>Jawaban benar tercepat dapat poin</p></div></div><div class="ai-note"><span>✦</span><p><b>SKOR BERLANJUT</b><br />Poin tetap tersimpan saat soal berganti atau halaman dimuat ulang.</p></div></div>
-        </section>
+
         <footer><span>VIRTUALLIVE <i>×</i> QUIZ ARENA</span><span>SIMULATOR LOKAL <i>·</i> BRIDGE TIKTOK NONRESMI</span></footer>
       </main>
     </div>
     <div class="toast" id="toast" role="status"></div>
+    <script src="answer-gate.js"></script>
     <script src="app.js"></script>
   </body>
 </html>

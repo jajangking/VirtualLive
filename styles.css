@@ -434,3 +434,135 @@ body.broadcast-mode .bottom-grid{display:none}
 .answer-instruction small{display:block;font-size:11px;color:#aebac8}.auto-advance{display:none!important}
 @media(max-width:700px){.answer-instruction small{font-size:9px}}
 @media(max-width:700px) and (max-height:639px){.answer-instruction small{display:none}}
+
+/* Requested order: event title, participant ranking, question/answers/timer, collapsible LIVE answers. */
+main{display:flex;flex-direction:column;gap:10px;overflow:hidden;padding:8px 0 6px}
+.bottom-grid{order:0;display:grid;flex:0 0 116px;min-height:116px;grid-template-columns:minmax(0,1fr);gap:0;margin:0}
+.leaderboard-panel{height:100%;min-height:0;padding:8px 14px;background:#111b29}
+.bottom-heading{margin:0 0 3px}
+.bottom-heading>div{display:flex;align-items:center;gap:10px}
+.bottom-heading .panel-kicker{display:none}
+.bottom-heading h2{font-size:15px;margin:0}
+.score-saved{display:none}
+.table-head{padding-bottom:3px}
+.score-row{padding:3px 8px}
+#leaderboardRows .score-row:nth-child(n+4){display:none}
+.leaderboard-empty{padding:4px;font-size:11px}
+.how-panel{display:none!important}
+.main-grid{order:1;display:flex;flex:1 1 0;flex-direction:column;min-height:0;gap:8px}
+.quiz-panel{display:flex;flex:1 1 0;flex-direction:column;min-height:0;height:auto}
+.panel-heading{height:44px;flex:0 0 44px}
+.panel-heading h2{display:flex;align-items:baseline;gap:10px;font-size:18px}
+.question-number{font:500 11px 'DM Mono',monospace;color:#aeb9c7}
+.quiz-stage{flex:1 1 0;min-height:0;padding:18px 22px}
+.question-prompt{display:none}
+.question-content h3{font-size:clamp(24px,2.1vw,32px);margin:0 0 18px}
+.answer-grid{gap:9px}
+.answer-option{min-height:49px}
+.answer-text{font-size:15px}
+.timer-row{height:34px;flex:0 0 34px}
+.quiz-footer{min-height:44px;flex:0 0 44px}
+.chat-panel{order:1;flex:0 0 clamp(150px,22vh,205px);height:clamp(150px,22vh,205px);min-height:0;transition:flex-basis .2s ease,height .2s ease}
+.chat-panel.is-collapsed{flex-basis:46px;height:46px}
+.chat-header{height:46px;flex:0 0 46px;padding:0 13px}
+.chat-title{display:flex;flex-direction:column;gap:2px;min-width:0}
+.chat-header h2{font-size:15px;line-height:1;white-space:nowrap}
+.answer-count{color:#b4c0ce;font:11px 'DM Mono',monospace}
+.chat-online{font-size:9px}
+.more-button{width:30px;height:30px;display:grid;place-items:center;border:1px solid #42536a;border-radius:5px;background:#1a2839;color:#f4f7fb;font-size:18px;line-height:1}
+.chat-notice{display:none!important}
+.chat-panel.is-collapsed .chat-feed,.chat-panel.is-collapsed .chat-composer-wrap{display:none}
+.chat-feed{flex:1 1 0;min-height:0;max-height:none;padding:4px 12px;overflow-y:auto}
+.chat-message{padding:4px 0}
+.chat-composer-wrap{flex:0 0 auto;padding:5px 10px}
+.chat-composer{height:32px}
+.quick-answers{margin-bottom:4px}
+.quick-answers button{width:27px;height:24px}
+.bridge-connected .chat-composer-wrap{display:none!important}
+@media (min-width:701px) and (max-height:680px){
+  .bottom-grid{flex-basis:92px;min-height:92px}
+  .score-row{padding:2px 7px}
+  .chat-panel{flex-basis:clamp(128px,21vh,155px);height:clamp(128px,21vh,155px)}
+  .chat-panel.is-collapsed{flex-basis:44px;height:44px}
+  .quiz-stage{padding:12px 18px}
+  .question-content h3{font-size:clamp(21px,2vw,27px);margin-bottom:12px}
+  .answer-option{min-height:42px}
+}
+@media (max-width:980px){
+  .bottom-grid{flex-basis:105px;min-height:105px}
+  .table-head,.score-row{grid-template-columns:28px minmax(0,1fr) 70px 50px;gap:5px}
+  .main-grid{gap:6px}
+}
+@media (max-width:700px) and (min-height:640px){
+  .bottom-grid{display:grid!important;flex-basis:90px;min-height:90px}
+  .leaderboard-panel{padding:5px 8px}
+  .bottom-heading{margin-bottom:2px}
+  .bottom-heading h2{font-size:14px}
+  .table-head{font-size:8px;padding-bottom:2px}
+  .table-head,.score-row{grid-template-columns:25px minmax(0,1fr) 48px;gap:4px}
+  .table-head span:nth-child(3),.score-correct{display:none}
+  .score-row{padding:2px 5px}
+  .score-pos,.score-name,.score-points{font-size:10px}
+  .leaderboard-empty{font-size:10px;padding:2px}
+  .main-grid{display:flex;flex-direction:column;gap:6px}
+  .quiz-panel{flex:1 1 0;min-height:0}
+  .panel-heading{height:38px;flex-basis:38px;padding:0 10px}
+  .panel-heading h2{font-size:16px;gap:6px}
+  .question-number{font-size:10px}
+  .quiz-stage{padding:11px}
+  .question-content h3{font-size:clamp(20px,5.2vw,25px);margin-bottom:12px}
+  .answer-grid{gap:6px}
+  .answer-option{min-height:39px;padding:6px 8px}
+  .answer-letter{width:25px;height:25px;flex-basis:25px}
+  .answer-text{font-size:12px}
+  .timer-row{height:30px;flex-basis:30px}
+  .quiz-footer{min-height:38px;flex-basis:38px;padding:5px 9px}
+  .answer-instruction b{font-size:10px}
+  .answer-instruction small{font-size:9px}
+  .chat-panel{flex-basis:clamp(125px,19vh,165px);height:clamp(125px,19vh,165px)}
+  .chat-panel.is-collapsed{flex-basis:42px;height:42px}
+  .chat-header{height:42px;flex-basis:42px;padding:0 9px}
+  .chat-header h2{font-size:13px}
+  .answer-count{font-size:9px}
+  .chat-feed{padding:2px 8px}
+  .chat-message{padding:2px 0}
+  .chat-name,.chat-text{font-size:10px}
+  .chat-avatar{width:21px;height:21px;flex-basis:21px}
+  .chat-composer-wrap{padding:4px 7px}
+  .quick-answers button{width:23px;height:22px}
+  .chat-composer{height:29px}
+  body.broadcast-mode .bottom-grid{display:grid!important}
+  body.broadcast-mode .main-grid{grid-template-rows:minmax(0,1fr)}
+}
+@media (max-width:700px) and (max-height:639px){
+  .bottom-grid{display:grid!important;flex-basis:76px;min-height:76px}
+  .leaderboard-panel{padding:3px 6px}
+  .bottom-heading h2{font-size:12px}
+  .table-head{display:none}
+  .score-row{padding:1px 4px}
+  .main-grid{display:flex;flex-direction:column}
+  .quiz-panel{flex:1 1 0;min-height:0}
+  .panel-heading{height:32px;flex-basis:32px}
+  .panel-heading h2{font-size:14px}
+  .quiz-stage{padding:6px}
+  .question-content h3{font-size:16px;margin-bottom:6px}
+  .answer-option{min-height:29px}
+  .answer-text{font-size:10px}
+  .timer-row{height:22px;flex-basis:22px}
+  .quiz-footer{min-height:30px;flex-basis:30px}
+  .answer-instruction small{display:none}
+  .chat-panel{flex-basis:clamp(100px,18vh,120px);height:clamp(100px,18vh,120px)}
+  .chat-panel.is-collapsed{flex-basis:38px;height:38px}
+  .chat-header{height:38px;flex-basis:38px}
+  .chat-feed{padding:1px 6px}
+  .chat-name,.chat-text{font-size:9px}
+  .chat-composer-wrap{padding:2px 5px}
+  .quick-answers{display:none}
+  .chat-composer{height:24px}
+  body.broadcast-mode .bottom-grid{display:grid!important}
+}
+body.broadcast-mode .bottom-grid{display:grid!important}
+body.broadcast-mode .main-grid{flex-direction:column}
+body.broadcast-mode .chat-panel{display:none!important}
+body.broadcast-mode .quiz-panel{display:flex!important}
+body.broadcast-mode .gift-reaction{top:17vh}

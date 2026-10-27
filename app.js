@@ -25,6 +25,7 @@
   const SCORE_KEY='virtuallive.quiz.scores.v1';
   const ROUND_SECONDS=30,RESULT_SECONDS=7;
   const $=selector=>document.querySelector(selector);
+  const answerGate=window.VirtualLiveAnswerGate.createFirstAnswerGate();
   const feed=$('#chatFeed'),input=$('#commentInput'),toast=$('#toast');
   let scores=loadScores(),deck=[],deckPosition=0,roundNumber=0,currentQuestion=null;
   let phase='question',remaining=ROUND_SECONDS,resultRemaining=RESULT_SECONDS,firstCorrect=null;
@@ -61,7 +62,8 @@
   function formatClock(seconds){const n=Math.max(0,Math.ceil(seconds));return `${String(Math.floor(n/60)).padStart(2,'0')}:${String(n%60).padStart(2,'0')}`;}
 
   function addMessage(name,text,kind='comment',letter=''){
-    const row=document.createElement('div');row.className=`chat-message ${kind==='system'?'system':''} ${kind==='gift'?'gift-message':''}`;
+    if(kind!=='comment')return;
+    const row=document.createElement('div');row.className='chat-message answer-message';
     const avatar=document.createElement('span');avatar.className=`chat-avatar ${kind==='system'?'is-system':''} ${kind==='winner'?'is-winner':''} ${kind==='gift'?'is-gift':''}`;
     avatar.textContent=kind==='system'?'✦':kind==='winner'?'★':kind==='gift'?'✧':cleanName(name).slice(0,1).toUpperCase();
     const body=document.createElement('div');body.className='chat-body';
@@ -161,10 +163,11 @@
       deckPosition=0;
     }
     currentQuestion=QUESTIONS[deck[deckPosition++]];roundNumber++;phase='question';
-    remaining=ROUND_SECONDS;resultRemaining=RESULT_SECONDS;firstCorrect=null;
+    remaining=ROUND_SECONDS;resultRemaining=RESULT_SECONDS;firstCorrect=null;answerGate.reset();
+    feed.replaceChildren();updateAnswerCount();
     $('#questionText').textContent=currentQuestion.question;
     $('#questionTag').textContent=currentQuestion.category;
-    $('#questionNumber').textContent=`/ ${String(roundNumber).padStart(2,'0')}`;
+    $('#questionNumber').textContent=`· SOAL ${String(roundNumber).padStart(2,'0')}`;
     $('#winnerBanner').classList.remove('visible','no-winner');
     $('#winnerLabel').textContent='JAWABAN BENAR PERTAMA!';$('#winnerName').textContent='—';
     $('.winner-points').innerHTML='+1 <small>POIN</small>';
@@ -210,10 +213,16 @@
     if(!firstCorrect){addMessage('QUIZ MASTER',`${player}, belum tepat — masih ada waktu!`,'system');$('#timerStatus').textContent='JAWABAN SALAH — COBA LAGI';}
   }
 
-  // Called in arrival order by the simulator or, later, by the TikTok comment adapter.
-  function receiveComment(username,comment){
-    const author=cleanName(username),text=String(comment||'').trim();if(!text)return;
-    const letter=parseAnswer(text);addMessage(author,text,'comment',letter||'');processAnswer(author,text);
+  // Accept and display only the first A–D answer from each participant in a round.
+  function receiveComment(username,comment,userId=''){
+    if(phase!=='question')return;
+    const author=cleanName(username),text=String(comment||'').trim(),letter=parseAnswer(text);if(!letter)return;
+    const participantKey=String(userId||scoreKey(author));
+    if(!answerGate.accept(participantKey))return;
+    addMessage(author,text,'comment',letter);updateAnswerCount();processAnswer(author,text);
+  }
+  function updateAnswerCount(){
+    const count=$('#answerCount');if(count)count.textContent=`${answerGate.size} jawaban · 1 per orang`;
   }
   function handleInput(raw){
     const text=raw.trim();if(!text)return;
@@ -293,6 +302,7 @@
 
   function updateBridgeStatus(data){
     const status=data?.status||'connecting',username=String(data?.username||'disepillya').replace(/^@/,'').toUpperCase();
+    document.body.classList.toggle('bridge-connected',status==='connected');
     const labels={disabled:'BRIDGE NONAKTIF',starting:'MEMULAI BRIDGE',connecting:'MENGHUBUNGKAN',connected:`LIVE @${username}`,waiting:`MENUNGGU @${username}`,error:'KONEKSI ERROR',reconnecting:'SERVER TERPUTUS'};
     const label=labels[status]||'STATUS TIDAK DIKETAHUI';
     $('#bridgeStatus').textContent=label;$('#bridgeTopStatus').textContent=label;
@@ -313,7 +323,7 @@
     const stream=new EventSource('/api/events');
     stream.addEventListener('status',event=>{try{updateBridgeStatus(JSON.parse(event.data));}catch(_){updateBridgeStatus({status:'error'});}});
     stream.addEventListener('comment',event=>{
-      try{const message=JSON.parse(event.data);receiveComment(message.username,message.comment);}catch(_){/* Ignore malformed server events. */}
+      try{const message=JSON.parse(event.data);receiveComment(message.username,message.comment,message.userId);}catch(_){/* Ignore malformed server events. */}
     });
     stream.addEventListener('gift',event=>{
       try{showGiftReaction(JSON.parse(event.data));}catch(_){/* Ignore malformed server events. */}
@@ -323,7 +333,10 @@
 
   $('#commentForm').addEventListener('submit',event=>{event.preventDefault();handleInput(input.value);input.value='';input.focus();});
   document.querySelectorAll('[data-answer]').forEach(button=>button.addEventListener('click',()=>receiveComment('KAMU',button.dataset.answer)));
-  $('#clearChat').addEventListener('click',()=>{feed.replaceChildren();addMessage('QUIZ MASTER','Chat dibersihkan. Kuis tetap berjalan otomatis.','system');});
+  $('#collapseChat').addEventListener('click',event=>{
+    const panel=$('#chatPanel'),button=event.currentTarget,isCollapsed=panel.classList.toggle('is-collapsed');
+    button.setAttribute('aria-expanded',String(!isCollapsed));button.setAttribute('aria-label',isCollapsed?'Buka live chat':'Ciutkan live chat');button.textContent=isCollapsed?'+':'−';
+  });
   $('#audioToggle').addEventListener('click',toggleAudio);
   $('#fullscreenToggle').addEventListener('click',toggleFullscreen);
   $('#giftTest').addEventListener('click',()=>showGiftReaction({username:'TESTER',giftName:'Rose',repeatCount:1}));

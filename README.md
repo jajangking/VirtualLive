@@ -23,7 +23,7 @@ Jangan set `TIKTOK_BRIDGE_ENABLED=true` jika tidak ingin server membuat koneksi 
 
 ## Tampilan live dan uji simulator
 
-- Mode dashboard: buka `/` untuk melihat soal, status listener, chat, dan simulator komentar. Layout desktop/mobile dipadatkan agar muat satu viewport; pada layar sempit papan peringkat/cara main disembunyikan.
+- Mode dashboard: buka `/`. Susunan satu layar: nama acara, papan peringkat, soal/pilihan, timer, lalu panel jawaban LIVE yang bisa diciutkan. Komentar non-jawaban dan jawaban kedua dari peserta yang sama pada ronde itu tidak ditampilkan/diproses; jawaban pertama yang dipilih mengunci peserta sampai ronde berikutnya.
 - Mode siaran bersih: buka `/?live=1` sebagai browser source portrait; chat/simulator disembunyikan dan layout memberi buffer atas, kanan, dan bawah untuk UI LIVE TikTok. Safe area TikTok tidak punya satu ukuran tetap untuk semua perangkat/format, jadi preview di aplikasi tetap perlu dicek.
 - Untuk mencoba simulator, kirim `Budi: A`, `@Budi: jawab A`, atau `jawab A` pada panel chat. Tombol A–D juga mensimulasikan penonton `KAMU`; tombol 🎁 menguji animasi gift.
 - Tombol `LAYAR PENUH` memperluas kuis ke layar penuh. Tombol `AUDIO OFF` mengaktifkan BGM sintetis orisinal bernuansa kuis tegang dan efek suara; browser meminta klik pengguna sebelum audio bisa diputar. Musik ini terinspirasi suasana acara kuis, bukan salinan musik Who Wants to Be a Millionaire.

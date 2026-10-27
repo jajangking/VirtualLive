@@ -11,7 +11,7 @@ const TIKTOK_USERNAME = String(process.env.TIKTOK_USERNAME || 'disepillya').repl
 const TIKTOK_BRIDGE_ENABLED = process.env.TIKTOK_BRIDGE_ENABLED === 'true';
 const TYPES = { '.html': 'text/html; charset=utf-8', '.css': 'text/css; charset=utf-8', '.js': 'text/javascript; charset=utf-8' };
 const PUBLIC_FILES = new Map([
-  ['/', 'index.html'], ['/index.html', 'index.html'], ['/styles.css', 'styles.css'], ['/app.js', 'app.js'],
+  ['/', 'index.html'], ['/index.html', 'index.html'], ['/styles.css', 'styles.css'], ['/app.js', 'app.js'], ['/answer-gate.js', 'answer-gate.js'],
 ]);
 const eventClients = new Set();
 const seenMessageIds = new Map();
