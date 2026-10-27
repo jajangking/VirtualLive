@@ -566,3 +566,34 @@ body.broadcast-mode .main-grid{flex-direction:column}
 body.broadcast-mode .chat-panel{display:none!important}
 body.broadcast-mode .quiz-panel{display:flex!important}
 body.broadcast-mode .gift-reaction{top:17vh}
+
+/* Keep every information panel in its own box; chat sits at the lower-right without covering the quiz. */
+@media (min-width:701px){
+  .main-grid{display:grid;grid-template-columns:minmax(0,1fr) minmax(270px,310px);align-items:stretch;gap:12px}
+  .quiz-panel{grid-column:1;grid-row:1;height:100%;min-height:0}
+  .chat-panel{grid-column:2;grid-row:1;align-self:end;width:100%;height:clamp(190px,27vh,260px);flex:none}
+  .chat-panel.is-collapsed{height:46px}
+}
+.leaderboard-panel{border:1px solid #43536a;border-radius:10px;background:#121e2c;box-shadow:0 3px 12px #0002}
+.chat-panel{border:1px solid #43536a;border-radius:10px;background:#111c2a;box-shadow:0 3px 12px #0002}
+.gift-reaction{position:relative;top:auto;left:auto;z-index:auto;display:none;width:auto;margin:0 10px;padding:8px 10px;gap:8px;transform:none;opacity:0;visibility:hidden;box-shadow:none;border-radius:7px}
+.gift-reaction.is-visible{display:flex;visibility:visible;animation:gift-inline-in .18s ease-out both}
+.gift-reaction-icon{width:34px;height:34px;flex-basis:34px;font-size:19px}
+.gift-reaction-copy{gap:2px}
+.gift-reaction-copy small{font-size:9px}
+.gift-reaction-copy strong{font-size:14px}
+@keyframes gift-inline-in{from{opacity:0;transform:translateY(-5px)}to{opacity:1;transform:translateY(0)}}
+@media (min-width:701px){
+  body.broadcast-mode .main-grid{display:grid;grid-template-columns:minmax(0,1fr) minmax(250px,31%);grid-template-rows:minmax(0,1fr);align-items:stretch;gap:14px}
+  body.broadcast-mode .quiz-panel{grid-column:1;grid-row:1;height:100%;}
+  body.broadcast-mode .chat-panel{display:flex!important;grid-column:2;grid-row:1;align-self:end;height:clamp(230px,27vh,330px);flex:none;width:100%;}
+  body.broadcast-mode .bottom-grid{display:grid!important;}
+  body.broadcast-mode .gift-reaction{top:auto;left:auto;}
+}
+@media (max-width:700px){
+  .chat-panel{align-self:stretch}
+  body.broadcast-mode .chat-panel{display:flex!important;height:clamp(110px,16vh,145px);flex:0 0 clamp(110px,16vh,145px)}
+  body.broadcast-mode .main-grid{display:flex;flex-direction:column}
+}
+body.broadcast-mode .chat-panel.is-collapsed{height:46px;flex-basis:46px}
+@media(max-width:700px){body.broadcast-mode .chat-panel.is-collapsed{height:42px;flex-basis:42px}}

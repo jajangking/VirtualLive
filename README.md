@@ -23,8 +23,8 @@ Jangan set `TIKTOK_BRIDGE_ENABLED=true` jika tidak ingin server membuat koneksi 
 
 ## Tampilan live dan uji simulator
 
-- Mode dashboard: buka `/`. Susunan satu layar: nama acara, papan peringkat, soal/pilihan, timer, lalu panel jawaban LIVE yang bisa diciutkan. Komentar non-jawaban dan jawaban kedua dari peserta yang sama pada ronde itu tidak ditampilkan/diproses; jawaban pertama yang dipilih mengunci peserta sampai ronde berikutnya.
-- Mode siaran bersih: buka `/?live=1` sebagai browser source portrait; chat/simulator disembunyikan dan layout memberi buffer atas, kanan, dan bawah untuk UI LIVE TikTok. Safe area TikTok tidak punya satu ukuran tetap untuk semua perangkat/format, jadi preview di aplikasi tetap perlu dicek.
+- Mode dashboard: buka `/`. Susunan satu layar: nama acara, panel ranking, pertanyaan/pilihan, timer, dan panel jawaban LIVE berbentuk kotak di kanan bawah yang bisa diciutkan. Pada layar sempit, panel ditumpuk agar tidak saling menutupi. Komentar non-jawaban dan jawaban kedua dari peserta yang sama pada ronde itu tidak ditampilkan/diproses; jawaban pertama yang dipilih mengunci peserta sampai ronde berikutnya.
+- Mode siaran: buka `/?live=1` sebagai browser source portrait. Konten dibatasi ke buffer safe area atas, kanan, dan bawah; ranking tetap berbentuk panel dan chat berada di kanan bawah pada layar lebar tanpa menutupi soal. Safe area TikTok dapat berubah menurut perangkat/UI, jadi tetap cek preview aplikasi sebelum siaran.
 - Untuk mencoba simulator, kirim `Budi: A`, `@Budi: jawab A`, atau `jawab A` pada panel chat. Tombol A–D juga mensimulasikan penonton `KAMU`; tombol 🎁 menguji animasi gift.
 - Tombol `LAYAR PENUH` memperluas kuis ke layar penuh. Tombol `AUDIO OFF` mengaktifkan BGM sintetis orisinal bernuansa kuis tegang dan efek suara; browser meminta klik pengguna sebelum audio bisa diputar. Musik ini terinspirasi suasana acara kuis, bukan salinan musik Who Wants to Be a Millionaire.
 - Event gift LIVE TikTok menampilkan reaksi animasi dan pesan di chat; suara gift diputar jika audio diaktifkan.
