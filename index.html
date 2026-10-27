@@ -4,8 +4,8 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="theme-color" content="#080d16" />
-    <meta name="description" content="Prototype balapan interaktif TikTok Live dengan mobil AI Q-learning." />
-    <title>VirtualLive — Neon Circuit</title>
+    <meta name="description" content="Kuis pengetahuan umum interaktif untuk TikTok Live." />
+    <title>VirtualLive — Quiz Arena</title>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet" />
@@ -14,72 +14,79 @@
   <body>
     <div class="app-shell">
       <header class="topbar">
-        <a class="brand" href="#" aria-label="VirtualLive home">
+        <a class="brand" href="#" aria-label="VirtualLive Quiz Arena">
           <span class="brand-mark"><span></span><span></span><span></span></span>
-          <span class="brand-copy"><strong>VIRTUAL<span>LIVE</span></strong><small>ARCADE LAB</small></span>
+          <span class="brand-copy"><strong>VIRTUAL<span>LIVE</span></strong><small>QUIZ ARENA</small></span>
         </a>
-        <div class="topbar-center"><span class="live-pulse"></span><span>RACE ROOM <b>01</b></span><i></i><span class="demo-tag">SIMULASI</span></div>
-        <button class="icon-button sound-button" id="soundButton" aria-label="Suara mati" title="Suara efek"><span class="sound-icon">♫</span><span class="sound-label">SFX OFF</span></button>
+        <div class="topbar-center"><span class="live-pulse"></span><span>LIVE QUIZ <b>01</b></span><i></i><span class="demo-tag">SIMULASI KOMENTAR</span></div>
+        <div class="topbar-right"><span class="top-status"><i></i> SIAP MAIN</span></div>
       </header>
 
       <main>
         <section class="intro-row">
           <div>
-            <div class="eyebrow"><span class="eyebrow-line"></span> KOMENTAR JADI PEMBALAP</div>
-            <h1>CHAT MASUK.<br /><span>MESIN MENYALA.</span></h1>
-            <p class="intro-copy">Ketik <code>/spawn nama</code> dan mobilmu langsung turun ke sirkuit.<br class="desktop-only" /> Setiap pembalap dikendalikan AI yang belajar dari balapan.</p>
+            <div class="eyebrow"><span class="eyebrow-line"></span> JAWAB CEPAT. MENANGKAN POIN.</div>
+            <h1>SIAPA PALING<br /><span>CEPAT &amp; TEPAT?</span></h1>
+            <p class="intro-copy">Jawab pertanyaan lewat komentar. Jawaban benar pertama dapat poin dan namanya naik ke papan skor.</p>
           </div>
-          <div class="race-controls">
-            <button class="button button-quiet" id="resetButton"><span class="reset-symbol">↺</span> RESET</button>
-            <button class="button button-primary" id="pauseButton"><span class="play-symbol">Ⅱ</span> <span>PAUSE</span></button>
+          <div class="host-controls">
+            <button class="button button-outline" id="nextQuestion"><span class="next-icon">↻</span> SOAL BERIKUTNYA</button>
           </div>
         </section>
 
-        <section class="stats-row" aria-label="Statistik balapan">
-          <article class="stat-card"><span class="stat-icon icon-racers">◉</span><div><small>PEMBALAP</small><strong id="racerCount">03<span> / 12</span></strong></div><span class="stat-foot" id="gridStatus">GRID AKTIF</span></article>
-          <article class="stat-card"><span class="stat-icon icon-lap">◷</span><div><small>PUTARAN</small><strong id="lapReadout">01<span> / 03</span></strong></div><span class="stat-foot">LAP SAAT INI</span></article>
-          <article class="stat-card"><span class="stat-icon icon-ai">⌘</span><div><small>AI EXPERIENCE</small><strong id="experienceReadout">0<span> langkah</span></strong></div><span class="stat-foot"><span class="learning-dot"></span> Q-LEARNING</span></article>
-          <article class="stat-card stat-leader"><span class="stat-icon icon-cup">✳</span><div><small>PEMIMPIN</small><strong id="leaderReadout">—</strong></div><span class="stat-foot" id="leaderFoot">MENUNGGU START</span></article>
+        <section class="stats-row" aria-label="Statistik kuis">
+          <article class="stat-card"><span class="stat-icon icon-round">#</span><div><small>SOAL LIVE</small><strong id="roundReadout">01</strong></div><span class="stat-foot" id="categoryReadout">PENGETAHUAN UMUM</span></article>
+          <article class="stat-card"><span class="stat-icon icon-correct">✓</span><div><small>JAWABAN BENAR</small><strong id="correctReadout">0</strong></div><span class="stat-foot">SEMUA SESI</span></article>
+          <article class="stat-card"><span class="stat-icon icon-time">◷</span><div><small>SISA WAKTU</small><strong id="timeReadout">00:30</strong></div><span class="stat-foot" id="timerStatus">MENUNGGU JAWABAN</span></article>
+          <article class="stat-card stat-leader"><span class="stat-icon icon-cup">✳</span><div><small>PEMIMPIN SKOR</small><strong id="leaderReadout">—</strong></div><span class="stat-foot" id="leaderFoot">BELUM ADA PEMENANG</span></article>
         </section>
 
         <section class="main-grid">
-          <div class="race-panel panel">
-            <div class="panel-heading race-heading">
-              <div><span class="panel-kicker">LIVE TRACK</span><h2>Neon Circuit <span class="track-number">/ 01</span></h2></div>
-              <div class="track-meta"><span class="track-condition"><span></span> ORANGE RACEWAY</span><span class="track-separator"></span><span id="raceClock">00:00</span></div>
+          <div class="quiz-panel panel">
+            <div class="panel-heading">
+              <div><span class="panel-kicker">PERTANYAAN UNTUK CHAT</span><h2>Pengetahuan Umum <span class="question-number" id="questionNumber">/ 01</span></h2></div>
+              <div class="question-badge"><span class="badge-star">✳</span> <span id="questionTag">MIXED BAG</span></div>
             </div>
-            <div class="track-stage" id="trackStage">
-              <canvas id="raceCanvas" aria-label="Visualisasi balapan mobil AI"></canvas>
-              <div class="track-overlay overlay-top"><span class="overlay-label"><i></i> TRACK CAM</span><span class="overlay-label">LAP <b id="overlayLap">01</b> <span class="overlay-divider">/</span> 03</span></div>
-              <div class="track-overlay overlay-bottom"><span>NEON CIRCUIT <b>•</b> JAKARTA, ID</span><span id="speedReadout">AVG 0 KM/H</span></div>
-              <div class="stage-empty" id="emptyHint"><span class="empty-flag">✳</span><b>GRID SIAP DIISI</b><small>Pembalap dari chat akan muncul di sini</small></div>
+            <div class="quiz-stage">
+              <div class="stage-decoration decor-one"></div><div class="stage-decoration decor-two"></div>
+              <div class="question-content">
+                <div class="question-prompt"><span class="prompt-dot"></span> PERTANYAAN</div>
+                <h3 id="questionText">Memuat pertanyaan…</h3>
+                <div class="answer-grid" id="answerGrid"></div>
+              </div>
+              <div class="winner-banner" id="winnerBanner" aria-live="polite">
+                <span class="winner-crown">✦</span>
+                <div><small id="winnerLabel">JAWABAN BENAR PERTAMA!</small><strong id="winnerName">—</strong></div>
+                <span class="winner-points">+1 <small>POIN</small></span>
+              </div>
             </div>
-            <div class="race-footer">
-              <div class="legend"><span><i class="legend-player"></i> PEMBALAP CHAT</span><span><i class="legend-bot"></i> AI Q-LEARNING</span></div>
-              <div class="race-actions"><span class="comment-count"><span class="learning-dot"></span> <b id="commentCount">0</b> KOMENTAR DITERIMA</span></div>
+            <div class="timer-row"><div class="timer-track"><div class="timer-fill" id="timerFill"></div></div><span id="timerCaption">00:30</span></div>
+            <div class="quiz-footer">
+              <div class="answer-instruction"><span class="instruction-icon">↳</span><div><b>KOMENTAR A, B, C, ATAU D</b><small>Yang paling cepat menjawab benar menang!</small></div></div>
+              <button class="button button-primary" id="nextQuestionFooter">SOAL BERIKUTNYA <span>→</span></button>
             </div>
           </div>
 
           <aside class="chat-panel panel">
             <div class="chat-header"><div><span class="panel-kicker">TIKTOK LIVE</span><h2>Live chat <span class="chat-online"><i></i> SIMULASI</span></h2></div><button id="clearChat" class="more-button" aria-label="Bersihkan chat">···</button></div>
-            <div class="chat-notice"><span class="notice-icon">⌁</span><p>Mode prototype — komentar di sini disimulasikan. Nanti bisa dihubungkan ke sumber komentar live.</p></div>
+            <div class="chat-notice"><span class="notice-icon">⌁</span><p>Prototype ini belum tersambung ke komentar TikTok. Ketik <b>nama: jawaban</b> untuk mencoba.</p></div>
             <div class="chat-feed" id="chatFeed" aria-live="polite"></div>
             <div class="chat-composer-wrap">
-              <div class="quick-commands"><button data-command="/spawn RAKYAT">+ SPAWN</button><button data-command="/gift RAKYAT">✦ GIFT</button></div>
-              <form class="chat-composer" id="commandForm"><span class="composer-prompt">›</span><input id="commandInput" type="text" placeholder="/spawn nama" autocomplete="off" maxlength="32" aria-label="Ketik perintah" /><button type="submit" aria-label="Kirim perintah">↗</button></form>
-              <div class="command-hint">COBA: <span>/spawn nama</span> <i>·</i> <span>/gift nama</span></div>
+              <div class="quick-answers"><span>SIMULASI JAWABAN</span><div><button data-answer="A">A</button><button data-answer="B">B</button><button data-answer="C">C</button><button data-answer="D">D</button></div></div>
+              <form class="chat-composer" id="commentForm"><span class="composer-prompt">›</span><input id="commentInput" type="text" placeholder="Budi: A  /  jawab A" autocomplete="off" maxlength="64" aria-label="Komentar jawaban penonton" /><button type="submit" aria-label="Kirim jawaban">↗</button></form>
+              <div class="command-hint">CONTOH: <span>BUDI: A</span> <i>·</i> <span>jawab C</span></div>
             </div>
           </aside>
         </section>
 
         <section class="bottom-grid">
           <div class="panel leaderboard-panel">
-            <div class="bottom-heading"><div><span class="panel-kicker">POSISI TERKINI</span><h2>Leaderboard</h2></div><span class="refresh-label"><i></i> LIVE</span></div>
-            <div class="leaderboard-table"><div class="table-head"><span>POS</span><span>PEMBALAP</span><span>AI MODE</span><span>LAP</span><span>PROGRES</span></div><div id="leaderboardRows"></div><div id="leaderboardEmpty" class="leaderboard-empty">Belum ada pembalap. Ketik <code>/spawn nama</code> di live chat.</div></div>
+            <div class="bottom-heading"><div><span class="panel-kicker">TERKUMPUL ANTARSOAL</span><h2>Papan skor <span class="score-saved"><i></i> TERSIMPAN</span></h2></div><button class="reset-scores" id="resetScores">RESET SKOR</button></div>
+            <div class="leaderboard-table"><div class="table-head"><span>POS</span><span>NAMA PENONTON</span><span>JAWAB BENAR</span><span>POIN</span></div><div id="leaderboardRows"></div><div id="leaderboardEmpty" class="leaderboard-empty">Belum ada poin. Jawab benar pertama untuk masuk ke papan skor!</div></div>
           </div>
-          <div class="panel how-panel"><span class="panel-kicker">CARA MAIN</span><h2>Balapan dimulai dari chat.</h2><div class="how-steps"><div><span>01</span><p>Komentar <code>/spawn nama</code></p></div><div><span>02</span><p>Mobil muncul atas namamu</p></div><div><span>03</span><p>AI belajar &amp; kejar podium</p></div></div><div class="ai-note"><span>⌘</span><p><b>AI Q-LEARNING</b><br />Belajar mengatur kecepatan, menjaga jarak, dan menyalip.</p></div></div>
+          <div class="panel how-panel"><span class="panel-kicker">CARA MAIN</span><h2>Satu soal. Satu pemenang.</h2><div class="how-steps"><div><span>01</span><p>Lihat pertanyaan &amp; pilihan A–D</p></div><div><span>02</span><p>Ketik huruf jawaban di komentar</p></div><div><span>03</span><p>Jawaban benar tercepat dapat poin</p></div></div><div class="ai-note"><span>✦</span><p><b>SKOR BERLANJUT</b><br />Poin tetap tersimpan saat soal berganti atau halaman dimuat ulang.</p></div></div>
         </section>
-        <footer><span>VIRTUALLIVE <i>×</i> NEON CIRCUIT</span><span>PROTOTYPE v0.1 <i>·</i> CHAT SIMULATOR</span></footer>
+        <footer><span>VIRTUALLIVE <i>×</i> QUIZ ARENA</span><span>PROTOTYPE v0.2 <i>·</i> MODE SIMULASI</span></footer>
       </main>
     </div>
     <div class="toast" id="toast" role="status"></div>
