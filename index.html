@@ -21,6 +21,7 @@
         <div class="topbar-center"><span class="live-pulse"></span><span>LIVE QUIZ <b>01</b></span><i></i><span class="demo-tag" id="bridgeTopStatus">MEMUAT STATUS LIVE</span></div>
         <div class="topbar-right">
           <button class="utility-button" id="audioToggle" type="button" aria-pressed="false" title="Aktifkan musik dan efek suara">♫ <span>AUDIO OFF</span></button>
+          <button class="utility-button" id="timerSettingsToggle" type="button" title="Atur durasi pertanyaan">◷ <span id="questionDurationLabel">30 DETIK</span></button>
           <button class="utility-button" id="groqSettingsToggle" type="button" title="Atur Groq AI">✦ <span id="groqSettingsLabel">GROQ AI</span></button>
           <button class="utility-button" id="editLayoutToggle" type="button" aria-pressed="false" title="Atur posisi dan ukuran panel">⠿ <span>ATUR</span></button>
           <button class="utility-button" id="fullscreenToggle" type="button" title="Tampilkan layar penuh">⛶ <span>LAYAR PENUH</span></button>
@@ -110,6 +111,11 @@
     <div class="toast" id="toast" role="status"></div>
     <dialog class="control-dialog" id="newBabakDialog" aria-labelledby="newBabakTitle"><div class="dialog-kicker">PAPAN SKOR</div><h2 id="newBabakTitle">Mulai babak baru?</h2><p id="newBabakSummary"></p><div class="dialog-actions"><button id="cancelBabakButton" type="button">BATAL</button><button id="confirmBabakButton" type="button">SIMPAN & RESET</button></div></dialog>
     <dialog class="control-dialog history-dialog" id="babakHistoryDialog" aria-labelledby="babakHistoryTitle"><div class="history-heading"><div><div class="dialog-kicker">ARSIP HASIL</div><h2 id="babakHistoryTitle">Riwayat babak</h2></div><button id="closeBabakHistory" type="button" aria-label="Tutup riwayat">×</button></div><ol id="babakHistoryList"></ol></dialog>
+    <dialog class="control-dialog timer-settings-dialog" id="timerSettingsDialog" aria-labelledby="timerSettingsTitle">
+      <div class="dialog-kicker">PENGATURAN KUIS</div><h2 id="timerSettingsTitle">Durasi pertanyaan</h2>
+      <p>Atur berapa lama penonton punya waktu untuk menjawab setiap soal. Pilih 10–180 detik.</p>
+      <form id="timerSettingsForm"><label class="ai-config-label" for="questionDurationInput">DURASI PER SOAL (DETIK)</label><input id="questionDurationInput" type="number" min="10" max="180" step="5" value="30" required aria-describedby="timerSettingsNote"><p class="ai-config-security" id="timerSettingsNote">Jika belum ada jawaban di soal berjalan, perubahan langsung menyesuaikan sisa waktu. Jika sudah ada jawaban, durasi baru berlaku mulai soal berikutnya.</p><div class="dialog-actions"><button id="timerSettingsCancel" type="button">BATAL</button><button type="submit">SIMPAN DURASI</button></div></form>
+    </dialog>
     <dialog class="control-dialog ai-config-dialog" id="groqSettingsDialog" aria-labelledby="groqSettingsTitle">
       <div class="dialog-kicker">PENGATURAN AI HOST</div><h2 id="groqSettingsTitle">Hubungkan Groq</h2>
       <p id="groqConfigMessage" class="ai-config-message">Masukkan Groq API key untuk mengaktifkan sapaan otomatis.</p>

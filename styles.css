@@ -1125,3 +1125,6 @@ body.broadcast-mode #groqSettingsToggle{display:none!important}
 }
 @keyframes winner-source-arrives{0%{transform:scale(.985);border-color:#ffffff10;box-shadow:0 0 0 #58f5d200}65%{transform:scale(1.025);border-color:#a3f6dc;box-shadow:0 0 25px #58f5d244}100%{transform:scale(1);border-color:#70e6c45c;box-shadow:0 0 18px #58f5d21c}}
 @keyframes winner-tag-pop{from{opacity:0;transform:translateX(6px) scale(.85)}to{opacity:1;transform:translateX(0) scale(1)}}
+.timer-settings-dialog input{display:block;width:100%;max-width:180px;height:48px;border:1px solid #40576d;border-radius:7px;background:#08121e;color:#e9f3ff;padding:0 12px;font:600 20px 'DM Mono',monospace;outline:none}
+.timer-settings-dialog input:focus{border-color:#73e6cf;box-shadow:0 0 0 3px #73e6cf1c}
+.timer-settings-dialog input::-webkit-inner-spin-button{opacity:.8}
