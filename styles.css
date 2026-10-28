@@ -1133,3 +1133,17 @@ body.broadcast-mode #groqSettingsToggle{display:none!important}
 .quiz-generator-dialog input:focus,.quiz-generator-dialog select:focus{border-color:#73e6cf;box-shadow:0 0 0 3px #73e6cf1c}
 .quiz-generator-dialog .quiz-difficulty-label{margin-top:14px}
 body.broadcast-mode #quizGeneratorToggle{display:none!important}
+
+/* Synchronized result beat: wrong choices clear, the answer gets the stage, then the winner enters. */
+.quiz-panel.is-answer-clearing .question-content{opacity:0;transform:translateY(-8px);pointer-events:none;transition:opacity .34s ease,transform .34s ease}
+.quiz-panel.is-answer-hero .answer-grid{grid-template-columns:minmax(0,1fr);max-width:min(100%,720px);margin-inline:auto}
+.quiz-panel.is-answer-hero .answer-option.correct.is-answer-hero{min-height:clamp(72px,9vh,104px);padding:14px 20px;border-color:#8fffe0;background:linear-gradient(110deg,#12443a,#1b5547 50%,#123b36);box-shadow:0 0 32px #58f5d255,inset 0 0 24px #58f5d21a}
+.quiz-panel.is-answer-hero .answer-option.correct.is-answer-hero .answer-letter{width:36px;height:36px;flex-basis:36px;font-size:15px;box-shadow:0 0 18px #58f5d277}
+.quiz-panel.is-answer-hero .answer-option.correct.is-answer-hero .answer-text{font-size:clamp(15px,2.1vw,22px);color:#effff9}
+.answer-option.is-removed{display:none!important}
+@media (prefers-reduced-motion:no-preference){
+  .quiz-panel.is-answer-reveal .answer-option.dimmed:not(.is-removed){animation:wrong-answer-exit .46s cubic-bezier(.55,0,.8,.25) both}
+  .quiz-panel.is-answer-hero .answer-option.correct.is-answer-hero{animation:correct-answer-hero .56s cubic-bezier(.16,1,.3,1) both}
+}
+@keyframes wrong-answer-exit{0%{opacity:.38;transform:translateY(0) scale(1);filter:blur(0)}100%{opacity:0;transform:translateY(-13px) scale(.9);filter:blur(3px)}}
+@keyframes correct-answer-hero{0%{opacity:1;transform:translateY(8px) scale(.96);box-shadow:0 0 0 #58f5d200}68%{transform:translateY(-2px) scale(1.035);box-shadow:0 0 38px #58f5d277}100%{transform:translateY(0) scale(1);box-shadow:0 0 32px #58f5d255}}

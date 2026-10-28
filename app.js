@@ -32,7 +32,7 @@
   let questionBank=QUESTIONS,preparedAiQuestions=loadPreparedAiQuestions();
   let scores=loadScores(),deck=[],deckPosition=0,roundNumber=0,currentQuestion=null,babakNumber=1,babakHistory=[],pendingBabakArchive=null,wasPausedBeforeBabakDialog=false;
   const donorTotals=new Map();
-  let phase='question',remaining=activeQuestionDuration,resultRemaining=RESULT_SECONDS,firstCorrect=null,isPaused=false,announcementActive=false,winnerSelectionTimer=null;
+  let phase='question',remaining=activeQuestionDuration,resultRemaining=RESULT_SECONDS,firstCorrect=null,isPaused=false,announcementActive=false,winnerSelectionTimer=null,resultSequenceTimer=null;
   let lastFrame=performance.now(),toastTimer,quizMotionTimer;
   let audioContext=null,masterGain=null,bgmGain=null,sfxGain=null,bgmTimer=null,bgmStep=0,audioEnabled=false,lastCountdownSecond=activeQuestionDuration,giftTimer=null;
   let hostAudioEnabled=false,hostAiConfigured=false,groqKeySource='none',hostJobs=[],hostQueueRunning=false,lastAutoHostAt=0,hostVoiceStatus='EDGE TTS · BRIAN';
@@ -307,6 +307,8 @@
 
   function nextQuestion(){
     if(roundNumber>=activeQuestionsPerBabak){finishBabak();return;}
+    const panel=$('.quiz-panel');panel.classList.remove('is-answer-reveal','is-answer-hero','is-answer-clearing');
+    clearTimeout(resultSequenceTimer);resultSequenceTimer=null;
     const animateTransition=roundNumber>0;
     if(deckPosition>=deck.length){
       const previous=deck.length?deck[deck.length-1]:-1;deck=shuffle(questionBank.map((_,i)=>i));
@@ -417,6 +419,31 @@
     },460);
   }
 
+  function presentQuestionResult(){
+    const panel=$('.quiz-panel'),banner=$('#winnerBanner');
+    panel?.classList.remove('is-answer-reveal','is-answer-hero');
+    banner.classList.remove('visible','winner-reveal');void banner.offsetWidth;
+    banner.classList.toggle('no-winner',!firstCorrect);banner.classList.add('visible','winner-reveal');
+    if(firstCorrect){playSfx('winner');animateWinnerSelection(firstCorrect);}
+  }
+  function sequenceQuestionResult(){
+    const panel=$('.quiz-panel'),wrong=[...document.querySelectorAll('.answer-option.dimmed')],correct=$('.answer-option.correct');
+    if(!panel){presentQuestionResult();return;}
+    clearTimeout(resultSequenceTimer);panel.classList.remove('is-answer-reveal','is-answer-hero','is-answer-clearing');void panel.offsetWidth;
+    panel.classList.add('is-answer-reveal');
+    const reduced=window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
+    const raiseAnswer=()=>{
+      wrong.forEach(option=>option.classList.add('is-removed'));
+      panel.classList.add('is-answer-hero');correct?.classList.add('is-answer-hero');
+      if(reduced){resultSequenceTimer=setTimeout(()=>{panel.classList.add('is-answer-clearing');presentQuestionResult();},650);return;}
+      resultSequenceTimer=setTimeout(()=>{
+        panel.classList.add('is-answer-clearing');
+        resultSequenceTimer=setTimeout(presentQuestionResult,360);
+      },920);
+    };
+    resultSequenceTimer=setTimeout(raiseAnswer,reduced?0:470);
+  }
+
   function finishBabak(){
     if(phase==='babak-end')return;
     phase='babak-end';remaining=0;resultRemaining=0;
@@ -434,26 +461,25 @@
 
   function finishQuestion(){
     if(phase!=='question')return;
-    phase='result';remaining=0;resultRemaining=RESULT_SECONDS;revealCorrect();animateQuizPanel('is-result-reveal',1350);playSfx(firstCorrect?'winner':'reveal');
+    phase='result';remaining=0;resultRemaining=RESULT_SECONDS;revealCorrect();animateQuizPanel('is-result-reveal',1350);playSfx('reveal');
     if(firstCorrect){
       const key=scoreKey(firstCorrect.name),previous=scores[key];
       scores[key]={name:previous?.name||firstCorrect.name,points:(previous?.points||0)+1,correct:(previous?.correct||0)+1};
       saveScores();
       $('#winnerLabel').textContent='YANG PALING DULU MENJAWAB BENAR';$('#winnerName').textContent=firstCorrect.name;
       $('.winner-points').innerHTML=`+1 <small>${firstCorrect.elapsed.toFixed(1)} DETIK</small>`;
-      $('#winnerBanner').classList.remove('no-winner');$('#winnerBanner').classList.add('visible','winner-reveal');
+      $('#winnerBanner').classList.remove('no-winner');
       $('#timerStatus').textContent='HASIL AKHIR';
       addMessage('QUIZ MASTER',`🏆 ${firstCorrect.name} paling dulu menjawab benar! +1 poin.`, 'winner');
     }else{
       const letter=LETTERS[currentQuestion.correct],answer=currentQuestion.options[currentQuestion.correct];
       $('#winnerLabel').textContent='WAKTU HABIS — JAWABANNYA';$('#winnerName').textContent=`${letter} · ${answer}`;
       $('.winner-points').innerHTML='— <small>TANPA PEMENANG</small>';
-      $('#winnerBanner').classList.add('visible','no-winner','winner-reveal');$('#timerStatus').textContent='WAKTU HABIS';
+      $('#winnerBanner').classList.add('no-winner');$('#timerStatus').textContent='WAKTU HABIS';
       addMessage('QUIZ MASTER',`Tidak ada jawaban benar kali ini. Jawaban: ${letter} — ${answer}.`,'system');
     }
-    $('#autoAdvanceText').textContent=`Soal baru otomatis dalam ${RESULT_SECONDS} detik`;
-    updateStats();
-    if(firstCorrect)animateWinnerSelection(firstCorrect);
+    $('#autoAdvanceText').textContent=`${roundNumber>=activeQuestionsPerBabak?'Babak selesai':'Soal baru'} dalam ${RESULT_SECONDS} detik`;
+    updateStats();sequenceQuestionResult();
   }
 
   function renderLeaderboard(){
