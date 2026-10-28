@@ -51,7 +51,7 @@
     { category:'SAINS', question:'Gas terbanyak di atmosfer Bumi adalah…', options:['Oksigen','Karbon dioksida','Nitrogen','Hidrogen'], correct:2 },
   ];
   const LETTERS=['A','B','C','D'];
-  const SCORE_KEY='virtuallive.quiz.scores.v1',BABAK_KEY='virtuallive.quiz.babak.v1',BABAK_HISTORY_KEY='virtuallive.quiz.babak-history.v1',PRIZE_KEY='virtuallive.quiz.babak-prize.v1',QUESTION_DURATION_KEY='virtuallive.quiz.question-duration.v1',QUESTIONS_PER_BABAK_KEY='virtuallive.quiz.questions-per-babak.v1',PREPARED_AI_QUESTIONS_KEY='virtuallive.quiz.prepared-ai-questions.v1',LOCAL_QUESTION_HISTORY_KEY='virtuallive.quiz.local-question-history.v1',QUIZ_CATEGORY_KEY='virtuallive.quiz.ai-category.v1',QUIZ_DIFFICULTY_KEY='virtuallive.quiz.ai-difficulty.v1';
+  const SCORE_KEY='virtuallive.quiz.scores.v1',BABAK_KEY='virtuallive.quiz.babak.v1',BABAK_HISTORY_KEY='virtuallive.quiz.babak-history.v1',PRIZE_KEY='virtuallive.quiz.babak-prize.v1',QUESTION_DURATION_KEY='virtuallive.quiz.question-duration.v1',QUESTIONS_PER_BABAK_KEY='virtuallive.quiz.questions-per-babak.v1',PREPARED_AI_QUESTIONS_KEY='virtuallive.quiz.prepared-ai-questions.v2',LOCAL_QUESTION_HISTORY_KEY='virtuallive.quiz.local-question-history.v1',QUIZ_CATEGORY_KEY='virtuallive.quiz.ai-category.v2',QUIZ_DIFFICULTY_KEY='virtuallive.quiz.ai-difficulty.v1';
   const DEFAULT_QUESTION_SECONDS=30,MIN_QUESTION_SECONDS=10,MAX_QUESTION_SECONDS=180,DEFAULT_QUESTIONS_PER_BABAK=10,MAX_QUESTIONS_PER_BABAK=20,RESULT_SECONDS=7;
   const $=selector=>document.querySelector(selector);
   const answerGate=window.VirtualLiveAnswerGate.createFirstAnswerGate();
