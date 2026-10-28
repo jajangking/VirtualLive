@@ -262,7 +262,12 @@ function cleanQuizText(value, maxLength) {
   return String(value ?? '').replace(/[\u0000-\u001f\u007f]/g, ' ').replace(/\s+/g, ' ').trim().slice(0, maxLength);
 }
 
-function validateQuizQuestionSet(value, requestedCount) {
+function questionFingerprint(value) {
+  return cleanQuizText(value, 180).normalize('NFKC').toLocaleLowerCase('id-ID').replace(/[^\p{L}\p{N}]+/gu, ' ').trim();
+}
+
+function validateQuizQuestionSet(value, requestedCount, excludedQuestions = []) {
+  const excluded = new Set((Array.isArray(excludedQuestions) ? excludedQuestions : []).map(questionFingerprint).filter(Boolean));
   const source = Array.isArray(value) ? value : value?.questions;
   if (!Array.isArray(source) || source.length !== requestedCount) throw Object.assign(new Error('Groq tidak menghasilkan jumlah soal yang diminta. Coba generate ulang.'), { statusCode: 502 });
   const questions = [], seen = new Set();
@@ -274,8 +279,9 @@ function validateQuizQuestionSet(value, requestedCount) {
     if (!category || !question || options.length !== 4 || options.some(option => !option) || new Set(options.map(option => option.toLocaleLowerCase('id-ID'))).size !== 4 || !Number.isInteger(correct) || correct < 0 || correct > 3) {
       throw Object.assign(new Error('Format soal AI tidak valid. Coba generate ulang.'), { statusCode: 502 });
     }
-    const fingerprint = question.toLocaleLowerCase('id-ID');
+    const fingerprint = questionFingerprint(question);
     if (seen.has(fingerprint)) throw Object.assign(new Error('Groq membuat soal duplikat. Coba generate ulang.'), { statusCode: 502 });
+    if (excluded.has(fingerprint)) throw Object.assign(new Error('Groq mengulang soal yang sudah pernah dipakai. Coba generate ulang.'), { statusCode: 502 });
     seen.add(fingerprint);
     questions.push({ category, question, options, correct });
   }
@@ -339,7 +345,7 @@ async function generateQuizQuestions(input) {
   let parsed;
   try { parsed = JSON.parse(data?.choices?.[0]?.message?.content || '{}'); }
   catch { throw Object.assign(new Error('Groq mengembalikan format soal yang tidak bisa dibaca. Coba ulangi.'), { statusCode: 502 }); }
-  return validateQuizQuestionSet(parsed, count);
+  return validateQuizQuestionSet(parsed, count, recentQuestions);
 }
 async function generateHostLine(input) {
   if (!GROQ_API_KEY) throw Object.assign(new Error('AI host belum dikonfigurasi di server.'), { statusCode: 503 });

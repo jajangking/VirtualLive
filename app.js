@@ -111,16 +111,19 @@
     preparedAiQuestions=null;
     try{localStorage.removeItem(PREPARED_AI_QUESTIONS_KEY);}catch(_){/* Memory state is already cleared. */}
   }
+  function questionFingerprint(value){
+    return String(value||'').normalize('NFKC').toLocaleLowerCase('id-ID').replace(/[^\p{L}\p{N}]+/gu,' ').trim();
+  }
   function readLocalQuestionHistory(){
     try{
       const saved=JSON.parse(localStorage.getItem(LOCAL_QUESTION_HISTORY_KEY)||'[]');
-      return Array.isArray(saved)?saved.filter(item=>typeof item==='string').slice(-QUESTIONS.length):[];
+      return Array.isArray(saved)?[...new Set(saved.filter(item=>typeof item==='string').map(questionFingerprint).filter(Boolean))].slice(-QUESTIONS.length):[];
     }catch(_){return [];}
   }
   function rememberQuestionBatch(batch){
     const recent=readLocalQuestionHistory();
     for(const item of batch){
-      const fingerprint=String(item?.question||'').trim().toLocaleLowerCase('id-ID');
+      const fingerprint=questionFingerprint(item?.question);
       if(!fingerprint)continue;
       const existing=recent.indexOf(fingerprint);if(existing>=0)recent.splice(existing,1);
       recent.push(fingerprint);
@@ -128,11 +131,10 @@
     try{localStorage.setItem(LOCAL_QUESTION_HISTORY_KEY,JSON.stringify(recent.slice(-QUESTIONS.length)));}catch(_){/* Keep the in-memory batch usable. */}
   }
   function generateFallbackQuestionBatch(count){
-    const recent=new Set(readLocalQuestionHistory());
-    const fresh=shuffle(QUESTIONS.filter(item=>!recent.has(item.question.trim().toLocaleLowerCase('id-ID'))));
-    const recycled=shuffle(QUESTIONS.filter(item=>recent.has(item.question.trim().toLocaleLowerCase('id-ID'))));
+    const recent=new Set([...readLocalQuestionHistory(),...(Array.isArray(preparedAiQuestions)?preparedAiQuestions.map(item=>questionFingerprint(item?.question)).filter(Boolean):[])]);
+    const fresh=shuffle(QUESTIONS.filter(item=>!recent.has(questionFingerprint(item.question))));
+    const recycled=shuffle(QUESTIONS.filter(item=>recent.has(questionFingerprint(item.question))));
     const selected=[...fresh,...recycled].slice(0,count);
-    rememberQuestionBatch(selected);
     return selected.map(item=>{
       const order=shuffle([0,1,2,3]);
       return {...item,options:order.map(index=>item.options[index]),correct:order.indexOf(item.correct)};
@@ -210,11 +212,12 @@
     let nextBatch=null,source='Groq AI',fallbackReason='';
     summary.textContent=`Menyiapkan ${count} pertanyaan resmi untuk babak baru…`;
     try{
-      if(preparedAiQuestions?.length===count){nextBatch=preparedAiQuestions;rememberQuestionBatch(nextBatch);source='batch soal tersimpan';clearPreparedAiQuestions();}
+      if(preparedAiQuestions?.length===count){nextBatch=preparedAiQuestions;source='batch soal tersimpan';clearPreparedAiQuestions();}
       else if(await loadHostStatus()){
-        try{nextBatch=await requestGeneratedQuestionBatch(count,$('#quizCategoryInput').value.trim()||'Pengetahuan Umum',$('#quizDifficultyInput').value);rememberQuestionBatch(nextBatch);}
+        try{nextBatch=await requestGeneratedQuestionBatch(count,$('#quizCategoryInput').value.trim()||'Pengetahuan Umum',$('#quizDifficultyInput').value);}
         catch(error){fallbackReason=String(error?.message||'layanan Groq tidak tersedia');nextBatch=generateFallbackQuestionBatch(count);source='generator lokal';}
       }else{fallbackReason='Groq belum dikonfigurasi';nextBatch=generateFallbackQuestionBatch(count);source='generator lokal';}
+      rememberQuestionBatch(nextBatch);
       babakHistory.unshift(archive);babakHistory=babakHistory.slice(0,50);babakNumber++;
       saveBabakState();scores={};saveScores();roundNumber=0;activeQuestionsPerBabak=count;
       questionBank=nextBatch;deck=shuffle(questionBank.map((_,index)=>index));deckPosition=0;
@@ -677,11 +680,20 @@
     }catch(_){hostAiConfigured=false;if(!hostAudioEnabled)setHostAvatarState('SERVER AI OFFLINE');return false;}
   }
   async function requestGeneratedQuestionBatch(count,category,difficulty){
-    const response=await fetch('/api/quiz/generate',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({count,category,difficulty,recentQuestions:readLocalQuestionHistory().slice(-20)})});
-    const data=await response.json().catch(()=>({}));
-    if(!response.ok)throw new Error(data.error||'Groq gagal membuat soal.');
-    if(!Array.isArray(data.questions)||data.questions.length!==count)throw new Error('Jumlah soal dari Groq tidak sesuai. Coba ulangi.');
-    return data.questions;
+    const reserved=(Array.isArray(preparedAiQuestions)?preparedAiQuestions:[]).map(item=>String(item?.question||''));
+    const recentQuestions=[...new Set([...readLocalQuestionHistory(),...reserved.map(questionFingerprint).filter(Boolean)])].slice(-20);
+    for(let attempt=0;attempt<2;attempt++){
+      const response=await fetch('/api/quiz/generate',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({count,category,difficulty,recentQuestions})});
+      const data=await response.json().catch(()=>({}));
+      if(!response.ok){
+        const message=data.error||'Groq gagal membuat soal.';
+        if(attempt===0&&/mengulang soal|duplikat/i.test(message))continue;
+        throw new Error(message);
+      }
+      if(!Array.isArray(data.questions)||data.questions.length!==count)throw new Error('Jumlah soal dari Groq tidak sesuai. Coba ulangi.');
+      return data.questions;
+    }
+    throw new Error('Groq mengulang soal yang sudah pernah dipakai; generator lokal anti-ulangan akan dipakai.');
   }
   function persistPreparedAiQuestions(){
     try{localStorage.setItem(PREPARED_AI_QUESTIONS_KEY,JSON.stringify(preparedAiQuestions));}catch(_){/* Keep the batch for this session. */}
@@ -709,7 +721,7 @@
     button.disabled=true;status.textContent=`Sedang meminta Groq membuat ${questionsPerBabak} soal…`;
     try{
       preparedAiQuestions=await requestGeneratedQuestionBatch(questionsPerBabak,$('#quizCategoryInput').value.trim()||'Pengetahuan Umum',$('#quizDifficultyInput').value);
-      rememberQuestionBatch(preparedAiQuestions);persistPreparedAiQuestions();
+      persistPreparedAiQuestions();
       status.textContent=`${preparedAiQuestions.length} soal Groq AI siap untuk babak berikutnya. Klik BABAK BARU untuk memakainya.`;
     }catch(error){
       preparedAiQuestions=generateFallbackQuestionBatch(questionsPerBabak);persistPreparedAiQuestions();
@@ -1005,11 +1017,12 @@
     $('#newBabakButton').disabled=true;$('#pauseToggle').disabled=true;$('#quizGeneratorToggle').disabled=true;updateTimer();
     const configured=await loadHostStatus();
     let batch=null,source='',fallbackReason='';
-    if(preparedAiQuestions?.length===activeQuestionsPerBabak){batch=preparedAiQuestions;rememberQuestionBatch(batch);source='batch soal tersimpan';clearPreparedAiQuestions();}
+    if(preparedAiQuestions?.length===activeQuestionsPerBabak){batch=preparedAiQuestions;source='batch soal tersimpan';clearPreparedAiQuestions();}
     else if(configured){
-      try{batch=await requestGeneratedQuestionBatch(activeQuestionsPerBabak,$('#quizCategoryInput').value.trim()||'Pengetahuan Umum',$('#quizDifficultyInput').value);rememberQuestionBatch(batch);source='Groq AI otomatis';}
+      try{batch=await requestGeneratedQuestionBatch(activeQuestionsPerBabak,$('#quizCategoryInput').value.trim()||'Pengetahuan Umum',$('#quizDifficultyInput').value);source='Groq AI otomatis';}
       catch(error){fallbackReason=String(error?.message||'layanan Groq tidak tersedia');batch=generateFallbackQuestionBatch(activeQuestionsPerBabak);source='generator lokal';}
     }else{fallbackReason='Groq belum dikonfigurasi';batch=generateFallbackQuestionBatch(activeQuestionsPerBabak);source='generator lokal';}
+    rememberQuestionBatch(batch);
     questionBank=batch;deck=shuffle(questionBank.map((_,index)=>index));deckPosition=0;
     phase='question';nextQuestion();$('#newBabakButton').disabled=false;$('#pauseToggle').disabled=false;$('#quizGeneratorToggle').disabled=false;
     addMessage('QUIZ MASTER',source==='generator lokal'?'Groq tidak tersedia; generator lokal anti-ulangan dipakai.':`Pertanyaan babak ini disiapkan oleh ${source}.`,'system');

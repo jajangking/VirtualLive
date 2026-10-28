@@ -125,6 +125,7 @@ test('forwards follow events and filters unrelated social activity', () => {
 test('validates generated quiz batches and rejects ambiguous or duplicate choices', () => {
   const batch = [{ category: 'Geografi', question: 'Apa ibu kota Jepang?', options: ['Tokyo', 'Osaka', 'Kyoto', 'Nara'], correct: 0 }];
   assert.deepEqual(validateQuizQuestionSet({ questions: batch }, 1), batch);
+  assert.throws(() => validateQuizQuestionSet({ questions: batch }, 1, ['apa ibu kota jepang']), /sudah pernah dipakai/);
   assert.throws(() => validateQuizQuestionSet({ questions: batch }, 2), /jumlah soal/);
   assert.throws(() => validateQuizQuestionSet([{ ...batch[0], options: ['Tokyo', 'Tokyo', 'Kyoto', 'Nara'] }], 1), /Format soal/);
   assert.throws(() => validateQuizQuestionSet([{ ...batch[0], question: 'apa ibu kota jepang?' } , batch[0]], 2), /duplikat/);
