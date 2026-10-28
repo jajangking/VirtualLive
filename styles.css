@@ -1147,3 +1147,9 @@ body.broadcast-mode #quizGeneratorToggle{display:none!important}
 }
 @keyframes wrong-answer-exit{0%{opacity:.38;transform:translateY(0) scale(1);filter:blur(0)}100%{opacity:0;transform:translateY(-13px) scale(.9);filter:blur(3px)}}
 @keyframes correct-answer-hero{0%{opacity:1;transform:translateY(8px) scale(.96);box-shadow:0 0 0 #58f5d200}68%{transform:translateY(-2px) scale(1.035);box-shadow:0 0 38px #58f5d277}100%{transform:translateY(0) scale(1);box-shadow:0 0 32px #58f5d255}}
+.groq-live-toggle{display:none;flex:0 0 auto;height:24px;padding:0 8px;border:1px solid #77683d;border-radius:5px;background:#312918;color:#ffe6a3;font:600 8px 'DM Mono',monospace;white-space:nowrap;cursor:pointer}
+.groq-live-toggle[data-configured="true"]{border-color:#5fbd9c;background:#17332d;color:#adf1d7}
+body.broadcast-mode .groq-live-toggle{display:inline-flex;align-items:center;justify-content:center}
+.groq-config-generate{display:block;margin:8px 0 0 auto;padding:8px 10px;border:1px solid #8e7b50;border-radius:6px;background:#2b2618;color:#ffe6a3;font:600 9px 'DM Mono',monospace;cursor:pointer}
+.groq-config-generate:hover{border-color:#73e6cf;color:#baffea}
+@media (max-width:380px){body.broadcast-mode .moderator-heading .moderator-indicator{display:none}}

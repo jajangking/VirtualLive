@@ -566,6 +566,7 @@
     const configured=Boolean(data?.configured);
     const label=$('#groqSettingsLabel');if(label)label.textContent=configured?'GROQ SIAP':'GROQ AI';
     $('#groqSettingsToggle')?.setAttribute('data-configured',String(configured));
+    $('#groqLiveSettingsToggle')?.setAttribute('data-configured',String(configured));
     const message=$('#groqConfigMessage');
     if(groqKeySource==='environment'){
       message.textContent='Groq sudah dikonfigurasi di environment server. Nilai key tidak dapat dilihat atau diganti dari UI.';
@@ -608,7 +609,10 @@
   $('#quizGeneratorToggle').addEventListener('click',openQuizGenerator);
   $('#quizGeneratorCancel').addEventListener('click',()=>$('#quizGeneratorDialog').close());
   $('#generateQuizQuestionsButton').addEventListener('click',generateQuizQuestionBatch);
-  $('#groqSettingsToggle').addEventListener('click',()=>$('#groqSettingsDialog').showModal());
+  const openGroqSettings=()=>$('#groqSettingsDialog').showModal();
+  $('#groqSettingsToggle').addEventListener('click',openGroqSettings);
+  $('#groqLiveSettingsToggle').addEventListener('click',openGroqSettings);
+  $('#quizGeneratorFromGroq').addEventListener('click',()=>{ $('#groqSettingsDialog').close();openQuizGenerator(); });
   $('#groqSettingsCancel').addEventListener('click',()=>$('#groqSettingsDialog').close());
   $('#groqConfigForm').addEventListener('submit',async event=>{
     event.preventDefault();const apiKey=$('#groqApiKeyInput').value.trim();if(!apiKey){$('#groqConfigMessage').textContent='Masukkan Groq API key terlebih dahulu.';$('#groqApiKeyInput').focus();return;}

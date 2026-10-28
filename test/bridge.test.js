@@ -7,7 +7,7 @@ const os = require('node:os');
 const path = require('node:path');
 const testGroqKeyFile = path.join(os.tmpdir(), `virtuallive-groq-test-${process.pid}`);
 process.env.GROQ_KEY_FILE = testGroqKeyFile;
-const { server, handleTikTokComment, handleTikTokGift, handleTikTokMember, handleTikTokFollow, handleTikTokSocial, describeEdgeTtsError, isTrustedRequestOrigin, isSecureConfigRequest, validateQuizQuestionSet, eventClients } = require('../server');
+const { server, handleTikTokComment, handleTikTokGift, handleTikTokMember, handleTikTokFollow, handleTikTokSocial, describeEdgeTtsError, isTrustedRequestOrigin, isSecureConfigRequest, validateQuizQuestionSet, groqFailureMessage, eventClients } = require('../server');
 
 test('forwards a TikTok chat event as an SSE comment with the quiz fields', () => {
   const chunks = [];
@@ -128,6 +128,18 @@ test('validates generated quiz batches and rejects ambiguous or duplicate choice
   assert.throws(() => validateQuizQuestionSet({ questions: batch }, 2), /jumlah soal/);
   assert.throws(() => validateQuizQuestionSet([{ ...batch[0], options: ['Tokyo', 'Tokyo', 'Kyoto', 'Nara'] }], 1), /Format soal/);
   assert.throws(() => validateQuizQuestionSet([{ ...batch[0], question: 'apa ibu kota jepang?' } , batch[0]], 2), /duplikat/);
+});
+
+test('reports actionable Groq model, key, and quota failures', async () => {
+  const originalWarn = console.warn;console.warn = () => {};
+  try {
+    const unauthorized = await groqFailureMessage(new Response(JSON.stringify({ error: { message: 'invalid api key' } }), { status: 401 }), 'quiz');
+    assert.match(unauthorized, /API key.*401/);
+    const modelError = await groqFailureMessage(new Response(JSON.stringify({ error: { message: 'model_decommissioned' } }), { status: 400 }), 'quiz');
+    assert.match(modelError, /HTTP 400.*model_decommissioned/);
+    const quotaError = await groqFailureMessage(new Response(JSON.stringify({ error: { message: 'quota exceeded' } }), { status: 429 }), 'quiz');
+    assert.match(quotaError, /kuota Groq.*429/);
+  } finally { console.warn = originalWarn; }
 });
 
 test('host status endpoint reports readiness without exposing the API key', async t => {
