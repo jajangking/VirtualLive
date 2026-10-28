@@ -30,7 +30,7 @@
   let scores=loadScores(),deck=[],deckPosition=0,roundNumber=0,currentQuestion=null,babakNumber=1,babakHistory=[],pendingBabakArchive=null,wasPausedBeforeBabakDialog=false;
   const donorTotals=new Map();
   let phase='question',remaining=ROUND_SECONDS,resultRemaining=RESULT_SECONDS,firstCorrect=null,isPaused=false,announcementActive=false;
-  let lastFrame=performance.now(),toastTimer;
+  let lastFrame=performance.now(),toastTimer,quizMotionTimer;
   let audioContext=null,masterGain=null,bgmGain=null,sfxGain=null,bgmTimer=null,bgmStep=0,audioEnabled=false,lastCountdownSecond=ROUND_SECONDS,giftTimer=null;
   let hostAudioEnabled=false,hostAiConfigured=false,groqKeySource='none',hostJobs=[],hostQueueRunning=false,lastAutoHostAt=0,hostVoiceStatus='EDGE TTS · BRIAN';
   let hostPlaybackContext=null,hostPlaybackSource=null;
@@ -136,7 +136,7 @@
     const AudioContextClass=window.AudioContext||window.webkitAudioContext;
     if(!AudioContextClass){notify('Browser ini tidak mendukung Web Audio.',true);return false;}
     audioContext=new AudioContextClass();masterGain=audioContext.createGain();bgmGain=audioContext.createGain();sfxGain=audioContext.createGain();
-    masterGain.gain.value=.55;bgmGain.gain.value=.17;sfxGain.gain.value=.4;
+    masterGain.gain.value=.55;bgmGain.gain.value=.23;sfxGain.gain.value=.4;
     bgmGain.connect(masterGain);sfxGain.connect(masterGain);masterGain.connect(audioContext.destination);
     return true;
   }
@@ -148,30 +148,49 @@
     envelope.gain.exponentialRampToValueAtTime(.0001,when+duration);
     oscillator.connect(envelope);envelope.connect(output);oscillator.start(when);oscillator.stop(when+duration+.04);
   }
+  function playPadChord(notes,when,duration,output){
+    if(!audioContext||!output)return;
+    for(const [index,note] of notes.entries()){
+      const oscillator=audioContext.createOscillator(),envelope=audioContext.createGain(),filter=audioContext.createBiquadFilter();
+      oscillator.type='sine';oscillator.frequency.setValueAtTime(note,when);oscillator.detune.setValueAtTime(index===1?-3:index===2?3:0,when);
+      filter.type='lowpass';filter.frequency.setValueAtTime(1050,when);filter.Q.setValueAtTime(.35,when);
+      envelope.gain.setValueAtTime(.0001,when);envelope.gain.linearRampToValueAtTime(.018,when+.24);
+      envelope.gain.setValueAtTime(.013,when+Math.max(.3,duration-.32));envelope.gain.exponentialRampToValueAtTime(.0001,when+duration);
+      oscillator.connect(filter);filter.connect(envelope);envelope.connect(output);oscillator.start(when);oscillator.stop(when+duration+.04);
+    }
+  }
   function scheduleBgm(){
     if(!audioEnabled||!audioContext)return;
-    const motif=[220,261.63,329.63,392,329.63,293.66,349.23,440,392,349.23,261.63,329.63,392,493.88,440,392];
-    const now=audioContext.currentTime,fast=phase==='question'&&remaining<=8;
-    tone(motif[bgmStep%motif.length],.32,now,bgmGain,.018,'triangle');
-    if(bgmStep%4===0)tone(motif[bgmStep%motif.length]/2,.52,now,bgmGain,.014,'sine');
-    bgmStep++;bgmTimer=setTimeout(scheduleBgm,fast?360:500);
+    const chords=[
+      {root:110,pad:[220,261.63,329.63],melody:[440,523.25,587.33,523.25]},
+      {root:87.31,pad:[174.61,220,261.63],melody:[392,440,523.25,440]},
+      {root:130.81,pad:[196,261.63,329.63],melody:[523.25,587.33,659.25,587.33]},
+      {root:98,pad:[196,246.94,293.66],melody:[440,493.88,587.33,493.88]},
+    ];
+    const urgent=phase==='question'&&remaining<=8,beat=urgent?.39:.535,step=bgmStep%16,chord=chords[Math.floor(step/4)],beatInChord=step%4,now=audioContext.currentTime;
+    if(beatInChord===0)playPadChord(chord.pad,now,beat*3.8,bgmGain);
+    tone(chord.root,.34,now,bgmGain,.046,'triangle');
+    const melody=chord.melody[beatInChord];
+    if(beatInChord===0||beatInChord===2)tone(melody,urgent?.2:.27,now+.035,bgmGain,urgent?.034:.027,'sine');
+    if(urgent&&beatInChord===3)tone(melody*2,.14,now+.15,bgmGain,.012,'triangle');
+    bgmStep++;bgmTimer=setTimeout(scheduleBgm,beat*1000);
   }
   function playSfx(kind){
     if(!audioEnabled||!audioContext)return;
     const now=audioContext.currentTime;
     const sounds={
-      correct:[523.25,659.25,783.99],wrong:[220,196],result:[392,523.25,659.25,783.99],start:[392,523.25],gift:[659.25,783.99,987.77],tick:[880]
+      correct:[523.25,659.25,783.99],wrong:[220,196],reveal:[349.23,440,523.25],winner:[392,523.25,659.25,783.99,1046.5],start:[392,523.25],gift:[659.25,783.99,987.77],tick:[880]
     };
-    const notes=sounds[kind]||[];notes.forEach((note,index)=>tone(note,.18,now+index*.085,sfxGain,kind==='tick'?.028:.055,'sine'));
+    const notes=sounds[kind]||[];notes.forEach((note,index)=>tone(note,kind==='winner'?.24:.18,now+index*(kind==='winner'?.075:.085),sfxGain,kind==='tick'?.028:kind==='winner'?.06:.055,kind==='winner'?'triangle':'sine'));
   }
   async function toggleAudio(){
     if(!initAudio())return;
     try{await audioContext.resume();}catch(_){notify('Audio belum bisa dimulai di browser ini.',true);return;}
     audioEnabled=!audioEnabled;
     const button=$('#audioToggle');button.setAttribute('aria-pressed',String(audioEnabled));button.classList.toggle('is-on',audioEnabled);
-    button.querySelector('span').textContent=audioEnabled?'AUDIO ON':'AUDIO OFF';
-    button.title=audioEnabled?'Matikan musik dan efek suara':'Aktifkan musik dan efek suara';
-    if(audioEnabled){bgmGain.gain.setTargetAtTime(.17,audioContext.currentTime,.08);scheduleBgm();}
+    button.querySelector('span').textContent=audioEnabled?'BGM + SFX ON':'BGM + SFX OFF';
+    button.title=audioEnabled?'Matikan BGM dan efek suara':'Aktifkan BGM dan efek suara';
+    if(audioEnabled){bgmGain.gain.setTargetAtTime(.23,audioContext.currentTime,.12);scheduleBgm();}
     else{clearTimeout(bgmTimer);bgmTimer=null;bgmGain.gain.setTargetAtTime(0,audioContext.currentTime,.12);}
   }
   async function toggleFullscreen(){
@@ -226,6 +245,12 @@
     for(let i=array.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[array[i],array[j]]=[array[j],array[i]];}
     return array;
   }
+  function animateQuizPanel(className,duration){
+    const panel=$('.quiz-panel');if(!panel)return;
+    panel.classList.remove('is-question-arriving','is-result-reveal');void panel.offsetWidth;panel.classList.add(className);
+    clearTimeout(quizMotionTimer);quizMotionTimer=setTimeout(()=>panel.classList.remove(className),duration);
+  }
+
   function nextQuestion(){
     const animateTransition=roundNumber>0;
     if(deckPosition>=deck.length){
@@ -241,6 +266,7 @@
     $('#questionNumber').textContent=`· BABAK ${String(babakNumber).padStart(2,'0')} · SOAL ${String(roundNumber).padStart(2,'0')}`;
     $('#winnerBanner').classList.remove('visible','no-winner','winner-reveal');
     if(animateTransition){
+      animateQuizPanel('is-question-arriving',1050);
       const content=$('.question-content'),heading=$('.quiz-panel .panel-heading');
       content.classList.remove('question-arrive');void content.offsetWidth;content.classList.add('question-arrive');
       heading.classList.remove('question-heading-arrive');void heading.offsetWidth;heading.classList.add('question-heading-arrive');
@@ -309,7 +335,7 @@
 
   function finishQuestion(){
     if(phase!=='question')return;
-    phase='result';remaining=0;resultRemaining=RESULT_SECONDS;revealCorrect();playSfx('result');
+    phase='result';remaining=0;resultRemaining=RESULT_SECONDS;revealCorrect();animateQuizPanel('is-result-reveal',1350);playSfx(firstCorrect?'winner':'reveal');
     if(firstCorrect){
       const key=scoreKey(firstCorrect.name),previous=scores[key];
       scores[key]={name:previous?.name||firstCorrect.name,points:(previous?.points||0)+1,correct:(previous?.correct||0)+1};
@@ -323,7 +349,7 @@
       const letter=LETTERS[currentQuestion.correct],answer=currentQuestion.options[currentQuestion.correct];
       $('#winnerLabel').textContent='WAKTU HABIS — JAWABANNYA';$('#winnerName').textContent=`${letter} · ${answer}`;
       $('.winner-points').innerHTML='— <small>TANPA PEMENANG</small>';
-      $('#winnerBanner').classList.add('visible','no-winner');$('#timerStatus').textContent='WAKTU HABIS';
+      $('#winnerBanner').classList.add('visible','no-winner','winner-reveal');$('#timerStatus').textContent='WAKTU HABIS';
       addMessage('QUIZ MASTER',`Tidak ada jawaban benar kali ini. Jawaban: ${letter} — ${answer}.`,'system');
     }
     $('#autoAdvanceText').textContent=`Soal baru otomatis dalam ${RESULT_SECONDS} detik`;
