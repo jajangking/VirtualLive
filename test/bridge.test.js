@@ -137,6 +137,8 @@ test('reports actionable Groq model, key, and quota failures', async () => {
     assert.match(unauthorized, /API key.*401/);
     const modelError = await groqFailureMessage(new Response(JSON.stringify({ error: { message: 'model_decommissioned' } }), { status: 400 }), 'quiz');
     assert.match(modelError, /HTTP 400.*model_decommissioned/);
+    const missingModel = await groqFailureMessage(new Response(JSON.stringify({ error: { message: 'model not found' } }), { status: 404 }), 'quiz');
+    assert.match(missingModel, /Model Groq.*tidak ditemukan \(HTTP 404\)/);
     const quotaError = await groqFailureMessage(new Response(JSON.stringify({ error: { message: 'quota exceeded' } }), { status: 429 }), 'quiz');
     assert.match(quotaError, /kuota Groq.*429/);
   } finally { console.warn = originalWarn; }
@@ -160,6 +162,7 @@ test('host status endpoint reports readiness without exposing the API key', asyn
   assert.equal(status.speech, 'edge-tts');
   assert.equal(status.voice, 'en-US-BrianMultilingualNeural');
   assert.equal(status.speechLanguage, 'multilingual-auto');
+  if (!process.env.GROQ_MODEL || process.env.GROQ_MODEL === 'llama-3.1-8b-instant') assert.equal(status.model, 'openai/gpt-oss-20b');
   assert.equal(Object.hasOwn(status, 'apiKey'), false);
   if (status.keySource === 'none') {
     const unavailableGenerator = await fetch(`http://127.0.0.1:${address.port}/api/quiz/generate`, {
@@ -184,6 +187,9 @@ test('host status endpoint reports readiness without exposing the API key', asyn
       if (String(url).startsWith('https://api.groq.com/')) {
         assert.equal(options.headers.Authorization, `Bearer ${key}`);
         const request = JSON.parse(options.body);
+        const configuredModel = String(process.env.GROQ_MODEL || '').trim();
+        assert.equal(request.model, !configuredModel || configuredModel === 'llama-3.1-8b-instant' ? 'openai/gpt-oss-20b' : configuredModel);
+        assert.equal(request.reasoning_format, 'hidden');
         assert.equal(request.response_format.type, 'json_object');
         return new Response(JSON.stringify({ choices: [{ message: { content: JSON.stringify({ questions: [{ category: 'Geografi', question: 'Apa ibu kota Jepang?', options: ['Tokyo', 'Osaka', 'Kyoto', 'Nara'], correct: 0 }] }) } }] }), { status: 200, headers: { 'Content-Type': 'application/json' } });
       }
