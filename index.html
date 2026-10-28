@@ -119,10 +119,10 @@
     </dialog>
     <dialog class="control-dialog quiz-generator-dialog" id="quizGeneratorDialog" aria-labelledby="quizGeneratorTitle">
       <div class="dialog-kicker">GENERATOR SOAL AI</div><h2 id="quizGeneratorTitle">Buat soal dengan Groq</h2>
-      <p>Groq akan menyiapkan pilihan ganda A–D untuk babak berikutnya tanpa mengganggu babak berjalan. Pemakaian menggunakan kuota API Groq; periksa kembali fakta dan kunci jawaban AI sebelum LIVE.</p>
+      <p>Soal resmi dibuat otomatis oleh Groq saat kuis dimulai dan setiap babak baru. Kategori dan tingkat kesulitan di bawah ini dipakai oleh generator otomatis. Jika Groq/kuota tidak tersedia, kuis beralih ke bank lokal yang diacak dan menghindari pengulangan sampai pertanyaan habis. Soal AI tetap perlu diperiksa sebelum LIVE.</p>
       <label class="ai-config-label" for="quizCategoryInput">KATEGORI</label><input id="quizCategoryInput" type="text" maxlength="48" value="Pengetahuan Umum" placeholder="Contoh: Sejarah Indonesia">
       <label class="ai-config-label quiz-difficulty-label" for="quizDifficultyInput">TINGKAT KESULITAN</label><select id="quizDifficultyInput"><option value="mudah">Mudah</option><option value="sedang" selected>Sedang</option><option value="sulit">Sulit</option></select>
-      <p class="ai-config-security" id="quizGeneratorStatus">Jumlah soal mengikuti setelan per babak. Generator hanya bisa digunakan jika Groq API sudah dikonfigurasi.</p>
+      <p class="ai-config-security" id="quizGeneratorStatus">Jumlah soal mengikuti setelan per babak. Jika Groq gagal atau kuota habis, generator lokal anti-ulangan akan menyiapkan soal pengganti.</p>
       <div class="dialog-actions"><button id="quizGeneratorCancel" type="button">TUTUP</button><button id="generateQuizQuestionsButton" type="button">BUAT SOAL AI</button></div>
     </dialog>
     <dialog class="control-dialog ai-config-dialog" id="groqSettingsDialog" aria-labelledby="groqSettingsTitle">

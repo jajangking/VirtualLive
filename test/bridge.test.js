@@ -190,14 +190,16 @@ test('host status endpoint reports readiness without exposing the API key', asyn
         const configuredModel = String(process.env.GROQ_MODEL || '').trim();
         assert.equal(request.model, !configuredModel || configuredModel === 'llama-3.1-8b-instant' ? 'openai/gpt-oss-20b' : configuredModel);
         assert.equal(request.reasoning_format, 'hidden');
+        assert.equal(request.reasoning_effort, 'low');
         assert.equal(request.response_format.type, 'json_object');
+        assert.match(request.messages[0].content, /sudah dipakai|pertanyaan terdahulu/);
         return new Response(JSON.stringify({ choices: [{ message: { content: JSON.stringify({ questions: [{ category: 'Geografi', question: 'Apa ibu kota Jepang?', options: ['Tokyo', 'Osaka', 'Kyoto', 'Nara'], correct: 0 }] }) } }] }), { status: 200, headers: { 'Content-Type': 'application/json' } });
       }
       return originalFetch(url, options);
     };
     try {
       const generated = await globalThis.fetch(`http://127.0.0.1:${address.port}/api/quiz/generate`, {
-        method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ count: 1, category: 'Geografi', difficulty: 'mudah' }),
+        method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ count: 1, category: 'Geografi', difficulty: 'mudah', recentQuestions: ['Soal yang sudah muncul sebelumnya'] }),
       });
       assert.equal(generated.status, 200);
       assert.deepEqual(await generated.json(), { questions: [{ category: 'Geografi', question: 'Apa ibu kota Jepang?', options: ['Tokyo', 'Osaka', 'Kyoto', 'Nara'], correct: 0 }] });

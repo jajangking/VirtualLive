@@ -20,9 +20,38 @@
     { category:'SAINS', question:'Pada tekanan udara normal, air membeku pada suhu…', options:['−10°C','0°C','10°C','32°C'], correct:1 },
     { category:'ASTRONOMI', question:'Planet bercincin paling terkenal di tata surya adalah…', options:['Mars','Saturnus','Merkurius','Bumi'], correct:1 },
     { category:'BAHASA', question:'Lawan kata “optimis” adalah…', options:['Pesimis','Realistis','Praktis','Idealis'], correct:0 },
+    { category:'ASTRONOMI', question:'Planet terdekat dengan Matahari adalah…', options:['Venus','Merkurius','Mars','Bumi'], correct:1 },
+    { category:'ASTRONOMI', question:'Satelit alami Bumi adalah…', options:['Titan','Bulan','Europa','Phobos'], correct:1 },
+    { category:'FISIKA', question:'Satuan energi dalam sistem SI adalah…', options:['Watt','Joule','Newton','Pascal'], correct:1 },
+    { category:'KIMIA', question:'Simbol unsur oksigen pada tabel periodik adalah…', options:['Ox','O','Og','Om'], correct:1 },
+    { category:'SAINS', question:'Bagian tumbuhan yang terutama menyerap air dari tanah adalah…', options:['Daun','Bunga','Akar','Batang'], correct:2 },
+    { category:'GEOGRAFI', question:'Apa ibu kota Kanada?', options:['Toronto','Montreal','Ottawa','Vancouver'], correct:2 },
+    { category:'GEOGRAFI', question:'Benua terkecil berdasarkan luas daratan adalah…', options:['Eropa','Australia','Antarktika','Amerika Selatan'], correct:1 },
+    { category:'GEOGRAFI', question:'Garis khayal yang membagi Bumi menjadi belahan utara dan selatan adalah…', options:['Garis Balik Utara','Meridian Utama','Khatulistiwa','Garis Tanggal Internasional'], correct:2 },
+    { category:'SEJARAH INDONESIA', question:'Hari Sumpah Pemuda diperingati setiap tanggal…', options:['20 Mei','1 Juni','28 Oktober','10 November'], correct:2 },
+    { category:'SEJARAH INDONESIA', question:'Candi Borobudur berada di provinsi…', options:['Jawa Barat','Jawa Tengah','Jawa Timur','DI Yogyakarta'], correct:1 },
+    { category:'SEJARAH DUNIA', question:'Tembok Besar yang terkenal berada di negara…', options:['India','Jepang','Tiongkok','Mongolia'], correct:2 },
+    { category:'BAHASA', question:'Kata baku yang tepat adalah…', options:['Resiko','Risiko','Resikko','Rissiko'], correct:1 },
+    { category:'MATEMATIKA', question:'Besar sudut siku-siku adalah…', options:['45 derajat','90 derajat','120 derajat','180 derajat'], correct:1 },
+    { category:'MATEMATIKA', question:'Hasil dari 12 dikali 8 adalah…', options:['86','92','96','108'], correct:2 },
+    { category:'DUNIA HEWAN', question:'Hewan terbesar yang diketahui hidup saat ini adalah…', options:['Gajah Afrika','Paus biru','Hiu paus','Jerapah'], correct:1 },
+    { category:'DUNIA HEWAN', question:'Serangga dewasa pada umumnya memiliki berapa kaki?', options:['Empat','Enam','Delapan','Sepuluh'], correct:1 },
+    { category:'OLAHRAGA', question:'Olahraga yang menggunakan kok atau shuttlecock adalah…', options:['Tenis meja','Bulu tangkis','Squash','Bola voli'], correct:1 },
+    { category:'SENI', question:'Alat musik tradisional Sunda yang dimainkan dengan cara dipetik adalah…', options:['Kecapi','Kolintang','Sasando','Tifa'], correct:0 },
+    { category:'SENI', question:'Alat musik sasando berasal dari Pulau Rote di provinsi…', options:['Maluku','Nusa Tenggara Timur','Sulawesi Utara','Bali'], correct:1 },
+    { category:'SASTRA', question:'Siapa penulis novel “Laskar Pelangi”?', options:['Tere Liye','Andrea Hirata','Pramoedya Ananta Toer','Dee Lestari'], correct:1 },
+    { category:'SAINS', question:'Air murni mendidih pada suhu sekitar berapa di permukaan laut?', options:['0°C','50°C','100°C','150°C'], correct:2 },
+    { category:'SEJARAH INDONESIA', question:'Siapa presiden pertama Republik Indonesia?', options:['Soeharto','B. J. Habibie','Soekarno','Abdurrahman Wahid'], correct:2 },
+    { category:'GEOGRAFI', question:'Apa ibu kota Australia?', options:['Sydney','Melbourne','Canberra','Perth'], correct:2 },
+    { category:'GEOGRAFI', question:'Ankara dan Istanbul merupakan kota penting di negara…', options:['Yunani','Turki','Mesir','Iran'], correct:1 },
+    { category:'MATEMATIKA', question:'Berapa meter dalam satu kilometer?', options:['100','500','1.000','10.000'], correct:2 },
+    { category:'TUBUH MANUSIA', question:'Organ utama yang memompa darah ke seluruh tubuh adalah…', options:['Paru-paru','Ginjal','Jantung','Lambung'], correct:2 },
+    { category:'BAHASA', question:'Sinonim kata “lekas” adalah…', options:['Lambat','Segera','Jarang','Ragu'], correct:1 },
+    { category:'GEOGRAFI', question:'Samudra yang berada di antara Afrika, Asia, dan Australia adalah…', options:['Samudra Atlantik','Samudra Arktik','Samudra Hindia','Samudra Selatan'], correct:2 },
+    { category:'SAINS', question:'Gas terbanyak di atmosfer Bumi adalah…', options:['Oksigen','Karbon dioksida','Nitrogen','Hidrogen'], correct:2 },
   ];
   const LETTERS=['A','B','C','D'];
-  const SCORE_KEY='virtuallive.quiz.scores.v1',BABAK_KEY='virtuallive.quiz.babak.v1',BABAK_HISTORY_KEY='virtuallive.quiz.babak-history.v1',PRIZE_KEY='virtuallive.quiz.babak-prize.v1',QUESTION_DURATION_KEY='virtuallive.quiz.question-duration.v1',QUESTIONS_PER_BABAK_KEY='virtuallive.quiz.questions-per-babak.v1',PREPARED_AI_QUESTIONS_KEY='virtuallive.quiz.prepared-ai-questions.v1';
+  const SCORE_KEY='virtuallive.quiz.scores.v1',BABAK_KEY='virtuallive.quiz.babak.v1',BABAK_HISTORY_KEY='virtuallive.quiz.babak-history.v1',PRIZE_KEY='virtuallive.quiz.babak-prize.v1',QUESTION_DURATION_KEY='virtuallive.quiz.question-duration.v1',QUESTIONS_PER_BABAK_KEY='virtuallive.quiz.questions-per-babak.v1',PREPARED_AI_QUESTIONS_KEY='virtuallive.quiz.prepared-ai-questions.v1',LOCAL_QUESTION_HISTORY_KEY='virtuallive.quiz.local-question-history.v1',QUIZ_CATEGORY_KEY='virtuallive.quiz.ai-category.v1',QUIZ_DIFFICULTY_KEY='virtuallive.quiz.ai-difficulty.v1';
   const DEFAULT_QUESTION_SECONDS=30,MIN_QUESTION_SECONDS=10,MAX_QUESTION_SECONDS=180,DEFAULT_QUESTIONS_PER_BABAK=10,MAX_QUESTIONS_PER_BABAK=20,RESULT_SECONDS=7;
   const $=selector=>document.querySelector(selector);
   const answerGate=window.VirtualLiveAnswerGate.createFirstAnswerGate();
@@ -32,7 +61,7 @@
   let questionBank=QUESTIONS,preparedAiQuestions=loadPreparedAiQuestions();
   let scores=loadScores(),deck=[],deckPosition=0,roundNumber=0,currentQuestion=null,babakNumber=1,babakHistory=[],pendingBabakArchive=null,wasPausedBeforeBabakDialog=false;
   const donorTotals=new Map();
-  let phase='question',remaining=activeQuestionDuration,resultRemaining=RESULT_SECONDS,firstCorrect=null,isPaused=false,announcementActive=false,resultSequenceTimer=null;
+  let phase='question',remaining=activeQuestionDuration,resultRemaining=RESULT_SECONDS,firstCorrect=null,isPaused=false,announcementActive=false,resultSequenceTimer=null,isStartingBabak=false,lastWrongSfxAt=0;
   let lastFrame=performance.now(),toastTimer,quizMotionTimer;
   let audioContext=null,masterGain=null,bgmGain=null,sfxGain=null,bgmTimer=null,bgmStep=0,audioEnabled=false,lastCountdownSecond=activeQuestionDuration,giftTimer=null;
   let hostAudioEnabled=false,hostAiConfigured=false,groqKeySource='none',hostJobs=[],hostQueueRunning=false,lastAutoHostAt=0,hostVoiceStatus='EDGE TTS · BRIAN';
@@ -81,6 +110,33 @@
   function clearPreparedAiQuestions(){
     preparedAiQuestions=null;
     try{localStorage.removeItem(PREPARED_AI_QUESTIONS_KEY);}catch(_){/* Memory state is already cleared. */}
+  }
+  function readLocalQuestionHistory(){
+    try{
+      const saved=JSON.parse(localStorage.getItem(LOCAL_QUESTION_HISTORY_KEY)||'[]');
+      return Array.isArray(saved)?saved.filter(item=>typeof item==='string').slice(-QUESTIONS.length):[];
+    }catch(_){return [];}
+  }
+  function rememberQuestionBatch(batch){
+    const recent=readLocalQuestionHistory();
+    for(const item of batch){
+      const fingerprint=String(item?.question||'').trim().toLocaleLowerCase('id-ID');
+      if(!fingerprint)continue;
+      const existing=recent.indexOf(fingerprint);if(existing>=0)recent.splice(existing,1);
+      recent.push(fingerprint);
+    }
+    try{localStorage.setItem(LOCAL_QUESTION_HISTORY_KEY,JSON.stringify(recent.slice(-QUESTIONS.length)));}catch(_){/* Keep the in-memory batch usable. */}
+  }
+  function generateFallbackQuestionBatch(count){
+    const recent=new Set(readLocalQuestionHistory());
+    const fresh=shuffle(QUESTIONS.filter(item=>!recent.has(item.question.trim().toLocaleLowerCase('id-ID'))));
+    const recycled=shuffle(QUESTIONS.filter(item=>recent.has(item.question.trim().toLocaleLowerCase('id-ID'))));
+    const selected=[...fresh,...recycled].slice(0,count);
+    rememberQuestionBatch(selected);
+    return selected.map(item=>{
+      const order=shuffle([0,1,2,3]);
+      return {...item,options:order.map(index=>item.options[index]),correct:order.indexOf(item.correct)};
+    });
   }
   function scoreKey(name){return cleanName(name).toLocaleLowerCase('id-ID');}
   function loadScores(){
@@ -134,24 +190,42 @@
     pendingBabakArchive={number:babakNumber,archivedAt:new Date().toISOString(),podium,prizeAmount:readPrizeAmount(),winner:podium[0]?.name||'',questionsPlayed:roundNumber,questionsPlanned:activeQuestionsPerBabak};
     try{localStorage.setItem(PRIZE_KEY,String(pendingBabakArchive.prizeAmount));}catch(_){/* The current prize remains active for this round. */}
     const questionSummary=`Soal babak ini: ${roundNumber}/${activeQuestionsPerBabak}.`;
-    const nextQuestionSource=preparedAiQuestions?.length===questionsPerBabak?'Soal AI siap dipakai.':'Soal berikutnya memakai bank lokal.';
+    const nextQuestionSource=preparedAiQuestions?.length===questionsPerBabak?'Batch soal yang disiapkan siap dipakai.':hostAiConfigured?'Soal Groq AI akan dibuat otomatis; jika kuota habis, generator lokal anti-ulangan mengambil alih.':'Groq belum siap; generator lokal anti-ulangan akan dipakai.';
     const summary=podium[0]?`Juara 1: ${podium[0].name} (${podium[0].points} poin). Hadiah yang dicatat: ${formatRupiah(pendingBabakArchive.prizeAmount)}. ${questionSummary} ${nextQuestionSource} Skor babak ini akan diarsipkan, lalu papan aktif direset.`:`${questionSummary} ${nextQuestionSource} Belum ada skor. Babak baru tetap dimulai dan papan skor aktif akan kosong.`;
     $('#newBabakSummary').textContent=summary;
     wasPausedBeforeBabakDialog=isPaused;if(!isPaused)setPaused(true);
     $('#newBabakDialog').showModal();
   }
   function closeNewBabakDialog(resume){
+    if(isStartingBabak&&resume)return;
     const dialog=$('#newBabakDialog');if(dialog.open)dialog.close();pendingBabakArchive=null;
     if(resume&&!wasPausedBeforeBabakDialog&&isPaused)setPaused(false);
   }
-  function beginNewBabak(){
-    if(!pendingBabakArchive)return;
-    babakHistory.unshift(pendingBabakArchive);babakHistory=babakHistory.slice(0,50);babakNumber++;
-    saveBabakState();scores={};saveScores();roundNumber=0;activeQuestionsPerBabak=questionsPerBabak;
-    questionBank=preparedAiQuestions?.length===activeQuestionsPerBabak?preparedAiQuestions:QUESTIONS;
-    if(questionBank===preparedAiQuestions)clearPreparedAiQuestions();
-    deck=shuffle(questionBank.map((_,index)=>index));deckPosition=0;
-    closeNewBabakDialog(false);setPaused(false);nextQuestion();renderBabakHistory();
+  async function beginNewBabak(){
+    if(!pendingBabakArchive||isStartingBabak)return;
+    isStartingBabak=true;
+    const confirm=$('#confirmBabakButton'),cancel=$('#cancelBabakButton'),summary=$('#newBabakSummary');
+    confirm.disabled=true;cancel.disabled=true;
+    const archive=pendingBabakArchive,count=questionsPerBabak;
+    let nextBatch=null,source='Groq AI',fallbackReason='';
+    summary.textContent=`Menyiapkan ${count} pertanyaan resmi untuk babak baru…`;
+    try{
+      if(preparedAiQuestions?.length===count){nextBatch=preparedAiQuestions;rememberQuestionBatch(nextBatch);source='batch soal tersimpan';clearPreparedAiQuestions();}
+      else if(await loadHostStatus()){
+        try{nextBatch=await requestGeneratedQuestionBatch(count,$('#quizCategoryInput').value.trim()||'Pengetahuan Umum',$('#quizDifficultyInput').value);rememberQuestionBatch(nextBatch);}
+        catch(error){fallbackReason=String(error?.message||'layanan Groq tidak tersedia');nextBatch=generateFallbackQuestionBatch(count);source='generator lokal';}
+      }else{fallbackReason='Groq belum dikonfigurasi';nextBatch=generateFallbackQuestionBatch(count);source='generator lokal';}
+      babakHistory.unshift(archive);babakHistory=babakHistory.slice(0,50);babakNumber++;
+      saveBabakState();scores={};saveScores();roundNumber=0;activeQuestionsPerBabak=count;
+      questionBank=nextBatch;deck=shuffle(questionBank.map((_,index)=>index));deckPosition=0;
+      closeNewBabakDialog(false);setPaused(false);nextQuestion();renderBabakHistory();
+      addMessage('QUIZ MASTER',source==='generator lokal'?'Babak baru memakai generator lokal dengan pengacakan dan anti-ulangan.':`Babak baru memakai ${source}.`,'system');
+      if(fallbackReason)notify(`Groq ${fallbackReason}; generator lokal anti-ulangan dipakai.`,true);
+    }catch(error){
+      summary.textContent=`Gagal menyiapkan babak: ${String(error?.message||error)}. Coba lagi.`;
+    }finally{
+      isStartingBabak=false;confirm.disabled=false;cancel.disabled=false;
+    }
   }
   function sortedScores(){return Object.values(scores).sort((a,b)=>b.points-a.points||a.name.localeCompare(b.name,'id-ID'));}
   function totalCorrect(){return Object.values(scores).reduce((sum,item)=>sum+item.points,0);}
@@ -202,6 +276,14 @@
     envelope.gain.exponentialRampToValueAtTime(.0001,when+duration);
     oscillator.connect(envelope);envelope.connect(output);oscillator.start(when);oscillator.stop(when+duration+.04);
   }
+  function sweepTone(startFrequency,endFrequency,duration,when,output,level=.035,wave='triangle'){
+    if(!audioContext||!output)return;
+    const oscillator=audioContext.createOscillator(),envelope=audioContext.createGain(),filter=audioContext.createBiquadFilter();
+    oscillator.type=wave;oscillator.frequency.setValueAtTime(startFrequency,when);oscillator.frequency.exponentialRampToValueAtTime(Math.max(20,endFrequency),when+duration);
+    filter.type='lowpass';filter.frequency.setValueAtTime(1500,when);filter.Q.setValueAtTime(.4,when);
+    envelope.gain.setValueAtTime(.0001,when);envelope.gain.linearRampToValueAtTime(level,when+.035);envelope.gain.exponentialRampToValueAtTime(.0001,when+duration);
+    oscillator.connect(filter);filter.connect(envelope);envelope.connect(output);oscillator.start(when);oscillator.stop(when+duration+.04);
+  }
   function playPadChord(notes,when,duration,output){
     if(!audioContext||!output)return;
     for(const [index,note] of notes.entries()){
@@ -232,10 +314,25 @@
   function playSfx(kind){
     if(!audioEnabled||!audioContext)return;
     const now=audioContext.currentTime;
-    const sounds={
-      correct:[523.25,659.25,783.99],wrong:[220,196],reveal:[349.23,440,523.25],winner:[392,523.25,659.25,783.99,1046.5],start:[392,523.25],gift:[659.25,783.99,987.77],tick:[880]
+    if(kind==='wrong'){
+      sweepTone(620,165,.62,now,sfxGain,.032,'sawtooth');
+      tone(146.83,.36,now+.21,sfxGain,.018,'triangle');
+      return;
+    }
+    if(kind==='reveal'){
+      sweepTone(196,392,.9,now,sfxGain,.022,'sine');
+      tone(392,.46,now+.42,sfxGain,.026,'sine');tone(523.25,.55,now+.68,sfxGain,.03,'sine');
+      return;
+    }
+    const cues={
+      correct:{notes:[587.33,739.99,880],gap:.14,duration:.34,level:.04,wave:'sine'},
+      winner:{notes:[392,493.88,587.33,783.99,987.77],gap:.17,duration:.48,level:.045,wave:'sine'},
+      start:{notes:[392,523.25,659.25],gap:.18,duration:.38,level:.034,wave:'sine'},
+      gift:{notes:[659.25,830.61,987.77],gap:.12,duration:.3,level:.032,wave:'sine'},
+      tick:{notes:[880],gap:0,duration:.11,level:.022,wave:'sine'},
     };
-    const notes=sounds[kind]||[];notes.forEach((note,index)=>tone(note,kind==='winner'?.24:.18,now+index*(kind==='winner'?.075:.085),sfxGain,kind==='tick'?.028:kind==='winner'?.06:.055,kind==='winner'?'triangle':'sine'));
+    const cue=cues[kind];if(!cue)return;
+    cue.notes.forEach((note,index)=>tone(note,cue.duration,now+index*cue.gap,sfxGain,cue.level,cue.wave));
   }
   async function toggleAudio(){
     if(!initAudio())return;
@@ -373,7 +470,10 @@
       }
       return;
     }
-    if(!firstCorrect){addMessage('QUIZ MASTER',`${player}, belum tepat — masih ada waktu!`,'system');$('#timerStatus').textContent='JAWABAN SALAH — COBA LAGI';}
+    if(!firstCorrect){
+      addMessage('QUIZ MASTER',`${player}, belum tepat — masih ada waktu!`,'system');$('#timerStatus').textContent='JAWABAN SALAH — COBA LAGI';
+      const now=Date.now();if(now-lastWrongSfxAt>1400){playSfx('wrong');lastWrongSfxAt=now;}
+    }
   }
 
   // Accept and display only the first A–D answer from each participant in a round.
@@ -518,10 +618,10 @@
     renderLeaderboard();
   }
   function updateTimer(){
-    const isQuestion=phase==='question',isResult=phase==='result';
-    const text=isQuestion?formatClock(remaining):phase==='babak-end'?'SELESAI':'HASIL';
+    const isQuestion=phase==='question',isResult=phase==='result',isPreparing=phase==='preparing';
+    const text=isPreparing?'AI':isQuestion?formatClock(remaining):phase==='babak-end'?'SELESAI':'HASIL';
     $('#timeReadout').textContent=text;
-    $('#timerCaption').textContent=isQuestion?text:phase==='babak-end'?'BABAK SELESAI':`SOAL BARU ${String(Math.ceil(resultRemaining)).padStart(2,'0')}`;
+    $('#timerCaption').textContent=isPreparing?'MENYIAPKAN SOAL':isQuestion?text:phase==='babak-end'?'BABAK SELESAI':`SOAL BARU ${String(Math.ceil(resultRemaining)).padStart(2,'0')}`;
     const pct=isQuestion?remaining/activeQuestionDuration:isResult?resultRemaining/RESULT_SECONDS:0;
     $('#timerFill').style.width=`${Math.max(0,pct*100)}%`;
     $('#timerFill').classList.toggle('urgent',isQuestion&&remaining<=8);
@@ -573,29 +673,55 @@
       $('#hostAudioToggle').title=`Edge TTS ${data?.voice||'en-US-BrianMultilingualNeural'} · atur sapaan AI lewat tombol GROQ AI.`;
       if(!hostAiConfigured){if(!hostAudioEnabled)setHostAvatarState('GROQ BELUM DIATUR');}
       else if(!hostAudioEnabled)setHostAvatarState('HOST SIAP');
-    }catch(_){hostAiConfigured=false;if(!hostAudioEnabled)setHostAvatarState('SERVER AI OFFLINE');}
+      return hostAiConfigured;
+    }catch(_){hostAiConfigured=false;if(!hostAudioEnabled)setHostAvatarState('SERVER AI OFFLINE');return false;}
+  }
+  async function requestGeneratedQuestionBatch(count,category,difficulty){
+    const response=await fetch('/api/quiz/generate',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({count,category,difficulty,recentQuestions:readLocalQuestionHistory().slice(-20)})});
+    const data=await response.json().catch(()=>({}));
+    if(!response.ok)throw new Error(data.error||'Groq gagal membuat soal.');
+    if(!Array.isArray(data.questions)||data.questions.length!==count)throw new Error('Jumlah soal dari Groq tidak sesuai. Coba ulangi.');
+    return data.questions;
+  }
+  function persistPreparedAiQuestions(){
+    try{localStorage.setItem(PREPARED_AI_QUESTIONS_KEY,JSON.stringify(preparedAiQuestions));}catch(_){/* Keep the batch for this session. */}
+  }
+  function loadQuizGenerationPreferences(){
+    try{
+      const category=localStorage.getItem(QUIZ_CATEGORY_KEY),difficulty=localStorage.getItem(QUIZ_DIFFICULTY_KEY);
+      if(category)$('#quizCategoryInput').value=category.slice(0,48);
+      if(['mudah','sedang','sulit'].includes(difficulty))$('#quizDifficultyInput').value=difficulty;
+    }catch(_){/* Defaults in the form remain usable. */}
+  }
+  function saveQuizGenerationPreferences(){
+    try{
+      localStorage.setItem(QUIZ_CATEGORY_KEY,$('#quizCategoryInput').value.trim().slice(0,48));
+      localStorage.setItem(QUIZ_DIFFICULTY_KEY,$('#quizDifficultyInput').value);
+    }catch(_){/* Preferences apply for this page session. */}
   }
   function openQuizGenerator(){
     $('#quizCategoryInput').value=$('#quizCategoryInput').value.trim()||'Pengetahuan Umum';
-    $('#quizGeneratorStatus').textContent=!hostAiConfigured?'Groq belum siap. Atur API key lewat tombol GROQ AI dahulu.':preparedAiQuestions?`${preparedAiQuestions.length} soal AI sudah siap dipakai pada babak berikutnya.`:`Akan dibuat ${questionsPerBabak} soal. Setelah siap, mulai babak dengan tombol BABAK BARU.`;
+    $('#quizGeneratorStatus').textContent=!hostAiConfigured?'Groq belum siap; tombol generator akan menyiapkan soal lokal anti-ulangan sebagai cadangan.':preparedAiQuestions?`${preparedAiQuestions.length} soal sudah siap dipakai pada babak berikutnya.`:`Akan dibuat ${questionsPerBabak} soal Groq. Jika kuota habis, generator lokal anti-ulangan otomatis menjadi cadangan.`;
     $('#quizGeneratorDialog').showModal();
   }
   async function generateQuizQuestionBatch(){
     const button=$('#generateQuizQuestionsButton'),status=$('#quizGeneratorStatus');
     button.disabled=true;status.textContent=`Sedang meminta Groq membuat ${questionsPerBabak} soal…`;
     try{
-      const response=await fetch('/api/quiz/generate',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({count:questionsPerBabak,category:$('#quizCategoryInput').value.trim()||'Pengetahuan Umum',difficulty:$('#quizDifficultyInput').value})});
-      const data=await response.json().catch(()=>({}));if(!response.ok)throw new Error(data.error||'Groq gagal membuat soal.');
-      if(!Array.isArray(data.questions)||data.questions.length!==questionsPerBabak)throw new Error('Jumlah soal dari Groq tidak sesuai. Coba ulangi.');
-      preparedAiQuestions=data.questions;
-      try{localStorage.setItem(PREPARED_AI_QUESTIONS_KEY,JSON.stringify(preparedAiQuestions));}catch(_){/* Keep the batch for this session. */}
-      status.textContent=`${preparedAiQuestions.length} soal AI siap untuk babak berikutnya. Klik BABAK BARU untuk memakainya.`;
-    }catch(error){status.textContent=String(error?.message||'Groq gagal membuat soal.');}
+      preparedAiQuestions=await requestGeneratedQuestionBatch(questionsPerBabak,$('#quizCategoryInput').value.trim()||'Pengetahuan Umum',$('#quizDifficultyInput').value);
+      rememberQuestionBatch(preparedAiQuestions);persistPreparedAiQuestions();
+      status.textContent=`${preparedAiQuestions.length} soal Groq AI siap untuk babak berikutnya. Klik BABAK BARU untuk memakainya.`;
+    }catch(error){
+      preparedAiQuestions=generateFallbackQuestionBatch(questionsPerBabak);persistPreparedAiQuestions();
+      status.textContent=`Groq tidak tersedia (${String(error?.message||'kuota habis')}). ${preparedAiQuestions.length} soal generator lokal anti-ulangan siap untuk babak berikutnya.`;
+    }
     finally{button.disabled=false;}
   }
   $('#quizGeneratorToggle').addEventListener('click',openQuizGenerator);
   $('#quizGeneratorCancel').addEventListener('click',()=>$('#quizGeneratorDialog').close());
   $('#generateQuizQuestionsButton').addEventListener('click',generateQuizQuestionBatch);
+  $('#quizCategoryInput').addEventListener('change',saveQuizGenerationPreferences);
+  $('#quizDifficultyInput').addEventListener('change',saveQuizGenerationPreferences);
   const openGroqSettings=()=>$('#groqSettingsDialog').showModal();
   $('#groqSettingsToggle').addEventListener('click',openGroqSettings);
   $('#groqLiveSettingsToggle').addEventListener('click',openGroqSettings);
@@ -871,12 +997,29 @@
   document.addEventListener('fullscreenchange',updateFullscreenButton);
   updateFullscreenButton();
 
+  async function initializeFirstBabak(){
+    phase='preparing';activeQuestionsPerBabak=questionsPerBabak;
+    $('#questionText').textContent='Menyiapkan pertanyaan resmi untuk babak ini…';
+    $('#questionTag').textContent='PENGETAHUAN UMUM';$('#answerGrid').replaceChildren();
+    $('#timerStatus').textContent='MENYIAPKAN SOAL';$('#autoAdvanceText').textContent='Groq AI sedang menyiapkan soal; generator lokal siap sebagai cadangan.';
+    $('#newBabakButton').disabled=true;$('#pauseToggle').disabled=true;$('#quizGeneratorToggle').disabled=true;updateTimer();
+    const configured=await loadHostStatus();
+    let batch=null,source='',fallbackReason='';
+    if(preparedAiQuestions?.length===activeQuestionsPerBabak){batch=preparedAiQuestions;rememberQuestionBatch(batch);source='batch soal tersimpan';clearPreparedAiQuestions();}
+    else if(configured){
+      try{batch=await requestGeneratedQuestionBatch(activeQuestionsPerBabak,$('#quizCategoryInput').value.trim()||'Pengetahuan Umum',$('#quizDifficultyInput').value);rememberQuestionBatch(batch);source='Groq AI otomatis';}
+      catch(error){fallbackReason=String(error?.message||'layanan Groq tidak tersedia');batch=generateFallbackQuestionBatch(activeQuestionsPerBabak);source='generator lokal';}
+    }else{fallbackReason='Groq belum dikonfigurasi';batch=generateFallbackQuestionBatch(activeQuestionsPerBabak);source='generator lokal';}
+    questionBank=batch;deck=shuffle(questionBank.map((_,index)=>index));deckPosition=0;
+    phase='question';nextQuestion();$('#newBabakButton').disabled=false;$('#pauseToggle').disabled=false;$('#quizGeneratorToggle').disabled=false;
+    addMessage('QUIZ MASTER',source==='generator lokal'?'Groq tidak tersedia; generator lokal anti-ulangan dipakai.':`Pertanyaan babak ini disiapkan oleh ${source}.`,'system');
+    if(fallbackReason)notify(`Groq ${fallbackReason}; generator lokal anti-ulangan dipakai.`,true);
+  }
+
   // Add ?live=1 for a clean portrait-friendly broadcast screen (question, timer and scoreboard only).
   window.VirtualLiveQuiz={receiveComment};
-  loadBabakState();renderBabakHistory();
+  loadBabakState();renderBabakHistory();loadQuizGenerationPreferences();
   connectTikTokEventStream();
-  loadHostStatus();
-  activeQuestionsPerBabak=questionsPerBabak;deck=shuffle(questionBank.map((_,index)=>index));nextQuestion();
-  addMessage('QUIZ MASTER','Quiz Arena berjalan otomatis. Jawab A, B, C, atau D sebelum timer habis.','system');
+  void initializeFirstBabak();
   updateTimer();requestAnimationFrame(frame);
 })();
