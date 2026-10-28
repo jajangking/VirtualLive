@@ -844,7 +844,8 @@ body.broadcast-mode.layout-editing [data-layout-panel]{position:absolute!importa
 body.broadcast-mode.layout-editing [data-layout-panel].is-selected{outline:3px solid #ffd27b;outline-offset:3px;z-index:30;box-shadow:0 0 0 9999px #02071025,0 0 28px #ffd27b45}
 .layout-drag-grip,.layout-resize-handle{display:none}
 body.broadcast-mode.layout-editing .layout-drag-grip,body.broadcast-mode.layout-editing .layout-resize-handle{position:absolute;z-index:50;display:grid;place-items:center;width:30px;height:30px;padding:0;border:1px solid #d7fff4;border-radius:7px;background:#0c2631ed;color:#eafff9;box-shadow:0 3px 12px #0008;font:18px/1 sans-serif;touch-action:none;user-select:none;cursor:grab}
-body.broadcast-mode.layout-editing .layout-drag-grip{top:4px;left:50%;transform:translateX(-50%)}
+body.broadcast-mode.layout-editing .layout-drag-grip{top:3px;right:3px;left:auto;width:22px;height:22px;transform:none;border:0;border-radius:4px;background:#07131c66;color:#c6d6dd;box-shadow:none;font-size:13px;opacity:.55}
+body.broadcast-mode.layout-editing .layout-drag-grip:hover,body.broadcast-mode.layout-editing .layout-drag-grip:focus-visible,body.broadcast-mode.layout-editing [data-layout-panel].is-selected .layout-drag-grip{opacity:1;background:#102531cc}
 body.broadcast-mode.layout-editing .layout-drag-grip:active{cursor:grabbing}
 body.broadcast-mode.layout-editing .layout-resize-handle{right:3px;bottom:3px;width:27px;height:27px;border-color:#ffe4ad;background:#40341feb;color:#ffe4ad;cursor:nwse-resize}
 body.broadcast-mode.layout-editing [data-layout-panel]{user-select:none}
