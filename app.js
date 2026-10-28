@@ -32,7 +32,7 @@
   let questionBank=QUESTIONS,preparedAiQuestions=loadPreparedAiQuestions();
   let scores=loadScores(),deck=[],deckPosition=0,roundNumber=0,currentQuestion=null,babakNumber=1,babakHistory=[],pendingBabakArchive=null,wasPausedBeforeBabakDialog=false;
   const donorTotals=new Map();
-  let phase='question',remaining=activeQuestionDuration,resultRemaining=RESULT_SECONDS,firstCorrect=null,isPaused=false,announcementActive=false,winnerSelectionTimer=null,resultSequenceTimer=null;
+  let phase='question',remaining=activeQuestionDuration,resultRemaining=RESULT_SECONDS,firstCorrect=null,isPaused=false,announcementActive=false,winnerSelectionTimer=null,resultSequenceTimer=null,resultClearHandler=null;
   let lastFrame=performance.now(),toastTimer,quizMotionTimer;
   let audioContext=null,masterGain=null,bgmGain=null,sfxGain=null,bgmTimer=null,bgmStep=0,audioEnabled=false,lastCountdownSecond=activeQuestionDuration,giftTimer=null;
   let hostAudioEnabled=false,hostAiConfigured=false,groqKeySource='none',hostJobs=[],hostQueueRunning=false,lastAutoHostAt=0,hostVoiceStatus='EDGE TTS · BRIAN';
@@ -304,11 +304,17 @@
     panel.classList.remove('is-question-arriving','is-result-reveal');void panel.offsetWidth;panel.classList.add(className);
     clearTimeout(quizMotionTimer);quizMotionTimer=setTimeout(()=>panel.classList.remove(className),duration);
   }
+  function clearResultSequence(){
+    clearTimeout(resultSequenceTimer);resultSequenceTimer=null;
+    const content=$('.question-content');
+    if(content&&resultClearHandler)content.removeEventListener('transitionend',resultClearHandler);
+    resultClearHandler=null;
+  }
 
   function nextQuestion(){
     if(roundNumber>=activeQuestionsPerBabak){finishBabak();return;}
+    clearResultSequence();
     const panel=$('.quiz-panel');panel.classList.remove('is-answer-reveal','is-answer-hero','is-answer-clearing');
-    clearTimeout(resultSequenceTimer);resultSequenceTimer=null;
     const animateTransition=roundNumber>0;
     if(deckPosition>=deck.length){
       const previous=deck.length?deck[deck.length-1]:-1;deck=shuffle(questionBank.map((_,i)=>i));
@@ -420,6 +426,7 @@
   }
 
   function presentQuestionResult(){
+    clearResultSequence();
     const panel=$('.quiz-panel'),banner=$('#winnerBanner');
     panel?.classList.remove('is-answer-reveal','is-answer-hero');
     banner.classList.remove('visible','winner-reveal');void banner.offsetWidth;
@@ -429,17 +436,25 @@
   function sequenceQuestionResult(){
     const panel=$('.quiz-panel'),wrong=[...document.querySelectorAll('.answer-option.dimmed')],correct=$('.answer-option.correct');
     if(!panel){presentQuestionResult();return;}
-    clearTimeout(resultSequenceTimer);panel.classList.remove('is-answer-reveal','is-answer-hero','is-answer-clearing');void panel.offsetWidth;
+    clearResultSequence();panel.classList.remove('is-answer-reveal','is-answer-hero','is-answer-clearing');void panel.offsetWidth;
     panel.classList.add('is-answer-reveal');
     const reduced=window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
     const raiseAnswer=()=>{
       wrong.forEach(option=>option.classList.add('is-removed'));
       panel.classList.add('is-answer-hero');correct?.classList.add('is-answer-hero');
-      if(reduced){resultSequenceTimer=setTimeout(()=>{panel.classList.add('is-answer-clearing');presentQuestionResult();},650);return;}
-      resultSequenceTimer=setTimeout(()=>{
+      const content=$('.question-content');
+      const fadeToWinner=()=>{
+        content?.classList.remove('question-arrive');content?.querySelectorAll('.answer-arrive').forEach(option=>option.classList.remove('answer-arrive'));
+        if(content)void content.offsetWidth;
         panel.classList.add('is-answer-clearing');
-        resultSequenceTimer=setTimeout(presentQuestionResult,360);
-      },920);
+        const showWinner=()=>{if(phase==='result')presentQuestionResult();};
+        if(reduced){resultSequenceTimer=setTimeout(showWinner,80);return;}
+        if(!content){showWinner();return;}
+        resultClearHandler=event=>{if(event.target===content&&event.propertyName==='opacity')showWinner();};
+        content.addEventListener('transitionend',resultClearHandler);
+        resultSequenceTimer=setTimeout(showWinner,360);
+      };
+      resultSequenceTimer=setTimeout(fadeToWinner,reduced?650:820);
     };
     resultSequenceTimer=setTimeout(raiseAnswer,reduced?0:470);
   }
