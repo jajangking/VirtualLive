@@ -32,7 +32,7 @@
   let phase='question',remaining=ROUND_SECONDS,resultRemaining=RESULT_SECONDS,firstCorrect=null,isPaused=false,announcementActive=false;
   let lastFrame=performance.now(),toastTimer;
   let audioContext=null,masterGain=null,bgmGain=null,sfxGain=null,bgmTimer=null,bgmStep=0,audioEnabled=false,lastCountdownSecond=ROUND_SECONDS,giftTimer=null;
-  let hostAudioEnabled=false,hostAiConfigured=false,hostJobs=[],hostQueueRunning=false,lastAutoHostAt=0,hostVoiceStatus='EDGE TTS · BRIAN';
+  let hostAudioEnabled=false,hostAiConfigured=false,groqKeySource='none',hostJobs=[],hostQueueRunning=false,lastAutoHostAt=0,hostVoiceStatus='EDGE TTS · BRIAN';
   let hostPlaybackContext=null,hostPlaybackSource=null;
   const seenHostEventKeys=new Map();
 
@@ -383,15 +383,53 @@
     const label=$('#hostAvatarState');if(label)label.textContent=text;
     $('#aiHostAvatar')?.classList.toggle('is-speaking',speaking);
   }
-  function loadHostStatus(){
-    fetch('/api/host/status',{cache:'no-store'}).then(response=>response.ok?response.json():null).then(data=>{
-      hostAiConfigured=Boolean(data?.configured);
-      $('#hostAudioToggle').title=`Edge TTS ${data?.voice||'en-US-BrianMultilingualNeural'} · sapaan AI memerlukan GROQ_API_KEY di server.`;
-      if(!hostAiConfigured){
-        if(!hostAudioEnabled)setHostAvatarState('GROQ BELUM DIATUR');
-      }else if(!hostAudioEnabled)setHostAvatarState('HOST SIAP');
-    }).catch(()=>{hostAiConfigured=false;if(!hostAudioEnabled)setHostAvatarState('SERVER AI OFFLINE');});
+  function renderGroqSettings(data){
+    groqKeySource=data?.keySource||'none';
+    const configured=Boolean(data?.configured);
+    const label=$('#groqSettingsLabel');if(label)label.textContent=configured?'GROQ SIAP':'GROQ AI';
+    $('#groqSettingsToggle')?.setAttribute('data-configured',String(configured));
+    const message=$('#groqConfigMessage');
+    if(groqKeySource==='environment'){
+      message.textContent='Groq sudah dikonfigurasi di environment server. Nilai key tidak dapat dilihat atau diganti dari UI.';
+      $('#groqConfigForm').hidden=true;$('#groqConfigClear').hidden=true;
+    }else if(groqKeySource==='ui'){
+      message.textContent='Groq aktif. Key tersimpan di file privat server dan tidak ditampilkan kembali; tidak disimpan di browser.';
+      $('#groqConfigForm').hidden=false;$('#groqConfigClear').hidden=false;
+    }else{
+      message.textContent='Belum ada Groq API key. Masukkan key untuk mengaktifkan sapaan AI otomatis.';
+      $('#groqConfigForm').hidden=false;$('#groqConfigClear').hidden=true;
+    }
   }
+  async function loadHostStatus(){
+    try{
+      const response=await fetch('/api/host/status',{cache:'no-store'}),data=response.ok?await response.json():null;
+      hostAiConfigured=Boolean(data?.configured);renderGroqSettings(data);
+      $('#hostAudioToggle').title=`Edge TTS ${data?.voice||'en-US-BrianMultilingualNeural'} · atur sapaan AI lewat tombol GROQ AI.`;
+      if(!hostAiConfigured){if(!hostAudioEnabled)setHostAvatarState('GROQ BELUM DIATUR');}
+      else if(!hostAudioEnabled)setHostAvatarState('HOST SIAP');
+    }catch(_){hostAiConfigured=false;if(!hostAudioEnabled)setHostAvatarState('SERVER AI OFFLINE');}
+  }
+  $('#groqSettingsToggle').addEventListener('click',()=>$('#groqSettingsDialog').showModal());
+  $('#groqSettingsCancel').addEventListener('click',()=>$('#groqSettingsDialog').close());
+  $('#groqConfigForm').addEventListener('submit',async event=>{
+    event.preventDefault();const apiKey=$('#groqApiKeyInput').value.trim();if(!apiKey){$('#groqConfigMessage').textContent='Masukkan Groq API key terlebih dahulu.';$('#groqApiKeyInput').focus();return;}
+    const button=$('#groqConfigForm button[type="submit"]');button.disabled=true;
+    try{
+      const response=await fetch('/api/host/config',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({apiKey})});
+      const data=await response.json().catch(()=>({}));if(!response.ok)throw new Error(data.error||'Key Groq gagal disimpan.');
+      $('#groqApiKeyInput').value='';await loadHostStatus();$('#groqConfigMessage').textContent='Groq aktif. Key tersimpan di file privat server dan tidak ditampilkan kembali; tidak disimpan di browser.';
+    }catch(error){$('#groqConfigMessage').textContent=String(error?.message||'Key Groq gagal disimpan.');}
+    finally{button.disabled=false;}
+  });
+  $('#groqConfigClear').addEventListener('click',async()=>{
+    const button=$('#groqConfigClear');button.disabled=true;
+    try{
+      const response=await fetch('/api/host/config',{method:'DELETE'}),data=await response.json().catch(()=>({}));
+      if(!response.ok)throw new Error(data.error||'Key Groq gagal dihapus.');
+      await loadHostStatus();
+    }catch(error){$('#groqConfigMessage').textContent=String(error?.message||'Key Groq gagal dihapus.');}
+    finally{button.disabled=false;}
+  });
   async function playHostSpeech(text){
     if(!hostAudioEnabled||!hostPlaybackContext)return;
     const response=await fetch('/api/host/speech',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({text})});

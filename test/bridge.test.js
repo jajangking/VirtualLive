@@ -2,7 +2,12 @@
 
 const test = require('node:test');
 const assert = require('node:assert/strict');
-const { server, handleTikTokComment, handleTikTokGift, handleTikTokMember, handleTikTokFollow, handleTikTokSocial, describeEdgeTtsError, isTrustedRequestOrigin, eventClients } = require('../server');
+const fs = require('node:fs');
+const os = require('node:os');
+const path = require('node:path');
+const testGroqKeyFile = path.join(os.tmpdir(), `virtuallive-groq-test-${process.pid}`);
+process.env.GROQ_KEY_FILE = testGroqKeyFile;
+const { server, handleTikTokComment, handleTikTokGift, handleTikTokMember, handleTikTokFollow, handleTikTokSocial, describeEdgeTtsError, isTrustedRequestOrigin, isSecureConfigRequest, eventClients } = require('../server');
 
 test('forwards a TikTok chat event as an SSE comment with the quiz fields', () => {
   const chunks = [];
@@ -122,7 +127,10 @@ test('host status endpoint reports readiness without exposing the API key', asyn
     server.once('error', reject);
     server.listen(0, '127.0.0.1', resolve);
   });
-  t.after(() => new Promise(resolve => server.close(resolve)));
+  t.after(async () => {
+    await new Promise(resolve => server.close(resolve));
+    try { fs.unlinkSync(testGroqKeyFile); } catch { /* No saved test key. */ }
+  });
   const address = server.address();
   const response = await fetch(`http://127.0.0.1:${address.port}/api/host/status`);
   assert.equal(response.status, 200);
@@ -133,6 +141,23 @@ test('host status endpoint reports readiness without exposing the API key', asyn
   assert.equal(status.voice, 'en-US-BrianMultilingualNeural');
   assert.equal(status.speechLanguage, 'multilingual-auto');
   assert.equal(Object.hasOwn(status, 'apiKey'), false);
+  if (status.keySource === 'none') {
+    const key = 'gsk_test_key_for_unit_test_123456';
+    const saved = await fetch(`http://127.0.0.1:${address.port}/api/host/config`, {
+      method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ apiKey: key }),
+    });
+    assert.equal(saved.status, 200);
+    assert.deepEqual(await saved.json(), { configured: true, keySource: 'ui' });
+    const configured = await fetch(`http://127.0.0.1:${address.port}/api/host/status`).then(response => response.json());
+    assert.equal(configured.configured, true);
+    assert.equal(configured.keySource, 'ui');
+    assert.equal(JSON.stringify(configured).includes(key), false);
+    assert.equal(fs.readFileSync(testGroqKeyFile, 'utf8'), key);
+    assert.equal(fs.statSync(testGroqKeyFile).mode & 0o777, 0o600);
+    const cleared = await fetch(`http://127.0.0.1:${address.port}/api/host/config`, { method: 'DELETE' });
+    assert.equal(cleared.status, 200);
+    assert.equal(fs.existsSync(testGroqKeyFile), false);
+  }
   const rejectedSpeech = await fetch(`http://127.0.0.1:${address.port}/api/host/speech`, {
     method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ text: '' }),
   });
@@ -146,6 +171,9 @@ test('accepts forwarded same-site origins but rejects cross-site origins', () =>
   assert.equal(isTrustedRequestOrigin({ headers: { origin: 'https://live.example', host: '127.0.0.1:3000', 'sec-fetch-site': 'same-origin' } }), true);
   assert.equal(isTrustedRequestOrigin({ headers: { origin: 'https://attacker.example', host: 'live.example', 'sec-fetch-site': 'cross-site' } }), false);
   assert.equal(isTrustedRequestOrigin({ headers: { origin: 'not a url', host: 'live.example' } }), false);
+  assert.equal(isSecureConfigRequest({ headers: { host: 'example.com', origin: 'http://example.com' }, socket: {} }), false);
+  assert.equal(isSecureConfigRequest({ headers: { host: '127.0.0.1:3000' }, socket: {} }), true);
+  assert.equal(isSecureConfigRequest({ headers: { host: '127.0.0.1:3000', 'x-forwarded-proto': 'https' }, socket: {} }), true);
 });
 
 

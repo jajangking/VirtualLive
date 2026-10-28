@@ -10,7 +10,13 @@ const PORT = Number.parseInt(process.env.PORT || '3000', 10);
 const HOST = process.env.HOST || '0.0.0.0';
 const TIKTOK_USERNAME = String(process.env.TIKTOK_USERNAME || 'disepillya').replace(/^@/, '').trim();
 const TIKTOK_BRIDGE_ENABLED = process.env.TIKTOK_BRIDGE_ENABLED === 'true';
-const GROQ_API_KEY = String(process.env.GROQ_API_KEY || '').trim();
+const ENV_GROQ_API_KEY = String(process.env.GROQ_API_KEY || '').trim();
+const GROQ_KEY_FILE = String(process.env.GROQ_KEY_FILE || (process.env.NODE_ENV === 'production' ? '/var/lib/virtuallive/groq-api-key' : path.join(ROOT, '.data', 'groq-api-key')));
+function readSavedGroqKey() {
+  if (ENV_GROQ_API_KEY) return '';
+  try { return fs.readFileSync(GROQ_KEY_FILE, 'utf8').trim(); } catch { return ''; }
+}
+let GROQ_API_KEY = ENV_GROQ_API_KEY || readSavedGroqKey();
 const GROQ_MODEL = String(process.env.GROQ_MODEL || 'llama-3.1-8b-instant').trim();
 const EDGE_TTS_VOICE = String(process.env.EDGE_TTS_VOICE || 'en-US-BrianMultilingualNeural').trim();
 const EDGE_TTS_PYTHON = String(process.env.EDGE_TTS_PYTHON || '').trim();
@@ -104,6 +110,25 @@ function hostPrompt({ kind, username, giftName, count }) {
   return `Ucapkan terima kasih singkat kepada ${who} atas gift ${String(giftName || 'gift').slice(0, 50)}${Number(count) > 1 ? ` sebanyak ${Math.min(9999, Number(count))} kali` : ''}.`;
 }
 
+function saveGroqKey(apiKey) {
+  const directory = path.dirname(GROQ_KEY_FILE);
+  fs.mkdirSync(directory, { recursive: true, mode: 0o700 });
+  const temporaryFile = `${GROQ_KEY_FILE}.${process.pid}.${Date.now()}.tmp`;
+  try {
+    fs.writeFileSync(temporaryFile, apiKey, { encoding: 'utf8', mode: 0o600, flag: 'wx' });
+    fs.renameSync(temporaryFile, GROQ_KEY_FILE);
+    fs.chmodSync(GROQ_KEY_FILE, 0o600);
+  } catch (error) {
+    try { fs.unlinkSync(temporaryFile); } catch { /* Ignore cleanup failures. */ }
+    throw error;
+  }
+}
+
+function clearSavedGroqKey() {
+  try { fs.unlinkSync(GROQ_KEY_FILE); }
+  catch (error) { if (error?.code !== 'ENOENT') throw error; }
+}
+
 async function readJsonBody(req, maxBytes = 2048) {
   const chunks = [];
   let size = 0;
@@ -136,6 +161,18 @@ function isTrustedRequestOrigin(req) {
   // Reverse proxies may replace Host with their internal upstream address. Fetch Metadata
   // still reflects the browser-visible URL and safely distinguishes cross-site requests.
   return ['same-origin', 'same-site', 'none'].includes(String(req.headers['sec-fetch-site'] || '').toLowerCase());
+}
+
+function isSecureConfigRequest(req) {
+  if (req.socket?.encrypted) return true;
+  const forwardedProto = String(req.headers['x-forwarded-proto'] || '').split(',')[0].trim().toLowerCase();
+  if (forwardedProto === 'https') return true;
+  const origin = req.headers.origin;
+  if (origin) {
+    try { if (new URL(origin).protocol === 'https:') return true; } catch { return false; }
+  }
+  const host = String(req.headers['x-forwarded-host'] || req.headers.host || '').split(',')[0].trim().toLowerCase();
+  return /^(localhost|127(?:\.\d{1,3}){3}|\[::1\])(?::\d+)?$/.test(host);
 }
 
 function allowHostRequest(req) {
@@ -344,9 +381,33 @@ const server = http.createServer((req, res) => {
   try { pathname = decodeURIComponent(new URL(req.url, 'http://localhost').pathname); }
   catch { res.writeHead(400).end('Bad Request'); return; }
 
+  if (pathname === '/api/host/config') {
+    if (req.method !== 'POST' && req.method !== 'DELETE') { res.writeHead(405, { Allow: 'POST, DELETE' }).end(); return; }
+    if (!allowHostRequest(req)) { sendJson(res, 429, { error: 'Terlalu banyak permintaan konfigurasi. Coba lagi sebentar.' }); return; }
+    if (!isTrustedRequestOrigin(req)) { sendJson(res, 403, { error: 'Origin tidak diizinkan.' }); return; }
+    if (!isSecureConfigRequest(req)) { sendJson(res, 400, { error: 'Masukkan Groq API key hanya melalui HTTPS (localhost diperbolehkan untuk development).' }); return; }
+    if (ENV_GROQ_API_KEY) { sendJson(res, 409, { error: 'GROQ_API_KEY sudah diatur di environment server dan tidak dapat diganti lewat UI.' }); return; }
+    if (req.method === 'DELETE') {
+      try { clearSavedGroqKey(); GROQ_API_KEY = ''; sendJson(res, 200, { configured: false, keySource: 'none' }); }
+      catch { sendJson(res, 500, { error: 'Key tidak dapat dihapus dari file konfigurasi server.' }); }
+      return;
+    }
+    readJsonBody(req).then(body => {
+      const apiKey = typeof body?.apiKey === 'string' ? body.apiKey.trim() : '';
+      if (apiKey.length < 20 || apiKey.length > 512 || /[\s\u0000-\u001f\u007f]/.test(apiKey)) {
+        throw Object.assign(new Error('API key tidak valid. Masukkan key Groq yang benar.'), { statusCode: 400 });
+      }
+      try { saveGroqKey(apiKey); }
+      catch { throw Object.assign(new Error('Key tidak dapat disimpan. Periksa izin folder data server.'), { statusCode: 500 }); }
+      GROQ_API_KEY = apiKey;
+      return sendJson(res, 200, { configured: true, keySource: 'ui' });
+    }).catch(error => sendJson(res, error.statusCode || 400, { error: error.message || 'Gagal menyimpan konfigurasi Groq.' }));
+    return;
+  }
+
   if (pathname === '/api/host/status') {
     if (req.method !== 'GET' && req.method !== 'HEAD') { res.writeHead(405, { Allow: 'GET, HEAD' }).end(); return; }
-    const body = JSON.stringify({ configured: Boolean(GROQ_API_KEY), model: GROQ_MODEL, textLanguage: 'id-ID', speech: 'edge-tts', voice: EDGE_TTS_VOICE, speechLanguage: 'multilingual-auto' });
+    const body = JSON.stringify({ configured: Boolean(GROQ_API_KEY), keySource: ENV_GROQ_API_KEY ? 'environment' : GROQ_API_KEY ? 'ui' : 'none', model: GROQ_MODEL, textLanguage: 'id-ID', speech: 'edge-tts', voice: EDGE_TTS_VOICE, speechLanguage: 'multilingual-auto' });
     res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8', 'Cache-Control': 'no-store' });
     res.end(req.method === 'HEAD' ? undefined : body);
     return;
@@ -447,4 +508,4 @@ if (require.main === module) {
   });
 }
 
-module.exports = { server, startServer, handleTikTokComment, handleTikTokGift, handleTikTokMember, handleTikTokFollow, handleTikTokSocial, generateHostLine, synthesizeHostSpeech, describeEdgeTtsError, isTrustedRequestOrigin, eventClients, getBridgeState: () => ({ ...bridgeState }) };
+module.exports = { server, startServer, handleTikTokComment, handleTikTokGift, handleTikTokMember, handleTikTokFollow, handleTikTokSocial, generateHostLine, synthesizeHostSpeech, describeEdgeTtsError, isTrustedRequestOrigin, isSecureConfigRequest, saveGroqKey, clearSavedGroqKey, eventClients, getBridgeState: () => ({ ...bridgeState }) };

@@ -2,4 +2,5 @@ node_modules/
 npm-debug.log*
 
 .venv-edge-tts/
+.data/
 __pycache__/

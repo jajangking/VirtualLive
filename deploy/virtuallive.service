@@ -9,6 +9,9 @@ Group=www-data
 WorkingDirectory=/opt/virtuallive
 Environment=NODE_ENV=production
 Environment=PORT=3000
+Environment=GROQ_KEY_FILE=/var/lib/virtuallive/groq-api-key
+StateDirectory=virtuallive
+StateDirectoryMode=0700
 Environment=TIKTOK_BRIDGE_ENABLED=true
 Environment=TIKTOK_USERNAME=disepillya
 ExecStart=@NODE_BIN@ /opt/virtuallive/server.js
