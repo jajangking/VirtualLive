@@ -107,9 +107,18 @@
         <div class="host-avatar-figure" aria-hidden="true"><span class="host-avatar-spark">✦</span><svg viewBox="0 0 100 100" role="presentation"><defs><linearGradient id="hostFaceGradient" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#a8ffe9"/><stop offset="1" stop-color="#62b7f7"/></linearGradient></defs><circle cx="50" cy="50" r="47" fill="#12383b" stroke="#75ead3" stroke-width="2"/><path d="M20 44a30 30 0 0 1 60 0v10c0 22-13 34-30 34S20 76 20 54z" fill="url(#hostFaceGradient)"/><path d="M18 47c2-22 16-34 32-34 19 0 31 14 32 34-9-5-14-13-17-20-10 10-25 15-47 15z" fill="#183047"/><path d="M33 55h.5M66.5 55h.5" stroke="#102638" stroke-width="7" stroke-linecap="round"/><path d="M41 69q9 8 18 0" fill="none" stroke="#236b73" stroke-width="3" stroke-linecap="round"/><path d="M13 49v12m74-12v12" stroke="#81f3dc" stroke-width="5" stroke-linecap="round"/><circle cx="50" cy="18" r="4" fill="#ffd77d"/></svg><span class="host-avatar-glow"></span></div>
         <div class="host-avatar-card"><div class="host-avatar-heading"><i></i><span id="hostAvatarState">HOST SIAP</span><b>AI</b></div><p id="hostSpeechText" aria-live="polite">Hai! Aku host VirtualLive. Senang kamu bergabung!</p></div>
       </aside>
-      <div class="layout-edit-toolbar" id="layoutEditToolbar" aria-hidden="true"><span><b>EDIT LAYOUT</b></span><button id="layoutReset" type="button">RESET</button><button id="layoutDone" type="button">SELESAI</button></div>
+      <div class="layout-edit-toolbar" id="layoutEditToolbar" aria-hidden="true"><span><b>EDIT LAYOUT</b></span><button id="layoutPresetToggle" type="button">PRESET</button><button id="layoutReset" type="button">RESET</button><button id="layoutDone" type="button">SELESAI</button></div>
     </div>
     <div class="toast" id="toast" role="status"></div>
+    <dialog class="control-dialog layout-preset-dialog" id="layoutPresetDialog" aria-labelledby="layoutPresetTitle" aria-describedby="layoutPresetNote">
+      <div class="dialog-kicker">EDITOR TATA LETAK</div><h2 id="layoutPresetTitle">Preset tata letak</h2>
+      <p id="layoutPresetNote">Simpan susunan panel untuk dipakai lagi. Preset tersimpan di browser ini saja.</p>
+      <label class="ai-config-label" for="layoutPresetName">NAMA PRESET</label><input id="layoutPresetName" type="text" maxlength="32" placeholder="Contoh: Portrait TikTok">
+      <div class="dialog-actions"><button id="layoutPresetSave" type="button">SIMPAN PRESET</button></div>
+      <label class="ai-config-label layout-preset-select-label" for="layoutPresetSelect">PRESET TERSIMPAN</label><select id="layoutPresetSelect"><option value="">Pilih preset…</option></select>
+      <div class="dialog-actions"><button id="layoutPresetDelete" type="button">HAPUS</button><button id="layoutPresetApply" type="button">PAKAI PRESET</button></div>
+      <div class="dialog-actions"><button id="layoutPresetClose" type="button">TUTUP</button></div>
+    </dialog>
     <dialog class="control-dialog" id="newBabakDialog" aria-labelledby="newBabakTitle"><div class="dialog-kicker">PAPAN SKOR</div><h2 id="newBabakTitle">Mulai babak baru?</h2><p id="newBabakSummary"></p><div class="dialog-actions"><button id="cancelBabakButton" type="button">BATAL</button><button id="confirmBabakButton" type="button">SIMPAN & RESET</button></div></dialog>
     <dialog class="control-dialog history-dialog" id="babakHistoryDialog" aria-labelledby="babakHistoryTitle"><div class="history-heading"><div><div class="dialog-kicker">ARSIP HASIL</div><h2 id="babakHistoryTitle">Riwayat babak</h2></div><button id="closeBabakHistory" type="button" aria-label="Tutup riwayat">×</button></div><ol id="babakHistoryList"></ol></dialog>
     <dialog class="control-dialog timer-settings-dialog" id="timerSettingsDialog" aria-labelledby="timerSettingsTitle">

@@ -833,7 +833,7 @@ body.broadcast-mode .donor-panel .donor-heading h2{font-size:clamp(13px,4.6cqw,2
 body.broadcast-mode .donor-panel .donor-row{font-size:clamp(10px,3.1cqw,15px)}
 body.broadcast-mode .donor-panel .donor-gift{font-size:clamp(9px,2.7cqw,13px)}
 .layout-edit-toolbar{display:none}
-body.broadcast-mode.layout-editing .layout-edit-toolbar{position:fixed;z-index:1000;top:auto;bottom:max(8px,env(safe-area-inset-bottom));left:1.5vw;right:auto;transform:none;display:flex;align-items:center;gap:5px;max-width:calc(50vw - 2vw);padding:5px 7px;border:1px solid #68d9c1;border-radius:8px;background:#0b1724ed;box-shadow:0 4px 14px #0008;color:#eaf5ff;font:9px 'DM Mono',monospace;white-space:nowrap}
+body.broadcast-mode.layout-editing .layout-edit-toolbar{position:fixed;z-index:1000;top:auto;bottom:max(8px,env(safe-area-inset-bottom));left:1.5vw;right:auto;transform:none;display:flex;align-items:center;gap:5px;max-width:calc(100vw - 24px);overflow-x:auto;overscroll-behavior:contain;padding:5px 7px;border:1px solid #68d9c1;border-radius:8px;background:#0b1724ed;box-shadow:0 4px 14px #0008;color:#eaf5ff;font:9px 'DM Mono',monospace;white-space:nowrap}
 .layout-edit-toolbar[aria-hidden="true"]{display:none!important}
 .layout-edit-toolbar span{overflow:hidden;text-overflow:ellipsis}
 .layout-edit-toolbar span b{color:#77f1d5}
@@ -1082,6 +1082,10 @@ body.broadcast-mode #groqSettingsToggle{display:none!important}
 .ai-config-dialog input{display:block;width:100%;height:42px;border:1px solid #40576d;border-radius:7px;background:#08121e;color:#e9f3ff;padding:0 12px;font:13px 'DM Mono',monospace;outline:none}
 .ai-config-dialog input:focus{border-color:#73e6cf;box-shadow:0 0 0 3px #73e6cf1c}
 .ai-config-security{margin:10px 0 0!important;color:#91a2b7!important;font-size:11px!important;line-height:1.45!important}
+.layout-preset-dialog input,.layout-preset-dialog select{display:block;width:100%;height:42px;border:1px solid #40576d;border-radius:7px;background:#08121e;color:#e9f3ff;padding:0 12px;font:13px 'DM Mono',monospace;outline:none}
+.layout-preset-dialog input:focus,.layout-preset-dialog select:focus{border-color:#73e6cf;box-shadow:0 0 0 3px #73e6cf1c}
+.layout-preset-dialog .layout-preset-select-label{margin-top:18px}
+.layout-preset-dialog button:disabled{opacity:.45;cursor:not-allowed}
 .groq-config-clear{display:block;margin:12px 0 0 auto;border:0;background:transparent;color:#ff9dad;font:600 9px 'DM Mono',monospace;cursor:pointer}
 .groq-config-clear[hidden]{display:none}
 #groqSettingsToggle[data-configured="true"]{border-color:#5fbd9c;color:#a4f2d8}

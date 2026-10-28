@@ -925,7 +925,7 @@
   $('#closeBabakHistory').addEventListener('click',()=>$('#babakHistoryDialog').close());
   if(document.body.classList.contains('broadcast-mode')&&window.innerWidth<561&&window.innerHeight<1000)setChatCollapsed(true);
 
-  const layoutStorageKey='virtuallive.broadcast-layout.v1',layoutPanels=[...document.querySelectorAll('[data-layout-panel]')],appShell=$('.app-shell');
+  const layoutStorageKey='virtuallive.broadcast-layout.v1',layoutPresetsStorageKey='virtuallive.broadcast-layout-presets.v1',layoutPanels=[...document.querySelectorAll('[data-layout-panel]')],appShell=$('.app-shell');
   const minPanelSize={header:[160,54],leaderboard:[145,72],quiz:[220,165],chat:[145,64],moderator:[145,64],donors:[145,110],announcement:[160,24],host:[130,80]};
   function layoutBounds(){const rect=appShell.getBoundingClientRect();return {left:rect.left,top:rect.top,width:rect.width,height:rect.height};}
   function applyPanelRect(panel,x,y,width,height){
@@ -944,10 +944,63 @@
       }}
     }catch(_){/* Ignore invalid local layout data. */}
   }
-  function saveLayout(){
+  function captureLayout(){
     const bounds=layoutBounds(),saved={};
+    if(!bounds.width||!bounds.height)return saved;
     for(const panel of layoutPanels){const rect=panel.getBoundingClientRect();if(!rect.width||!rect.height)continue;saved[panel.dataset.layoutPanel]={x:(rect.left-bounds.left)/bounds.width,y:(rect.top-bounds.top)/bounds.height,w:rect.width/bounds.width,h:rect.height/bounds.height};}
-    try{localStorage.setItem(layoutStorageKey,JSON.stringify(saved));}catch(_){notify('Layout tampil, tetapi tidak bisa disimpan browser.',true);}
+    return saved;
+  }
+  function saveLayout(){
+    try{localStorage.setItem(layoutStorageKey,JSON.stringify(captureLayout()));}catch(_){notify('Layout tampil, tetapi tidak bisa disimpan browser.',true);}
+  }
+  function readLayoutPresets(){
+    try{
+      const stored=JSON.parse(localStorage.getItem(layoutPresetsStorageKey)||'[]');
+      if(!Array.isArray(stored))return [];
+      return stored.filter(item=>item&&typeof item.name==='string'&&item.name.trim()&&item.name.length<=32&&item.layout&&typeof item.layout==='object'&&!Array.isArray(item.layout));
+    }catch(_){return [];}
+  }
+  function writeLayoutPresets(presets){
+    try{localStorage.setItem(layoutPresetsStorageKey,JSON.stringify(presets));return true;}
+    catch(_){$('#layoutPresetNote').textContent='Preset tidak bisa disimpan. Ruang penyimpanan browser mungkin penuh.';return false;}
+  }
+  function refreshLayoutPresetOptions(selectedName=''){
+    const select=$('#layoutPresetSelect');select.replaceChildren(new Option('Pilih preset…',''));
+    for(const preset of readLayoutPresets()){
+      const option=document.createElement('option');option.value=preset.name;option.textContent=preset.name;select.append(option);
+    }
+    select.value=selectedName;
+    const hasSelection=Boolean(select.value);
+    $('#layoutPresetApply').disabled=!hasSelection;$('#layoutPresetDelete').disabled=!hasSelection;
+  }
+  function applyLayoutSnapshot(snapshot){
+    const bounds=layoutBounds();
+    for(const panel of layoutPanels){
+      const item=snapshot?.[panel.dataset.layoutPanel];
+      if(!item||![item.x,item.y,item.w,item.h].every(Number.isFinite))continue;
+      applyPanelRect(panel,item.x*bounds.width,item.y*bounds.height,item.w*bounds.width,item.h*bounds.height);
+    }
+    saveLayout();
+  }
+  function saveLayoutPreset(){
+    const name=$('#layoutPresetName').value.trim().replace(/\s+/g,' ').slice(0,32);
+    if(!name){$('#layoutPresetNote').textContent='Isi nama preset terlebih dahulu.';$('#layoutPresetName').focus();return;}
+    const layout=captureLayout();if(!Object.keys(layout).length){$('#layoutPresetNote').textContent='Belum ada susunan panel yang bisa disimpan.';return;}
+    const presets=readLayoutPresets(),index=presets.findIndex(item=>item.name.toLocaleLowerCase('id-ID')===name.toLocaleLowerCase('id-ID'));
+    if(index>=0){if(!confirm(`Preset “${name}” sudah ada. Timpa dengan susunan ini?`))return;presets[index]={name,layout};}
+    else{if(presets.length>=20){$('#layoutPresetNote').textContent='Maksimal 20 preset. Hapus preset lama terlebih dahulu.';return;}presets.push({name,layout});}
+    if(writeLayoutPresets(presets)){refreshLayoutPresetOptions(name);$('#layoutPresetNote').textContent=`Preset “${name}” berhasil disimpan di browser ini.`;}
+  }
+  function applySelectedLayoutPreset(){
+    const name=$('#layoutPresetSelect').value,preset=readLayoutPresets().find(item=>item.name===name);
+    if(!preset){$('#layoutPresetNote').textContent='Pilih preset yang ingin dipakai.';return;}
+    applyLayoutSnapshot(preset.layout);$('#layoutPresetDialog').close();notify(`Preset “${name}” diterapkan.`);
+  }
+  function deleteSelectedLayoutPreset(){
+    const name=$('#layoutPresetSelect').value;if(!name){$('#layoutPresetNote').textContent='Pilih preset yang ingin dihapus.';return;}
+    if(!confirm(`Hapus preset “${name}”?`))return;
+    const presets=readLayoutPresets().filter(item=>item.name!==name);
+    if(writeLayoutPresets(presets)){refreshLayoutPresetOptions();$('#layoutPresetNote').textContent=`Preset “${name}” dihapus.`;}
   }
   function installLayoutHandles(){
     for(const panel of layoutPanels){
@@ -990,6 +1043,13 @@
     else{for(const panel of layoutPanels)panel.classList.remove('is-selected');saveLayout();setAnnouncementPreview(false);}
   }
   restoreLayout();
+  $('#layoutPresetToggle').addEventListener('click',()=>{refreshLayoutPresetOptions();$('#layoutPresetNote').textContent='Simpan susunan panel untuk dipakai lagi. Preset tersimpan di browser ini saja.';$('#layoutPresetDialog').showModal();});
+  $('#layoutPresetName').addEventListener('keydown',event=>{if(event.key==='Enter'){event.preventDefault();saveLayoutPreset();}});
+  $('#layoutPresetSave').addEventListener('click',saveLayoutPreset);
+  $('#layoutPresetSelect').addEventListener('change',()=>{if($('#layoutPresetSelect').value)$('#layoutPresetName').value=$('#layoutPresetSelect').value;refreshLayoutPresetOptions($('#layoutPresetSelect').value);});
+  $('#layoutPresetApply').addEventListener('click',applySelectedLayoutPreset);
+  $('#layoutPresetDelete').addEventListener('click',deleteSelectedLayoutPreset);
+  $('#layoutPresetClose').addEventListener('click',()=>$('#layoutPresetDialog').close());
   $('#editLayoutToggle').addEventListener('click',()=>setLayoutEditing(!document.body.classList.contains('layout-editing')));
   $('#layoutDone').addEventListener('click',()=>setLayoutEditing(false));
   $('#layoutReset').addEventListener('click',()=>{try{localStorage.removeItem(layoutStorageKey);}catch(_){}location.reload();});
