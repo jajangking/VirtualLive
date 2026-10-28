@@ -7,7 +7,7 @@ const os = require('node:os');
 const path = require('node:path');
 const testGroqKeyFile = path.join(os.tmpdir(), `virtuallive-groq-test-${process.pid}`);
 process.env.GROQ_KEY_FILE = testGroqKeyFile;
-const { server, handleTikTokComment, handleTikTokGift, handleTikTokMember, handleTikTokFollow, handleTikTokSocial, describeEdgeTtsError, isTrustedRequestOrigin, isSecureConfigRequest, eventClients } = require('../server');
+const { server, handleTikTokComment, handleTikTokGift, handleTikTokMember, handleTikTokFollow, handleTikTokSocial, describeEdgeTtsError, isTrustedRequestOrigin, isSecureConfigRequest, validateQuizQuestionSet, eventClients } = require('../server');
 
 test('forwards a TikTok chat event as an SSE comment with the quiz fields', () => {
   const chunks = [];
@@ -122,6 +122,14 @@ test('forwards follow events and filters unrelated social activity', () => {
 });
 
 
+test('validates generated quiz batches and rejects ambiguous or duplicate choices', () => {
+  const batch = [{ category: 'Geografi', question: 'Apa ibu kota Jepang?', options: ['Tokyo', 'Osaka', 'Kyoto', 'Nara'], correct: 0 }];
+  assert.deepEqual(validateQuizQuestionSet({ questions: batch }, 1), batch);
+  assert.throws(() => validateQuizQuestionSet({ questions: batch }, 2), /jumlah soal/);
+  assert.throws(() => validateQuizQuestionSet([{ ...batch[0], options: ['Tokyo', 'Tokyo', 'Kyoto', 'Nara'] }], 1), /Format soal/);
+  assert.throws(() => validateQuizQuestionSet([{ ...batch[0], question: 'apa ibu kota jepang?' } , batch[0]], 2), /duplikat/);
+});
+
 test('host status endpoint reports readiness without exposing the API key', async t => {
   await new Promise((resolve, reject) => {
     server.once('error', reject);
@@ -142,6 +150,11 @@ test('host status endpoint reports readiness without exposing the API key', asyn
   assert.equal(status.speechLanguage, 'multilingual-auto');
   assert.equal(Object.hasOwn(status, 'apiKey'), false);
   if (status.keySource === 'none') {
+    const unavailableGenerator = await fetch(`http://127.0.0.1:${address.port}/api/quiz/generate`, {
+      method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ count: 1 }),
+    });
+    assert.equal(unavailableGenerator.status, 503);
+    assert.match((await unavailableGenerator.json()).error, /Groq API belum dikonfigurasi/);
     const key = 'gsk_test_key_for_unit_test_123456';
     const saved = await fetch(`http://127.0.0.1:${address.port}/api/host/config`, {
       method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ apiKey: key }),
@@ -154,6 +167,23 @@ test('host status endpoint reports readiness without exposing the API key', asyn
     assert.equal(JSON.stringify(configured).includes(key), false);
     assert.equal(fs.readFileSync(testGroqKeyFile, 'utf8'), key);
     assert.equal(fs.statSync(testGroqKeyFile).mode & 0o777, 0o600);
+    const originalFetch = globalThis.fetch;
+    globalThis.fetch = async (url, options) => {
+      if (String(url).startsWith('https://api.groq.com/')) {
+        assert.equal(options.headers.Authorization, `Bearer ${key}`);
+        const request = JSON.parse(options.body);
+        assert.equal(request.response_format.type, 'json_object');
+        return new Response(JSON.stringify({ choices: [{ message: { content: JSON.stringify({ questions: [{ category: 'Geografi', question: 'Apa ibu kota Jepang?', options: ['Tokyo', 'Osaka', 'Kyoto', 'Nara'], correct: 0 }] }) } }] }), { status: 200, headers: { 'Content-Type': 'application/json' } });
+      }
+      return originalFetch(url, options);
+    };
+    try {
+      const generated = await globalThis.fetch(`http://127.0.0.1:${address.port}/api/quiz/generate`, {
+        method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ count: 1, category: 'Geografi', difficulty: 'mudah' }),
+      });
+      assert.equal(generated.status, 200);
+      assert.deepEqual(await generated.json(), { questions: [{ category: 'Geografi', question: 'Apa ibu kota Jepang?', options: ['Tokyo', 'Osaka', 'Kyoto', 'Nara'], correct: 0 }] });
+    } finally { globalThis.fetch = originalFetch; }
     const cleared = await fetch(`http://127.0.0.1:${address.port}/api/host/config`, { method: 'DELETE' });
     assert.equal(cleared.status, 200);
     assert.equal(fs.existsSync(testGroqKeyFile), false);

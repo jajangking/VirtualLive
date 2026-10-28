@@ -22,12 +22,14 @@
     { category:'BAHASA', question:'Lawan kata “optimis” adalah…', options:['Pesimis','Realistis','Praktis','Idealis'], correct:0 },
   ];
   const LETTERS=['A','B','C','D'];
-  const SCORE_KEY='virtuallive.quiz.scores.v1',BABAK_KEY='virtuallive.quiz.babak.v1',BABAK_HISTORY_KEY='virtuallive.quiz.babak-history.v1',PRIZE_KEY='virtuallive.quiz.babak-prize.v1',QUESTION_DURATION_KEY='virtuallive.quiz.question-duration.v1';
-  const DEFAULT_QUESTION_SECONDS=30,MIN_QUESTION_SECONDS=10,MAX_QUESTION_SECONDS=180,RESULT_SECONDS=7;
+  const SCORE_KEY='virtuallive.quiz.scores.v1',BABAK_KEY='virtuallive.quiz.babak.v1',BABAK_HISTORY_KEY='virtuallive.quiz.babak-history.v1',PRIZE_KEY='virtuallive.quiz.babak-prize.v1',QUESTION_DURATION_KEY='virtuallive.quiz.question-duration.v1',QUESTIONS_PER_BABAK_KEY='virtuallive.quiz.questions-per-babak.v1',PREPARED_AI_QUESTIONS_KEY='virtuallive.quiz.prepared-ai-questions.v1';
+  const DEFAULT_QUESTION_SECONDS=30,MIN_QUESTION_SECONDS=10,MAX_QUESTION_SECONDS=180,DEFAULT_QUESTIONS_PER_BABAK=10,MAX_QUESTIONS_PER_BABAK=20,RESULT_SECONDS=7;
   const $=selector=>document.querySelector(selector);
   const answerGate=window.VirtualLiveAnswerGate.createFirstAnswerGate();
   const feed=$('#chatFeed'),input=$('#commentInput'),toast=$('#toast');
   let questionDuration=loadQuestionDuration(),activeQuestionDuration=questionDuration;
+  let questionsPerBabak=loadQuestionsPerBabak(),activeQuestionsPerBabak=questionsPerBabak;
+  let questionBank=QUESTIONS,preparedAiQuestions=loadPreparedAiQuestions();
   let scores=loadScores(),deck=[],deckPosition=0,roundNumber=0,currentQuestion=null,babakNumber=1,babakHistory=[],pendingBabakArchive=null,wasPausedBeforeBabakDialog=false;
   const donorTotals=new Map();
   let phase='question',remaining=activeQuestionDuration,resultRemaining=RESULT_SECONDS,firstCorrect=null,isPaused=false,announcementActive=false,winnerSelectionTimer=null;
@@ -55,6 +57,30 @@
   function saveQuestionDuration(){
     try{localStorage.setItem(QUESTION_DURATION_KEY,String(questionDuration));}
     catch(_){notify('Durasi tersimpan untuk sesi ini, tetapi browser tidak bisa menyimpannya.');}
+  }
+  function normalizeQuestionCount(value){
+    const count=Math.floor(Number(value));
+    return Number.isFinite(count)?Math.max(1,Math.min(MAX_QUESTIONS_PER_BABAK,count)):DEFAULT_QUESTIONS_PER_BABAK;
+  }
+  function loadQuestionsPerBabak(){
+    try{const stored=localStorage.getItem(QUESTIONS_PER_BABAK_KEY);return stored===null?DEFAULT_QUESTIONS_PER_BABAK:normalizeQuestionCount(stored);}
+    catch(_){return DEFAULT_QUESTIONS_PER_BABAK;}
+  }
+  function loadPreparedAiQuestions(){
+    try{
+      const saved=JSON.parse(localStorage.getItem(PREPARED_AI_QUESTIONS_KEY)||'null');
+      if(!Array.isArray(saved)||saved.length!==questionsPerBabak)return null;
+      const valid=saved.every(question=>question&&typeof question.category==='string'&&typeof question.question==='string'&&Array.isArray(question.options)&&question.options.length===4&&question.options.every(option=>typeof option==='string'&&option.trim())&&Number.isInteger(question.correct)&&question.correct>=0&&question.correct<4);
+      return valid?saved:null;
+    }catch(_){return null;}
+  }
+  function saveQuestionsPerBabak(){
+    try{localStorage.setItem(QUESTIONS_PER_BABAK_KEY,String(questionsPerBabak));}
+    catch(_){notify('Jumlah soal tersimpan untuk sesi ini, tetapi browser tidak bisa menyimpannya.');}
+  }
+  function clearPreparedAiQuestions(){
+    preparedAiQuestions=null;
+    try{localStorage.removeItem(PREPARED_AI_QUESTIONS_KEY);}catch(_){/* Memory state is already cleared. */}
   }
   function scoreKey(name){return cleanName(name).toLocaleLowerCase('id-ID');}
   function loadScores(){
@@ -97,15 +123,19 @@
       const summary=document.createElement('p');
       const podium=Array.isArray(record.podium)?record.podium.filter(player=>player&&typeof player==='object'):[];
       summary.textContent=podium.length?podium.slice(0,3).map((player,index)=>`${index+1}. ${cleanName(player.name)} · ${player.points} poin`).join('  |  '):'Belum ada pemenang';
-      const prize=document.createElement('span');prize.className='history-prize';prize.textContent=record.winner?`Hadiah ${formatRupiah(record.prizeAmount)}`:'Tanpa hadiah';
+      const prize=document.createElement('span');prize.className='history-prize';
+      const questionCount=Number.isFinite(record.questionsPlayed)?`${record.questionsPlayed}/${record.questionsPlanned||0} soal · `:'';
+      prize.textContent=`${questionCount}${record.winner?`Hadiah ${formatRupiah(record.prizeAmount)}`:'Tanpa hadiah'}`;
       const top=document.createElement('div');top.className='history-entry-top';top.append(title,date);item.append(top,summary,prize);list.append(item);
     }
   }
   function openNewBabakDialog(){
     const podium=sortedScores().slice(0,3).map(player=>({name:player.name,points:player.points,correct:player.correct}));
-    pendingBabakArchive={number:babakNumber,archivedAt:new Date().toISOString(),podium,prizeAmount:readPrizeAmount(),winner:podium[0]?.name||''};
+    pendingBabakArchive={number:babakNumber,archivedAt:new Date().toISOString(),podium,prizeAmount:readPrizeAmount(),winner:podium[0]?.name||'',questionsPlayed:roundNumber,questionsPlanned:activeQuestionsPerBabak};
     try{localStorage.setItem(PRIZE_KEY,String(pendingBabakArchive.prizeAmount));}catch(_){/* The current prize remains active for this round. */}
-    const summary=podium[0]?`Juara 1: ${podium[0].name} (${podium[0].points} poin). Hadiah yang dicatat: ${formatRupiah(pendingBabakArchive.prizeAmount)}. Skor babak ini akan diarsipkan, lalu papan aktif direset.`:'Belum ada skor pada babak ini. Babak baru tetap dimulai dan papan skor aktif akan kosong.';
+    const questionSummary=`Soal babak ini: ${roundNumber}/${activeQuestionsPerBabak}.`;
+    const nextQuestionSource=preparedAiQuestions?.length===questionsPerBabak?'Soal AI siap dipakai.':'Soal berikutnya memakai bank lokal.';
+    const summary=podium[0]?`Juara 1: ${podium[0].name} (${podium[0].points} poin). Hadiah yang dicatat: ${formatRupiah(pendingBabakArchive.prizeAmount)}. ${questionSummary} ${nextQuestionSource} Skor babak ini akan diarsipkan, lalu papan aktif direset.`:`${questionSummary} ${nextQuestionSource} Belum ada skor. Babak baru tetap dimulai dan papan skor aktif akan kosong.`;
     $('#newBabakSummary').textContent=summary;
     wasPausedBeforeBabakDialog=isPaused;if(!isPaused)setPaused(true);
     $('#newBabakDialog').showModal();
@@ -117,7 +147,10 @@
   function beginNewBabak(){
     if(!pendingBabakArchive)return;
     babakHistory.unshift(pendingBabakArchive);babakHistory=babakHistory.slice(0,50);babakNumber++;
-    saveBabakState();scores={};saveScores();roundNumber=0;deck=shuffle(QUESTIONS.map((_,index)=>index));deckPosition=0;
+    saveBabakState();scores={};saveScores();roundNumber=0;activeQuestionsPerBabak=questionsPerBabak;
+    questionBank=preparedAiQuestions?.length===activeQuestionsPerBabak?preparedAiQuestions:QUESTIONS;
+    if(questionBank===preparedAiQuestions)clearPreparedAiQuestions();
+    deck=shuffle(questionBank.map((_,index)=>index));deckPosition=0;
     closeNewBabakDialog(false);setPaused(false);nextQuestion();renderBabakHistory();
   }
   function sortedScores(){return Object.values(scores).sort((a,b)=>b.points-a.points||a.name.localeCompare(b.name,'id-ID'));}
@@ -273,19 +306,20 @@
   }
 
   function nextQuestion(){
+    if(roundNumber>=activeQuestionsPerBabak){finishBabak();return;}
     const animateTransition=roundNumber>0;
     if(deckPosition>=deck.length){
-      const previous=deck.length?deck[deck.length-1]:-1;deck=shuffle(QUESTIONS.map((_,i)=>i));
+      const previous=deck.length?deck[deck.length-1]:-1;deck=shuffle(questionBank.map((_,i)=>i));
       if(deck.length>1&&deck[0]===previous)[deck[0],deck[1]]=[deck[1],deck[0]];
       deckPosition=0;
     }
-    currentQuestion=QUESTIONS[deck[deckPosition++]];roundNumber++;phase='question';
+    currentQuestion=questionBank[deck[deckPosition++]];roundNumber++;phase='question';
     activeQuestionDuration=questionDuration;remaining=activeQuestionDuration;resultRemaining=RESULT_SECONDS;firstCorrect=null;answerGate.reset();
     clearTimeout(winnerSelectionTimer);winnerSelectionTimer=null;
     feed.replaceChildren();updateAnswerCount();
     $('#questionText').textContent=currentQuestion.question;
     $('#questionTag').textContent=currentQuestion.category;
-    $('#questionNumber').textContent=`· BABAK ${String(babakNumber).padStart(2,'0')} · SOAL ${String(roundNumber).padStart(2,'0')}`;
+    $('#questionNumber').textContent=`· BABAK ${String(babakNumber).padStart(2,'0')} · SOAL ${String(roundNumber).padStart(2,'0')}/${String(activeQuestionsPerBabak).padStart(2,'0')}`;
     $('#winnerBanner').classList.remove('visible','no-winner','winner-reveal');
     if(animateTransition){
       animateQuizPanel('is-question-arriving',1050);
@@ -383,6 +417,21 @@
     },460);
   }
 
+  function finishBabak(){
+    if(phase==='babak-end')return;
+    phase='babak-end';remaining=0;resultRemaining=0;
+    const champion=sortedScores()[0];
+    $('#winnerLabel').textContent=champion?`JUARA BABAK ${String(babakNumber).padStart(2,'0')} · ${activeQuestionsPerBabak} SOAL`:'BABAK SELESAI';
+    $('#winnerName').textContent=champion?champion.name:'TANPA PEMENANG';
+    $('.winner-points').innerHTML=champion?`${champion.points} <small>POIN TOTAL</small>`:'— <small>POIN</small>';
+    const banner=$('#winnerBanner');banner.classList.remove('winner-reveal');void banner.offsetWidth;
+    banner.classList.toggle('no-winner',!champion);banner.classList.add('visible','winner-reveal');
+    $('#timerStatus').textContent='BABAK SELESAI';
+    $('#autoAdvanceText').textContent='Lihat papan skor, lalu tekan BABAK BARU untuk lanjut';
+    animateQuizPanel('is-result-reveal',1350);if(champion)playSfx('winner');
+    updateStats();updateTimer();
+  }
+
   function finishQuestion(){
     if(phase!=='question')return;
     phase='result';remaining=0;resultRemaining=RESULT_SECONDS;revealCorrect();animateQuizPanel('is-result-reveal',1350);playSfx(firstCorrect?'winner':'reveal');
@@ -423,16 +472,21 @@
   }
   function renderQuestionDuration(){
     $('#questionDurationInput').value=String(questionDuration);
+    $('#questionsPerBabakInput').value=String(questionsPerBabak);
     $('#questionDurationLabel').textContent=`${questionDuration} DETIK`;
-    $('#timerSettingsToggle').title=`Atur durasi pertanyaan · ${questionDuration} detik`;
+    $('#timerSettingsToggle').title=`Atur durasi pertanyaan · ${questionDuration} detik · ${questionsPerBabak} soal per babak`;
   }
   function timerDurationHint(){
     return phase==='question'&&answerGate.size===0
       ?'Soal ini belum menerima jawaban: perubahan langsung menyesuaikan sisa waktu dan berlaku untuk soal berikutnya.'
       :'Perubahan disimpan dan mulai berlaku pada soal berikutnya.';
   }
-  function applyQuestionDuration(value){
-    questionDuration=normalizeQuestionDuration(value);saveQuestionDuration();renderQuestionDuration();
+  function applyRoundSettings(durationValue,countValue){
+    const oldCount=questionsPerBabak;
+    questionDuration=normalizeQuestionDuration(durationValue);questionsPerBabak=normalizeQuestionCount(countValue);
+    saveQuestionDuration();saveQuestionsPerBabak();
+    if(oldCount!==questionsPerBabak&&preparedAiQuestions?.length!==questionsPerBabak)clearPreparedAiQuestions();
+    renderQuestionDuration();
     if(phase==='question'&&answerGate.size===0){
       const elapsed=Math.max(0,activeQuestionDuration-remaining);
       activeQuestionDuration=questionDuration;remaining=Math.max(0,activeQuestionDuration-elapsed);
@@ -440,9 +494,10 @@
       if(remaining===0)finishQuestion();
       updateTimer();
     }
+    $('#timerSettingsNote').textContent=`Durasi soal saat ini diperbarui bila belum ada jawaban; jumlah ${questionsPerBabak} soal berlaku mulai babak berikutnya.`;
   }
   function updateStats(){
-    $('#roundReadout').textContent=String(roundNumber).padStart(2,'0');
+    $('#roundReadout').textContent=`${String(roundNumber).padStart(2,'0')}/${String(activeQuestionsPerBabak).padStart(2,'0')}`;
     $('#correctReadout').textContent=totalCorrect().toLocaleString('id-ID');
     const leader=sortedScores()[0];$('#leaderReadout').textContent=leader?leader.name:'—';
     $('#leaderFoot').textContent=leader?`${leader.points} POIN TOTAL`:'BELUM ADA PEMENANG';
@@ -450,11 +505,11 @@
     renderLeaderboard();
   }
   function updateTimer(){
-    const isQuestion=phase==='question';
-    const text=isQuestion?formatClock(remaining):'HASIL';
+    const isQuestion=phase==='question',isResult=phase==='result';
+    const text=isQuestion?formatClock(remaining):phase==='babak-end'?'SELESAI':'HASIL';
     $('#timeReadout').textContent=text;
-    $('#timerCaption').textContent=isQuestion?text:`SOAL BARU ${String(Math.ceil(resultRemaining)).padStart(2,'0')}`;
-    const pct=isQuestion?remaining/activeQuestionDuration:resultRemaining/RESULT_SECONDS;
+    $('#timerCaption').textContent=isQuestion?text:phase==='babak-end'?'BABAK SELESAI':`SOAL BARU ${String(Math.ceil(resultRemaining)).padStart(2,'0')}`;
+    const pct=isQuestion?remaining/activeQuestionDuration:isResult?resultRemaining/RESULT_SECONDS:0;
     $('#timerFill').style.width=`${Math.max(0,pct*100)}%`;
     $('#timerFill').classList.toggle('urgent',isQuestion&&remaining<=8);
   }
@@ -467,9 +522,9 @@
         if(countdownSecond!==lastCountdownSecond&&countdownSecond<=5&&countdownSecond>0)playSfx('tick');
         lastCountdownSecond=countdownSecond;
         if(remaining===0)finishQuestion();
-      }else{
+      }else if(phase==='result'){
         resultRemaining=Math.max(0,resultRemaining-dt);
-        $('#autoAdvanceText').textContent=`Soal baru otomatis dalam ${Math.ceil(resultRemaining)} detik`;
+        $('#autoAdvanceText').textContent=`${roundNumber>=activeQuestionsPerBabak?'Babak selesai':'Soal baru'} dalam ${Math.ceil(resultRemaining)} detik`;
         if(resultRemaining===0)nextQuestion();
       }
     }
@@ -506,6 +561,27 @@
       else if(!hostAudioEnabled)setHostAvatarState('HOST SIAP');
     }catch(_){hostAiConfigured=false;if(!hostAudioEnabled)setHostAvatarState('SERVER AI OFFLINE');}
   }
+  function openQuizGenerator(){
+    $('#quizCategoryInput').value=$('#quizCategoryInput').value.trim()||'Pengetahuan Umum';
+    $('#quizGeneratorStatus').textContent=!hostAiConfigured?'Groq belum siap. Atur API key lewat tombol GROQ AI dahulu.':preparedAiQuestions?`${preparedAiQuestions.length} soal AI sudah siap dipakai pada babak berikutnya.`:`Akan dibuat ${questionsPerBabak} soal. Setelah siap, mulai babak dengan tombol BABAK BARU.`;
+    $('#quizGeneratorDialog').showModal();
+  }
+  async function generateQuizQuestionBatch(){
+    const button=$('#generateQuizQuestionsButton'),status=$('#quizGeneratorStatus');
+    button.disabled=true;status.textContent=`Sedang meminta Groq membuat ${questionsPerBabak} soal…`;
+    try{
+      const response=await fetch('/api/quiz/generate',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({count:questionsPerBabak,category:$('#quizCategoryInput').value.trim()||'Pengetahuan Umum',difficulty:$('#quizDifficultyInput').value})});
+      const data=await response.json().catch(()=>({}));if(!response.ok)throw new Error(data.error||'Groq gagal membuat soal.');
+      if(!Array.isArray(data.questions)||data.questions.length!==questionsPerBabak)throw new Error('Jumlah soal dari Groq tidak sesuai. Coba ulangi.');
+      preparedAiQuestions=data.questions;
+      try{localStorage.setItem(PREPARED_AI_QUESTIONS_KEY,JSON.stringify(preparedAiQuestions));}catch(_){/* Keep the batch for this session. */}
+      status.textContent=`${preparedAiQuestions.length} soal AI siap untuk babak berikutnya. Klik BABAK BARU untuk memakainya.`;
+    }catch(error){status.textContent=String(error?.message||'Groq gagal membuat soal.');}
+    finally{button.disabled=false;}
+  }
+  $('#quizGeneratorToggle').addEventListener('click',openQuizGenerator);
+  $('#quizGeneratorCancel').addEventListener('click',()=>$('#quizGeneratorDialog').close());
+  $('#generateQuizQuestionsButton').addEventListener('click',generateQuizQuestionBatch);
   $('#groqSettingsToggle').addEventListener('click',()=>$('#groqSettingsDialog').showModal());
   $('#groqSettingsCancel').addEventListener('click',()=>$('#groqSettingsDialog').close());
   $('#groqConfigForm').addEventListener('submit',async event=>{
@@ -660,7 +736,8 @@
     $('#pauseIndicator').hidden=!isPaused;
     if(isPaused){$('#timerStatus').textContent='DIJEDA MODERATOR';$('#autoAdvanceText').textContent='Timer dan pergantian soal dijeda';}
     else if(phase==='question'){$('#timerStatus').textContent=firstCorrect?'JAWABAN BENAR TERCATAT':'MENUNGGU JAWABAN';$('#autoAdvanceText').textContent=firstCorrect?'Ada jawaban benar — hasil saat timer habis':'Hasil diumumkan saat timer habis';}
-    else{$('#timerStatus').textContent='HASIL AKHIR';$('#autoAdvanceText').textContent=`Soal baru otomatis dalam ${Math.ceil(resultRemaining)} detik`;}
+    else if(phase==='result'){$('#timerStatus').textContent='HASIL AKHIR';$('#autoAdvanceText').textContent=`${roundNumber>=activeQuestionsPerBabak?'Babak selesai':'Soal baru'} dalam ${Math.ceil(resultRemaining)} detik`;}
+    else{$('#timerStatus').textContent='BABAK SELESAI';$('#autoAdvanceText').textContent='Lihat papan skor, lalu tekan BABAK BARU untuk lanjut';}
     setChatCollapsed($('#chatPanel').classList.contains('is-collapsed'));
   }
   $('#collapseChat').addEventListener('click',()=>setChatCollapsed(!$('#chatPanel').classList.contains('is-collapsed')));
@@ -767,9 +844,9 @@
   });
   $('#timerSettingsCancel').addEventListener('click',()=>$('#timerSettingsDialog').close());
   $('#timerSettingsForm').addEventListener('submit',event=>{
-    event.preventDefault();const durationInput=$('#questionDurationInput');
-    if(!durationInput.reportValidity())return;
-    applyQuestionDuration(durationInput.value);$('#timerSettingsDialog').close();
+    event.preventDefault();const durationInput=$('#questionDurationInput'),countInput=$('#questionsPerBabakInput');
+    if(!durationInput.reportValidity()||!countInput.reportValidity())return;
+    applyRoundSettings(durationInput.value,countInput.value);$('#timerSettingsDialog').close();
   });
   $('#audioToggle').addEventListener('click',toggleAudio);
   $('#fullscreenToggle').addEventListener('click',toggleFullscreen);
@@ -782,7 +859,7 @@
   loadBabakState();renderBabakHistory();
   connectTikTokEventStream();
   loadHostStatus();
-  deck=shuffle(QUESTIONS.map((_,index)=>index));nextQuestion();
+  activeQuestionsPerBabak=questionsPerBabak;deck=shuffle(questionBank.map((_,index)=>index));nextQuestion();
   addMessage('QUIZ MASTER','Quiz Arena berjalan otomatis. Jawab A, B, C, atau D sebelum timer habis.','system');
   updateTimer();requestAnimationFrame(frame);
 })();

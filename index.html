@@ -22,6 +22,7 @@
         <div class="topbar-right">
           <button class="utility-button" id="audioToggle" type="button" aria-pressed="false" title="Aktifkan musik dan efek suara">♫ <span>AUDIO OFF</span></button>
           <button class="utility-button" id="timerSettingsToggle" type="button" title="Atur durasi pertanyaan">◷ <span id="questionDurationLabel">30 DETIK</span></button>
+          <button class="utility-button" id="quizGeneratorToggle" type="button" title="Buat soal baru dengan Groq">✧ <span>SOAL AI</span></button>
           <button class="utility-button" id="groqSettingsToggle" type="button" title="Atur Groq AI">✦ <span id="groqSettingsLabel">GROQ AI</span></button>
           <button class="utility-button" id="editLayoutToggle" type="button" aria-pressed="false" title="Atur posisi dan ukuran panel">⠿ <span>ATUR</span></button>
           <button class="utility-button" id="fullscreenToggle" type="button" title="Tampilkan layar penuh">⛶ <span>LAYAR PENUH</span></button>
@@ -112,9 +113,17 @@
     <dialog class="control-dialog" id="newBabakDialog" aria-labelledby="newBabakTitle"><div class="dialog-kicker">PAPAN SKOR</div><h2 id="newBabakTitle">Mulai babak baru?</h2><p id="newBabakSummary"></p><div class="dialog-actions"><button id="cancelBabakButton" type="button">BATAL</button><button id="confirmBabakButton" type="button">SIMPAN & RESET</button></div></dialog>
     <dialog class="control-dialog history-dialog" id="babakHistoryDialog" aria-labelledby="babakHistoryTitle"><div class="history-heading"><div><div class="dialog-kicker">ARSIP HASIL</div><h2 id="babakHistoryTitle">Riwayat babak</h2></div><button id="closeBabakHistory" type="button" aria-label="Tutup riwayat">×</button></div><ol id="babakHistoryList"></ol></dialog>
     <dialog class="control-dialog timer-settings-dialog" id="timerSettingsDialog" aria-labelledby="timerSettingsTitle">
-      <div class="dialog-kicker">PENGATURAN KUIS</div><h2 id="timerSettingsTitle">Durasi pertanyaan</h2>
+      <div class="dialog-kicker">PENGATURAN KUIS</div><h2 id="timerSettingsTitle">Timer &amp; jumlah soal</h2>
       <p>Atur berapa lama penonton punya waktu untuk menjawab setiap soal. Pilih 10–180 detik.</p>
-      <form id="timerSettingsForm"><label class="ai-config-label" for="questionDurationInput">DURASI PER SOAL (DETIK)</label><input id="questionDurationInput" type="number" min="10" max="180" step="5" value="30" required aria-describedby="timerSettingsNote"><p class="ai-config-security" id="timerSettingsNote">Jika belum ada jawaban di soal berjalan, perubahan langsung menyesuaikan sisa waktu. Jika sudah ada jawaban, durasi baru berlaku mulai soal berikutnya.</p><div class="dialog-actions"><button id="timerSettingsCancel" type="button">BATAL</button><button type="submit">SIMPAN DURASI</button></div></form>
+      <form id="timerSettingsForm"><label class="ai-config-label" for="questionDurationInput">DURASI PER SOAL (DETIK)</label><input id="questionDurationInput" type="number" min="10" max="180" step="5" value="30" required aria-describedby="timerSettingsNote"><label class="ai-config-label question-count-label" for="questionsPerBabakInput">JUMLAH SOAL PER BABAK</label><input id="questionsPerBabakInput" type="number" min="1" max="20" step="1" value="10" required><p class="ai-config-security" id="timerSettingsNote">Jika belum ada jawaban di soal berjalan, perubahan langsung menyesuaikan sisa waktu. Jika sudah ada jawaban, durasi baru berlaku mulai soal berikutnya. Jumlah soal berlaku untuk babak berikutnya.</p><div class="dialog-actions"><button id="timerSettingsCancel" type="button">BATAL</button><button type="submit">SIMPAN SETELAN</button></div></form>
+    </dialog>
+    <dialog class="control-dialog quiz-generator-dialog" id="quizGeneratorDialog" aria-labelledby="quizGeneratorTitle">
+      <div class="dialog-kicker">GENERATOR SOAL AI</div><h2 id="quizGeneratorTitle">Buat soal dengan Groq</h2>
+      <p>Groq akan menyiapkan pilihan ganda A–D untuk babak berikutnya tanpa mengganggu babak berjalan. Pemakaian menggunakan kuota API Groq; periksa kembali fakta dan kunci jawaban AI sebelum LIVE.</p>
+      <label class="ai-config-label" for="quizCategoryInput">KATEGORI</label><input id="quizCategoryInput" type="text" maxlength="48" value="Pengetahuan Umum" placeholder="Contoh: Sejarah Indonesia">
+      <label class="ai-config-label quiz-difficulty-label" for="quizDifficultyInput">TINGKAT KESULITAN</label><select id="quizDifficultyInput"><option value="mudah">Mudah</option><option value="sedang" selected>Sedang</option><option value="sulit">Sulit</option></select>
+      <p class="ai-config-security" id="quizGeneratorStatus">Jumlah soal mengikuti setelan per babak. Generator hanya bisa digunakan jika Groq API sudah dikonfigurasi.</p>
+      <div class="dialog-actions"><button id="quizGeneratorCancel" type="button">TUTUP</button><button id="generateQuizQuestionsButton" type="button">BUAT SOAL AI</button></div>
     </dialog>
     <dialog class="control-dialog ai-config-dialog" id="groqSettingsDialog" aria-labelledby="groqSettingsTitle">
       <div class="dialog-kicker">PENGATURAN AI HOST</div><h2 id="groqSettingsTitle">Hubungkan Groq</h2>
