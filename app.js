@@ -69,7 +69,8 @@
   const seenHostEventKeys=new Map();
 
   const pageParams=new URLSearchParams(location.search);
-  if(pageParams.get('live')==='1'||pageParams.get('edit')==='1')document.body.classList.add('broadcast-mode');
+  const dashboardMode=pageParams.get('dashboard')==='1'&&pageParams.get('live')!=='1'&&pageParams.get('edit')!=='1';
+  if(!dashboardMode)document.body.classList.add('broadcast-mode');
 
   function cleanName(value){
     return String(value||'').replace(/[\u0000-\u001f\u007f]/g,'').replace(/^@/,'').trim().replace(/\s+/g,' ').slice(0,20)||'PENONTON';
@@ -1029,7 +1030,7 @@
     if(fallbackReason)notify(`Groq ${fallbackReason}; generator lokal anti-ulangan dipakai.`,true);
   }
 
-  // Add ?live=1 for a clean portrait-friendly broadcast screen (question, timer and scoreboard only).
+  // The default route is the clean broadcast view; add ?dashboard=1 to open the full moderator dashboard.
   window.VirtualLiveQuiz={receiveComment};
   loadBabakState();renderBabakHistory();loadQuizGenerationPreferences();
   connectTikTokEventStream();
