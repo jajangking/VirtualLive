@@ -412,17 +412,20 @@
     panel?.classList.remove('is-answer-reveal');panel?.classList.add('is-answer-result');
     banner.classList.remove('visible','winner-reveal');void banner.offsetWidth;
     banner.classList.toggle('no-winner',!firstCorrect);banner.classList.add('visible','winner-reveal');
-    if(firstCorrect){playSfx('winner');animateWinnerSelection(firstCorrect);}
+    if(firstCorrect)playSfx('winner');
   }
   function sequenceQuestionResult(){
     const panel=$('.quiz-panel'),wrong=[...document.querySelectorAll('.answer-option.dimmed')],correct=$('.answer-option.correct');
     if(!panel){presentQuestionResult();return;}
-    clearResultSequence();panel.classList.remove('is-answer-reveal','is-answer-hero','is-answer-result');void panel.offsetWidth;
-    panel.classList.add('is-answer-reveal');
+    clearResultSequence();panel.classList.remove('is-answer-reveal','is-answer-hero','is-answer-result');
+    const content=$('.question-content');content?.classList.remove('question-arrive');content?.querySelectorAll('.answer-arrive').forEach(option=>option.classList.remove('answer-arrive'));
+    $('.quiz-panel .panel-heading')?.classList.remove('question-heading-arrive');
+    void panel.offsetWidth;panel.classList.add('is-answer-reveal');
     const reduced=window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
     const raiseAnswer=()=>{
       wrong.forEach(option=>option.classList.add('is-removed'));
       panel.classList.add('is-answer-hero');correct?.classList.add('is-answer-hero');
+      if(firstCorrect)animateWinnerSelection(firstCorrect);
       resultSequenceTimer=setTimeout(()=>{if(phase==='result')presentQuestionResult();},reduced?120:950);
     };
     resultSequenceTimer=setTimeout(raiseAnswer,reduced?0:650);
@@ -457,11 +460,10 @@
       $('#timerStatus').textContent='HASIL AKHIR';
       addMessage('QUIZ MASTER',`🏆 ${firstCorrect.name} paling dulu menjawab benar! +1 poin.`, 'winner');
     }else{
-      const letter=LETTERS[currentQuestion.correct],answer=currentQuestion.options[currentQuestion.correct];
-      $('#winnerLabel').textContent='WAKTU HABIS — JAWABANNYA';$('#winnerName').textContent=`${letter} · ${answer}`;
-      $('.winner-points').innerHTML='— <small>TANPA PEMENANG</small>';
+      $('#winnerLabel').textContent='WAKTU HABIS';$('#winnerName').textContent='BELUM ADA PEMENANG';
+      $('.winner-points').innerHTML='— <small>POIN</small>';
       $('#winnerBanner').classList.add('no-winner');$('#timerStatus').textContent='WAKTU HABIS';
-      addMessage('QUIZ MASTER',`Tidak ada jawaban benar kali ini. Jawaban: ${letter} — ${answer}.`,'system');
+      addMessage('QUIZ MASTER','Waktu habis. Tidak ada jawaban yang benar.','system');
     }
     $('#autoAdvanceText').textContent=`${roundNumber>=activeQuestionsPerBabak?'Babak selesai':'Soal baru'} dalam ${RESULT_SECONDS} detik`;
     updateStats();sequenceQuestionResult();
