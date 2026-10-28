@@ -150,6 +150,20 @@ function allowHostRequest(req) {
   return true;
 }
 
+function describeEdgeTtsError(error) {
+  const code = String(error?.code || error?.cause?.code || '');
+  const detail = String(error?.message || '').replace(/(?:https?|wss?):\/\/[^\s]+/gi, '[upstream]').slice(0, 180);
+  console.error(`[Edge TTS] ${code ? `${code}: ` : ''}${detail || error?.name || 'unknown error'}`);
+  if (/ENOTFOUND|EAI_AGAIN|ENETUNREACH|EHOSTUNREACH|ECONNREFUSED|ECONNRESET|ETIMEDOUT/.test(code)) {
+    return `Edge TTS tidak dapat tersambung dari server (${code}). Periksa DNS dan firewall koneksi keluar.`;
+  }
+  if (/timed out|timeout/i.test(detail)) return 'Edge TTS timeout. Periksa koneksi keluar server ke layanan Microsoft.';
+  if (/closed before turn\.end/i.test(detail)) return `Edge TTS menutup sesi (${detail}). Periksa voice/bahasa dan koneksi keluar.`;
+  const responseCode = detail.match(/(?:server response|status(?: code)?)\D+(\d{3})/i)?.[1];
+  if (responseCode) return `Edge TTS ditolak oleh layanan (HTTP ${responseCode}). Periksa voice dan bahasa yang dikonfigurasi.`;
+  return `Edge TTS gagal (${code || error?.name || 'unknown'}). Periksa log service untuk detail.`;
+}
+
 async function synthesizeHostSpeech(text) {
   const tts = new EdgeTTS({
     voice: EDGE_TTS_VOICE,
@@ -323,7 +337,7 @@ const server = http.createServer((req, res) => {
     }).then(audio => {
       res.writeHead(200, { 'Content-Type': 'audio/mpeg', 'Content-Length': audio.length, 'Cache-Control': 'no-store' });
       res.end(audio);
-    }).catch(error => sendJson(res, error.statusCode || 502, { error: error.statusCode ? error.message : 'Edge TTS sedang tidak bisa dihubungi.' }));
+    }).catch(error => sendJson(res, error.statusCode || 502, { error: error.statusCode ? error.message : describeEdgeTtsError(error) }));
     return;
   }
 
@@ -398,4 +412,4 @@ if (require.main === module) {
   });
 }
 
-module.exports = { server, startServer, handleTikTokComment, handleTikTokGift, handleTikTokMember, handleTikTokFollow, handleTikTokSocial, generateHostLine, synthesizeHostSpeech, isTrustedRequestOrigin, eventClients, getBridgeState: () => ({ ...bridgeState }) };
+module.exports = { server, startServer, handleTikTokComment, handleTikTokGift, handleTikTokMember, handleTikTokFollow, handleTikTokSocial, generateHostLine, synthesizeHostSpeech, describeEdgeTtsError, isTrustedRequestOrigin, eventClients, getBridgeState: () => ({ ...bridgeState }) };

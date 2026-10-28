@@ -2,7 +2,7 @@
 
 const test = require('node:test');
 const assert = require('node:assert/strict');
-const { server, handleTikTokComment, handleTikTokGift, handleTikTokMember, handleTikTokFollow, handleTikTokSocial, isTrustedRequestOrigin, eventClients } = require('../server');
+const { server, handleTikTokComment, handleTikTokGift, handleTikTokMember, handleTikTokFollow, handleTikTokSocial, describeEdgeTtsError, isTrustedRequestOrigin, eventClients } = require('../server');
 
 test('forwards a TikTok chat event as an SSE comment with the quiz fields', () => {
   const chunks = [];
@@ -146,4 +146,14 @@ test('accepts forwarded same-site origins but rejects cross-site origins', () =>
   assert.equal(isTrustedRequestOrigin({ headers: { origin: 'https://live.example', host: '127.0.0.1:3000', 'sec-fetch-site': 'same-origin' } }), true);
   assert.equal(isTrustedRequestOrigin({ headers: { origin: 'https://attacker.example', host: 'live.example', 'sec-fetch-site': 'cross-site' } }), false);
   assert.equal(isTrustedRequestOrigin({ headers: { origin: 'not a url', host: 'live.example' } }), false);
+});
+
+
+test('Edge TTS errors explain network and upstream rejection cases', () => {
+  const originalError = console.error;
+  console.error = () => {};
+  try {
+    assert.match(describeEdgeTtsError(Object.assign(new Error('socket hang up'), { code: 'ECONNRESET' })), /koneksi keluar/);
+    assert.match(describeEdgeTtsError(new Error('WebSocket closed before turn.end (code 1008)')), /Periksa voice\/bahasa/);
+  } finally { console.error = originalError; }
 });
