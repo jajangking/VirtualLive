@@ -32,7 +32,7 @@
   let questionBank=QUESTIONS,preparedAiQuestions=loadPreparedAiQuestions();
   let scores=loadScores(),deck=[],deckPosition=0,roundNumber=0,currentQuestion=null,babakNumber=1,babakHistory=[],pendingBabakArchive=null,wasPausedBeforeBabakDialog=false;
   const donorTotals=new Map();
-  let phase='question',remaining=activeQuestionDuration,resultRemaining=RESULT_SECONDS,firstCorrect=null,isPaused=false,announcementActive=false,winnerSelectionTimer=null,resultSequenceTimer=null,resultClearHandler=null;
+  let phase='question',remaining=activeQuestionDuration,resultRemaining=RESULT_SECONDS,firstCorrect=null,isPaused=false,announcementActive=false,winnerSelectionTimer=null,resultSequenceTimer=null;
   let lastFrame=performance.now(),toastTimer,quizMotionTimer;
   let audioContext=null,masterGain=null,bgmGain=null,sfxGain=null,bgmTimer=null,bgmStep=0,audioEnabled=false,lastCountdownSecond=activeQuestionDuration,giftTimer=null;
   let hostAudioEnabled=false,hostAiConfigured=false,groqKeySource='none',hostJobs=[],hostQueueRunning=false,lastAutoHostAt=0,hostVoiceStatus='EDGE TTS · BRIAN';
@@ -306,15 +306,12 @@
   }
   function clearResultSequence(){
     clearTimeout(resultSequenceTimer);resultSequenceTimer=null;
-    const content=$('.question-content');
-    if(content&&resultClearHandler)content.removeEventListener('transitionend',resultClearHandler);
-    resultClearHandler=null;
   }
 
   function nextQuestion(){
     if(roundNumber>=activeQuestionsPerBabak){finishBabak();return;}
     clearResultSequence();
-    const panel=$('.quiz-panel');panel.classList.remove('is-answer-reveal','is-answer-hero','is-answer-clearing');
+    const panel=$('.quiz-panel');panel.classList.remove('is-answer-reveal','is-answer-hero','is-answer-result');
     const animateTransition=roundNumber>0;
     if(deckPosition>=deck.length){
       const previous=deck.length?deck[deck.length-1]:-1;deck=shuffle(questionBank.map((_,i)=>i));
@@ -428,7 +425,7 @@
   function presentQuestionResult(){
     clearResultSequence();
     const panel=$('.quiz-panel'),banner=$('#winnerBanner');
-    panel?.classList.remove('is-answer-reveal','is-answer-hero');
+    panel?.classList.remove('is-answer-reveal');panel?.classList.add('is-answer-result');
     banner.classList.remove('visible','winner-reveal');void banner.offsetWidth;
     banner.classList.toggle('no-winner',!firstCorrect);banner.classList.add('visible','winner-reveal');
     if(firstCorrect){playSfx('winner');animateWinnerSelection(firstCorrect);}
@@ -436,25 +433,13 @@
   function sequenceQuestionResult(){
     const panel=$('.quiz-panel'),wrong=[...document.querySelectorAll('.answer-option.dimmed')],correct=$('.answer-option.correct');
     if(!panel){presentQuestionResult();return;}
-    clearResultSequence();panel.classList.remove('is-answer-reveal','is-answer-hero','is-answer-clearing');void panel.offsetWidth;
+    clearResultSequence();panel.classList.remove('is-answer-reveal','is-answer-hero','is-answer-result');void panel.offsetWidth;
     panel.classList.add('is-answer-reveal');
     const reduced=window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
     const raiseAnswer=()=>{
       wrong.forEach(option=>option.classList.add('is-removed'));
       panel.classList.add('is-answer-hero');correct?.classList.add('is-answer-hero');
-      const content=$('.question-content');
-      const fadeToWinner=()=>{
-        content?.classList.remove('question-arrive');content?.querySelectorAll('.answer-arrive').forEach(option=>option.classList.remove('answer-arrive'));
-        if(content)void content.offsetWidth;
-        panel.classList.add('is-answer-clearing');
-        const showWinner=()=>{if(phase==='result')presentQuestionResult();};
-        if(reduced){resultSequenceTimer=setTimeout(showWinner,80);return;}
-        if(!content){showWinner();return;}
-        resultClearHandler=event=>{if(event.target===content&&event.propertyName==='opacity')showWinner();};
-        content.addEventListener('transitionend',resultClearHandler);
-        resultSequenceTimer=setTimeout(showWinner,360);
-      };
-      resultSequenceTimer=setTimeout(fadeToWinner,reduced?650:820);
+      resultSequenceTimer=setTimeout(()=>{if(phase==='result')presentQuestionResult();},reduced?120:820);
     };
     resultSequenceTimer=setTimeout(raiseAnswer,reduced?0:470);
   }
@@ -462,6 +447,7 @@
   function finishBabak(){
     if(phase==='babak-end')return;
     phase='babak-end';remaining=0;resultRemaining=0;
+    clearResultSequence();$('.quiz-panel')?.classList.remove('is-answer-reveal','is-answer-hero','is-answer-result');
     const champion=sortedScores()[0];
     $('#winnerLabel').textContent=champion?`JUARA BABAK ${String(babakNumber).padStart(2,'0')} · ${activeQuestionsPerBabak} SOAL`:'BABAK SELESAI';
     $('#winnerName').textContent=champion?champion.name:'TANPA PEMENANG';
