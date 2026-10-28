@@ -3,7 +3,7 @@
 const http = require('node:http');
 const fs = require('node:fs');
 const path = require('node:path');
-const { EdgeTTS } = require('node-edge-tts');
+const { spawn } = require('node:child_process');
 
 const ROOT = path.resolve(__dirname);
 const PORT = Number.parseInt(process.env.PORT || '3000', 10);
@@ -13,7 +13,8 @@ const TIKTOK_BRIDGE_ENABLED = process.env.TIKTOK_BRIDGE_ENABLED === 'true';
 const GROQ_API_KEY = String(process.env.GROQ_API_KEY || '').trim();
 const GROQ_MODEL = String(process.env.GROQ_MODEL || 'llama-3.1-8b-instant').trim();
 const EDGE_TTS_VOICE = String(process.env.EDGE_TTS_VOICE || 'en-US-BrianMultilingualNeural').trim();
-const EDGE_TTS_LANG = String(process.env.EDGE_TTS_LANG || 'id-ID').trim();
+const EDGE_TTS_PYTHON = String(process.env.EDGE_TTS_PYTHON || '').trim();
+const EDGE_TTS_TIMEOUT_MS = 30_000;
 const TYPES = { '.html': 'text/html; charset=utf-8', '.css': 'text/css; charset=utf-8', '.js': 'text/javascript; charset=utf-8' };
 const PUBLIC_FILES = new Map([
   ['/', 'index.html'], ['/index.html', 'index.html'], ['/styles.css', 'styles.css'], ['/app.js', 'app.js'], ['/answer-gate.js', 'answer-gate.js'],
@@ -154,6 +155,8 @@ function describeEdgeTtsError(error) {
   const code = String(error?.code || error?.cause?.code || '');
   const detail = String(error?.message || '').replace(/(?:https?|wss?):\/\/[^\s]+/gi, '[upstream]').slice(0, 180);
   console.error(`[Edge TTS] ${code ? `${code}: ` : ''}${detail || error?.name || 'unknown error'}`);
+  if (code === 'EDGE_TTS_NOT_INSTALLED') return 'Python edge-tts belum terpasang di server. Jalankan instalasi dependency sesuai README.';
+  if (code === 'ENOENT') return 'Python 3 tidak ditemukan di server. Pasang Python 3 atau atur EDGE_TTS_PYTHON.';
   if (/ENOTFOUND|EAI_AGAIN|ENETUNREACH|EHOSTUNREACH|ECONNREFUSED|ECONNRESET|ETIMEDOUT/.test(code)) {
     return `Edge TTS tidak dapat tersambung dari server (${code}). Periksa DNS dan firewall koneksi keluar.`;
   }
@@ -164,25 +167,57 @@ function describeEdgeTtsError(error) {
   return `Edge TTS gagal (${code || error?.name || 'unknown'}). Periksa log service untuk detail.`;
 }
 
-async function synthesizeHostSpeech(text) {
-  const tts = new EdgeTTS({
-    voice: EDGE_TTS_VOICE,
-    lang: EDGE_TTS_LANG,
-    outputFormat: 'audio-24khz-48kbitrate-mono-mp3',
-    rate: '+0%',
-    pitch: '+0Hz',
-    timeout: 20_000,
+function synthesizeHostSpeech(text) {
+  return new Promise((resolve, reject) => {
+    const venvPython = path.join(ROOT, '.venv-edge-tts', 'bin', 'python');
+    const python = EDGE_TTS_PYTHON || (fs.existsSync(venvPython) ? venvPython : 'python3');
+    const args = ['-m', 'edge_tts', `--voice=${EDGE_TTS_VOICE}`, `--text=${text}`, '--write-media=-', '--no-progress'];
+    const child = spawn(python, args, { stdio: ['ignore', 'pipe', 'pipe'] });
+    const audioChunks = [], errorChunks = [];
+    let audioBytes = 0, errorBytes = 0, settled = false;
+    const timeout = setTimeout(() => {
+      const error = Object.assign(new Error('Edge TTS subprocess timed out.'), { code: 'ETIMEDOUT' });
+      child.kill('SIGKILL'); fail(error);
+    }, EDGE_TTS_TIMEOUT_MS);
+    timeout.unref?.();
+    function fail(error) {
+      if (settled) return;
+      settled = true; clearTimeout(timeout); reject(error);
+    }
+    child.stdout.on('data', chunk => {
+      if (settled) return;
+      audioBytes += chunk.length;
+      if (audioBytes > 2 * 1024 * 1024) {
+        child.kill('SIGKILL');
+        fail(Object.assign(new Error('Audio host terlalu besar.'), { statusCode: 502 }));
+        return;
+      }
+      audioChunks.push(chunk);
+    });
+    child.stderr.on('data', chunk => {
+      if (errorBytes >= 6000) return;
+      const remaining = 6000 - errorBytes, piece = chunk.subarray(0, remaining);
+      errorChunks.push(piece); errorBytes += piece.length;
+    });
+    child.once('error', fail);
+    child.once('close', code => {
+      if (settled) return;
+      clearTimeout(timeout);
+      if (code !== 0) {
+        const stderrText = Buffer.concat(errorChunks).toString('utf8').trim();
+        const detail = stderrText.split('\n').filter(Boolean).slice(-3).join(' ').slice(-1000);
+        const error = new Error(detail || `edge-tts exited with code ${code}.`);
+        if (/No module named ['"]?edge_tts['"]?/.test(detail)) error.code = 'EDGE_TTS_NOT_INSTALLED';
+        else if (/timed out|timeout/i.test(detail)) error.code = 'ETIMEDOUT';
+        else if (/Name or service not known|Temporary failure in name resolution|Cannot connect to host/i.test(detail)) error.code = 'ENOTFOUND';
+        fail(error);
+        return;
+      }
+      if (!audioBytes) { fail(Object.assign(new Error('Edge TTS menghasilkan audio kosong.'), { statusCode: 502 })); return; }
+      settled = true;
+      resolve(Buffer.concat(audioChunks, audioBytes));
+    });
   });
-  const chunks = [];
-  let totalBytes = 0;
-  for await (const chunk of tts.streamAudio(text)) {
-    if (!Buffer.isBuffer(chunk)) continue;
-    totalBytes += chunk.length;
-    if (totalBytes > 2 * 1024 * 1024) throw Object.assign(new Error('Audio host terlalu besar.'), { statusCode: 502 });
-    chunks.push(chunk);
-  }
-  if (!totalBytes) throw Object.assign(new Error('Edge TTS tidak menghasilkan audio.'), { statusCode: 502 });
-  return Buffer.concat(chunks, totalBytes);
 }
 
 async function generateHostLine(input) {
@@ -311,7 +346,7 @@ const server = http.createServer((req, res) => {
 
   if (pathname === '/api/host/status') {
     if (req.method !== 'GET' && req.method !== 'HEAD') { res.writeHead(405, { Allow: 'GET, HEAD' }).end(); return; }
-    const body = JSON.stringify({ configured: Boolean(GROQ_API_KEY), model: GROQ_MODEL, textLanguage: 'id-ID', speech: 'edge-tts', voice: EDGE_TTS_VOICE, speechLanguage: EDGE_TTS_LANG });
+    const body = JSON.stringify({ configured: Boolean(GROQ_API_KEY), model: GROQ_MODEL, textLanguage: 'id-ID', speech: 'edge-tts', voice: EDGE_TTS_VOICE, speechLanguage: 'multilingual-auto' });
     res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8', 'Cache-Control': 'no-store' });
     res.end(req.method === 'HEAD' ? undefined : body);
     return;

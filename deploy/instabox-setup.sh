@@ -48,6 +48,7 @@ else
 fi
 
 npm --prefix "$APP_DIR" ci --omit=dev
+APP_DIR="$APP_DIR" bash "$APP_DIR/deploy/install-edge-tts.sh"
 
 node_bin="$(command -v node)"
 sed "s|@NODE_BIN@|$node_bin|g" "$APP_DIR/deploy/virtuallive.service" > /etc/systemd/system/virtuallive.service

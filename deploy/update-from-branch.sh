@@ -29,5 +29,6 @@ fi
 
 git -C "$APP_DIR" reset --hard "$target"
 npm --prefix "$APP_DIR" ci --omit=dev
+APP_DIR="$APP_DIR" bash "$APP_DIR/deploy/install-edge-tts.sh"
 systemctl restart virtuallive.service
 echo "Deployed $BRANCH at ${target:0:12}"

@@ -131,7 +131,7 @@ test('host status endpoint reports readiness without exposing the API key', asyn
   assert.equal(status.textLanguage, 'id-ID');
   assert.equal(status.speech, 'edge-tts');
   assert.equal(status.voice, 'en-US-BrianMultilingualNeural');
-  assert.equal(status.speechLanguage, 'id-ID');
+  assert.equal(status.speechLanguage, 'multilingual-auto');
   assert.equal(Object.hasOwn(status, 'apiKey'), false);
   const rejectedSpeech = await fetch(`http://127.0.0.1:${address.port}/api/host/speech`, {
     method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ text: '' }),
@@ -155,5 +155,6 @@ test('Edge TTS errors explain network and upstream rejection cases', () => {
   try {
     assert.match(describeEdgeTtsError(Object.assign(new Error('socket hang up'), { code: 'ECONNRESET' })), /koneksi keluar/);
     assert.match(describeEdgeTtsError(new Error('WebSocket closed before turn.end (code 1008)')), /Periksa voice\/bahasa/);
+    assert.match(describeEdgeTtsError(new Error('Unexpected server response: 200')), /HTTP 200/);
   } finally { console.error = originalError; }
 });

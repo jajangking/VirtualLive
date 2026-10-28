@@ -4,10 +4,12 @@ Kuis pengetahuan umum otomatis untuk tampilan live. Setiap soal menampilkan pili
 
 ## Jalankan lokal
 
-Butuh Node.js 22+ dan npm (dependency tree yang terpasang memakai `got@15`, yang mensyaratkan Node.js 22+):
+Butuh Node.js 22+, npm, dan Python 3 dengan dukungan `venv` (dependency `got@15` mensyaratkan Node.js 22+):
 
 ```bash
 npm ci
+python3 -m venv .venv-edge-tts
+.venv-edge-tts/bin/python -m pip install -r requirements-edge-tts.txt
 npm start
 ```
 
@@ -32,7 +34,7 @@ Jangan set `TIKTOK_BRIDGE_ENABLED=true` jika tidak ingin server membuat koneksi 
 - Event gift LIVE TikTok menampilkan reaksi animasi dan pesan di chat; suara gift diputar jika audio diaktifkan. Event penonton bergabung, follow, dan gift juga dapat memicu sapaan AI host.
 - AI host tampil pada mode siaran sebagai avatar animasi. Tekan `SUARA OFF` → `SUARA ON` dari panel moderator terlebih dahulu agar browser mengizinkan pemutaran otomatis (di OBS, gunakan `Interact` pada Browser Source). Pastikan audio Browser Source ikut masuk ke mixer/siaran OBS. Host membacakan sapaan Groq saat ada event LIVE; moderator dapat mengetik ucapan di kolom host lalu menekan `UCAPKAN`. Sapaan otomatis dibatasi/dideduplikasi agar tidak terlalu sering. Ucapan moderator tetap dapat dipakai tanpa konfigurasi Groq.
 - AI host membuat teks bahasa Indonesia lewat Groq Chat Completions. Atur `GROQ_API_KEY` hanya sebagai environment variable server (jangan pernah memasukkannya ke `app.js`, HTML, atau commit). Opsional: `GROQ_MODEL` (default `llama-3.1-8b-instant`). Contoh lokal: `export GROQ_API_KEY='isi-kunci-di-environment-lokal'` lalu `npm start`.
-- TTS memakai Edge TTS dengan voice default `en-US-BrianMultilingualNeural` (Brian Multilingual, US) dan bahasa teks `id-ID`. Audio dibuat server-side lalu diputar setelah moderator mengaktifkan suara; VPS harus bisa membuat koneksi keluar HTTPS/WebSocket (port 443) ke layanan Edge TTS. Layanan dapat berubah atau menolak koneksi. Tidak diperlukan API key TTS. Opsional: `EDGE_TTS_VOICE` dan `EDGE_TTS_LANG` untuk mengganti voice/bahasa.
+- TTS memakai paket Python `edge-tts` dengan voice default `en-US-BrianMultilingualNeural` (Brian Multilingual, US). Audio dibuat server-side lalu diputar setelah moderator mengaktifkan suara; voice multilingual membaca teks host berbahasa Indonesia. VPS harus bisa membuat koneksi keluar HTTPS/WebSocket (port 443) ke layanan Edge TTS. Layanan dapat berubah atau menolak koneksi. Tidak diperlukan API key TTS. Opsional: `EDGE_TTS_VOICE` untuk mengganti voice; `EDGE_TTS_PYTHON` untuk memilih interpreter Python.
 - Pada VPS systemd, simpan API key Groq di override privat service, bukan file repo: jalankan `sudo systemctl edit virtuallive.service`, tambahkan `[Service]` dan `Environment=GROQ_API_KEY=...`, lalu `sudo systemctl daemon-reload && sudo systemctl restart virtuallive.service`. Kunci tetap berada di server; endpoint AI/TTS memiliki validasi input, pemeriksaan origin, dan pembatasan permintaan.
 - Tidak perlu menekan tombol untuk mengganti soal. Timer berjalan otomatis, hasil muncul setelah timer selesai, lalu soal baru dimulai sendiri.
 
