@@ -29,7 +29,7 @@
   const feed=$('#chatFeed'),input=$('#commentInput'),toast=$('#toast');
   let scores=loadScores(),deck=[],deckPosition=0,roundNumber=0,currentQuestion=null,babakNumber=1,babakHistory=[],pendingBabakArchive=null,wasPausedBeforeBabakDialog=false;
   const donorTotals=new Map();
-  let phase='question',remaining=ROUND_SECONDS,resultRemaining=RESULT_SECONDS,firstCorrect=null,isPaused=false,announcementActive=false;
+  let phase='question',remaining=ROUND_SECONDS,resultRemaining=RESULT_SECONDS,firstCorrect=null,isPaused=false,announcementActive=false,winnerSelectionTimer=null;
   let lastFrame=performance.now(),toastTimer,quizMotionTimer;
   let audioContext=null,masterGain=null,bgmGain=null,sfxGain=null,bgmTimer=null,bgmStep=0,audioEnabled=false,lastCountdownSecond=ROUND_SECONDS,giftTimer=null;
   let hostAudioEnabled=false,hostAiConfigured=false,groqKeySource='none',hostJobs=[],hostQueueRunning=false,lastAutoHostAt=0,hostVoiceStatus='EDGE TTS · BRIAN';
@@ -123,9 +123,16 @@
     const time=document.createElement('span');time.className='chat-time';time.textContent=timestamp();meta.append(user,time);
     const message=document.createElement('div');message.className='chat-text';message.textContent=text;
     if(letter){const chip=document.createElement('span');chip.className='answer-chip';chip.textContent=letter;message.append(chip);}
-    body.append(meta,message);row.append(avatar,body);feed.append(row);
-    while(feed.children.length>55)feed.firstElementChild.remove();
+    body.append(meta,message);row.append(avatar,body);
+    const selectionTag=document.createElement('span');selectionTag.className='winner-selection-tag';selectionTag.textContent='PILIHAN BENAR';selectionTag.hidden=true;row.append(selectionTag);
+    feed.append(row);
+    while(feed.children.length>55){
+      const removable=[...feed.children].find(item=>item!==firstCorrect?.row);
+      if(!removable)break;
+      removable.remove();
+    }
     feed.scrollTop=feed.scrollHeight;
+    return row;
   }
   function notify(text,error=false){
     toast.textContent=text;toast.classList.toggle('error',error);toast.classList.add('visible');
@@ -260,6 +267,7 @@
     }
     currentQuestion=QUESTIONS[deck[deckPosition++]];roundNumber++;phase='question';
     remaining=ROUND_SECONDS;resultRemaining=RESULT_SECONDS;firstCorrect=null;answerGate.reset();
+    clearTimeout(winnerSelectionTimer);winnerSelectionTimer=null;
     feed.replaceChildren();updateAnswerCount();
     $('#questionText').textContent=currentQuestion.question;
     $('#questionTag').textContent=currentQuestion.category;
@@ -301,12 +309,12 @@
       option.classList.toggle('correct',index===correct);option.classList.toggle('dimmed',index!==correct);
     });
   }
-  function processAnswer(name,comment){
+  function processAnswer(name,comment,row){
     const letter=parseAnswer(comment);if(!letter||phase!=='question')return;
     const selected=LETTERS.indexOf(letter),player=cleanName(name);
     if(selected===currentQuestion.correct){
       if(!firstCorrect){
-        firstCorrect={name:player,letter,elapsed:ROUND_SECONDS-remaining,receivedAt:Date.now()};
+        firstCorrect={name:player,letter,elapsed:ROUND_SECONDS-remaining,receivedAt:Date.now(),row};
         $('#timerStatus').textContent='JAWABAN BENAR TERCATAT';
         $('#autoAdvanceText').textContent='Ada jawaban benar — hasil saat timer habis';
         addMessage('QUIZ MASTER','Jawaban benar sudah tercatat. Pemenang diumumkan setelah waktu habis.','system');playSfx('correct');
@@ -322,7 +330,7 @@
     const author=cleanName(username),text=String(comment||'').trim(),letter=parseAnswer(text);if(!letter)return;
     const participantKey=String(userId||scoreKey(author));
     if(!answerGate.accept(participantKey))return;
-    addMessage(author,text,'comment',letter);updateAnswerCount();processAnswer(author,text);
+    const answerRow=addMessage(author,text,'comment',letter);updateAnswerCount();processAnswer(author,text,answerRow);
   }
   function updateAnswerCount(){
     const count=$('#answerCount');if(count)count.textContent=`${answerGate.size} jawaban · 1 per orang`;
@@ -331,6 +339,34 @@
     const text=raw.trim();if(!text)return;
     const named=text.match(/^@?([\p{L}\p{N}_ .-]{1,20})\s*:\s*(.+)$/u);
     if(named)receiveComment(named[1],named[2]);else receiveComment('KAMU',text);
+  }
+
+  function animateWinnerSelection(winner){
+    const row=winner?.row,feed=$('#chatFeed'),banner=$('#winnerBanner');
+    if(!row||!feed||!banner)return;
+    const tag=row.querySelector('.winner-selection-tag');if(tag)tag.hidden=false;
+    row.classList.add('winner-source');
+    const reduced=window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
+    const feedVisible=feed.getClientRects().length>0&&feed.clientHeight>0;
+    if(!feedVisible)return;
+    const rowRect=row.getBoundingClientRect(),feedRect=feed.getBoundingClientRect();
+    const targetTop=feed.scrollTop+rowRect.top-feedRect.top-(feed.clientHeight-rowRect.height)/2;
+    feed.scrollTo({top:Math.max(0,targetTop),behavior:reduced?'auto':'smooth'});
+    if(reduced)return;
+    clearTimeout(winnerSelectionTimer);
+    winnerSelectionTimer=setTimeout(()=>{
+      if(!row.isConnected)return;
+      row.classList.add('winner-source-picked');
+      const source=row.getBoundingClientRect(),destination=banner.getBoundingClientRect();
+      if(!source.width||!destination.width)return;
+      const token=document.createElement('div');token.className='winner-answer-flight';token.setAttribute('aria-hidden','true');
+      const name=document.createElement('span'),answer=document.createElement('b');name.textContent=winner.name;answer.textContent=winner.letter;
+      token.append(name,answer);token.style.left=`${source.left}px`;token.style.top=`${source.top}px`;token.style.width=`${Math.min(source.width,280)}px`;
+      document.body.append(token);
+      const dx=destination.left+destination.width/2-(source.left+source.width/2),dy=destination.top+destination.height/2-(source.top+source.height/2);
+      const flight=token.animate([{transform:'translate(0,0) scale(1)',opacity:1},{transform:`translate(${dx}px,${dy}px) scale(.72)`,opacity:.12}],{duration:640,easing:'cubic-bezier(.2,.72,.24,1)',fill:'forwards'});
+      flight.onfinish=()=>token.remove();
+    },460);
   }
 
   function finishQuestion(){
@@ -354,6 +390,7 @@
     }
     $('#autoAdvanceText').textContent=`Soal baru otomatis dalam ${RESULT_SECONDS} detik`;
     updateStats();
+    if(firstCorrect)animateWinnerSelection(firstCorrect);
   }
 
   function renderLeaderboard(){
