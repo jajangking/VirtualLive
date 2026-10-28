@@ -18,7 +18,7 @@ function readSavedGroqKey() {
 }
 let GROQ_API_KEY = ENV_GROQ_API_KEY || readSavedGroqKey();
 const configuredGroqModel = String(process.env.GROQ_MODEL || '').trim();
-const GROQ_MODEL = !configuredGroqModel || configuredGroqModel === 'llama-3.1-8b-instant' ? 'openai/gpt-oss-20b' : configuredGroqModel;
+const GROQ_MODEL = !configuredGroqModel || configuredGroqModel === 'llama-3.1-8b-instant' ? 'openai/gpt-oss-120b' : configuredGroqModel;
 const EDGE_TTS_VOICE = String(process.env.EDGE_TTS_VOICE || 'en-US-BrianMultilingualNeural').trim();
 const EDGE_TTS_PYTHON = String(process.env.EDGE_TTS_PYTHON || '').trim();
 const EDGE_TTS_TIMEOUT_MS = 30_000;

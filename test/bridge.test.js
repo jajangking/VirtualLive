@@ -163,7 +163,7 @@ test('host status endpoint reports readiness without exposing the API key', asyn
   assert.equal(status.speech, 'edge-tts');
   assert.equal(status.voice, 'en-US-BrianMultilingualNeural');
   assert.equal(status.speechLanguage, 'multilingual-auto');
-  if (!process.env.GROQ_MODEL || process.env.GROQ_MODEL === 'llama-3.1-8b-instant') assert.equal(status.model, 'openai/gpt-oss-20b');
+  if (!process.env.GROQ_MODEL || process.env.GROQ_MODEL === 'llama-3.1-8b-instant') assert.equal(status.model, 'openai/gpt-oss-120b');
   assert.equal(Object.hasOwn(status, 'apiKey'), false);
   if (status.keySource === 'none') {
     const unavailableGenerator = await fetch(`http://127.0.0.1:${address.port}/api/quiz/generate`, {
@@ -189,7 +189,7 @@ test('host status endpoint reports readiness without exposing the API key', asyn
         assert.equal(options.headers.Authorization, `Bearer ${key}`);
         const request = JSON.parse(options.body);
         const configuredModel = String(process.env.GROQ_MODEL || '').trim();
-        assert.equal(request.model, !configuredModel || configuredModel === 'llama-3.1-8b-instant' ? 'openai/gpt-oss-20b' : configuredModel);
+        assert.equal(request.model, !configuredModel || configuredModel === 'llama-3.1-8b-instant' ? 'openai/gpt-oss-120b' : configuredModel);
         assert.equal(request.reasoning_format, 'hidden');
         assert.equal(request.reasoning_effort, 'low');
         assert.equal(request.response_format.type, 'json_object');
