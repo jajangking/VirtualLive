@@ -32,7 +32,7 @@
   let questionBank=QUESTIONS,preparedAiQuestions=loadPreparedAiQuestions();
   let scores=loadScores(),deck=[],deckPosition=0,roundNumber=0,currentQuestion=null,babakNumber=1,babakHistory=[],pendingBabakArchive=null,wasPausedBeforeBabakDialog=false;
   const donorTotals=new Map();
-  let phase='question',remaining=activeQuestionDuration,resultRemaining=RESULT_SECONDS,firstCorrect=null,isPaused=false,announcementActive=false,winnerSelectionTimer=null,resultSequenceTimer=null;
+  let phase='question',remaining=activeQuestionDuration,resultRemaining=RESULT_SECONDS,firstCorrect=null,isPaused=false,announcementActive=false,resultSequenceTimer=null;
   let lastFrame=performance.now(),toastTimer,quizMotionTimer;
   let audioContext=null,masterGain=null,bgmGain=null,sfxGain=null,bgmTimer=null,bgmStep=0,audioEnabled=false,lastCountdownSecond=activeQuestionDuration,giftTimer=null;
   let hostAudioEnabled=false,hostAiConfigured=false,groqKeySource='none',hostJobs=[],hostQueueRunning=false,lastAutoHostAt=0,hostVoiceStatus='EDGE TTS · BRIAN';
@@ -320,7 +320,6 @@
     }
     currentQuestion=questionBank[deck[deckPosition++]];roundNumber++;phase='question';
     activeQuestionDuration=questionDuration;remaining=activeQuestionDuration;resultRemaining=RESULT_SECONDS;firstCorrect=null;answerGate.reset();
-    clearTimeout(winnerSelectionTimer);winnerSelectionTimer=null;
     feed.replaceChildren();updateAnswerCount();
     $('#questionText').textContent=currentQuestion.question;
     $('#questionTag').textContent=currentQuestion.category;
@@ -395,31 +394,16 @@
   }
 
   function animateWinnerSelection(winner){
-    const row=winner?.row,feed=$('#chatFeed'),banner=$('#winnerBanner');
-    if(!row||!feed||!banner)return;
+    const row=winner?.row,feed=$('#chatFeed');
+    if(!row||!feed)return;
     const tag=row.querySelector('.winner-selection-tag');if(tag)tag.hidden=false;
-    row.classList.add('winner-source');
+    row.classList.add('winner-source','winner-source-picked');
     const reduced=window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
     const feedVisible=feed.getClientRects().length>0&&feed.clientHeight>0;
     if(!feedVisible)return;
     const rowRect=row.getBoundingClientRect(),feedRect=feed.getBoundingClientRect();
     const targetTop=feed.scrollTop+rowRect.top-feedRect.top-(feed.clientHeight-rowRect.height)/2;
     feed.scrollTo({top:Math.max(0,targetTop),behavior:reduced?'auto':'smooth'});
-    if(reduced)return;
-    clearTimeout(winnerSelectionTimer);
-    winnerSelectionTimer=setTimeout(()=>{
-      if(!row.isConnected)return;
-      row.classList.add('winner-source-picked');
-      const source=row.getBoundingClientRect(),destination=banner.getBoundingClientRect();
-      if(!source.width||!destination.width)return;
-      const token=document.createElement('div');token.className='winner-answer-flight';token.setAttribute('aria-hidden','true');
-      const name=document.createElement('span'),answer=document.createElement('b');name.textContent=winner.name;answer.textContent=winner.letter;
-      token.append(name,answer);token.style.left=`${source.left}px`;token.style.top=`${source.top}px`;token.style.width=`${Math.min(source.width,280)}px`;
-      document.body.append(token);
-      const dx=destination.left+destination.width/2-(source.left+source.width/2),dy=destination.top+destination.height/2-(source.top+source.height/2);
-      const flight=token.animate([{transform:'translate(0,0) scale(1)',opacity:1},{transform:`translate(${dx}px,${dy}px) scale(.72)`,opacity:.12}],{duration:640,easing:'cubic-bezier(.2,.72,.24,1)',fill:'forwards'});
-      flight.onfinish=()=>token.remove();
-    },460);
   }
 
   function presentQuestionResult(){
@@ -439,9 +423,9 @@
     const raiseAnswer=()=>{
       wrong.forEach(option=>option.classList.add('is-removed'));
       panel.classList.add('is-answer-hero');correct?.classList.add('is-answer-hero');
-      resultSequenceTimer=setTimeout(()=>{if(phase==='result')presentQuestionResult();},reduced?120:820);
+      resultSequenceTimer=setTimeout(()=>{if(phase==='result')presentQuestionResult();},reduced?120:950);
     };
-    resultSequenceTimer=setTimeout(raiseAnswer,reduced?0:470);
+    resultSequenceTimer=setTimeout(raiseAnswer,reduced?0:650);
   }
 
   function finishBabak(){
