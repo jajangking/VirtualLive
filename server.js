@@ -3,6 +3,7 @@
 const http = require('node:http');
 const fs = require('node:fs');
 const path = require('node:path');
+const { EdgeTTS } = require('node-edge-tts');
 
 const ROOT = path.resolve(__dirname);
 const PORT = Number.parseInt(process.env.PORT || '3000', 10);
@@ -11,6 +12,8 @@ const TIKTOK_USERNAME = String(process.env.TIKTOK_USERNAME || 'disepillya').repl
 const TIKTOK_BRIDGE_ENABLED = process.env.TIKTOK_BRIDGE_ENABLED === 'true';
 const GROQ_API_KEY = String(process.env.GROQ_API_KEY || '').trim();
 const GROQ_MODEL = String(process.env.GROQ_MODEL || 'llama-3.1-8b-instant').trim();
+const EDGE_TTS_VOICE = String(process.env.EDGE_TTS_VOICE || 'en-US-BrianMultilingualNeural').trim();
+const EDGE_TTS_LANG = String(process.env.EDGE_TTS_LANG || 'id-ID').trim();
 const TYPES = { '.html': 'text/html; charset=utf-8', '.css': 'text/css; charset=utf-8', '.js': 'text/javascript; charset=utf-8' };
 const PUBLIC_FILES = new Map([
   ['/', 'index.html'], ['/index.html', 'index.html'], ['/styles.css', 'styles.css'], ['/app.js', 'app.js'], ['/answer-gate.js', 'answer-gate.js'],
@@ -129,6 +132,27 @@ function allowHostRequest(req) {
   if (window.count >= 10) return false;
   window.count++;
   return true;
+}
+
+async function synthesizeHostSpeech(text) {
+  const tts = new EdgeTTS({
+    voice: EDGE_TTS_VOICE,
+    lang: EDGE_TTS_LANG,
+    outputFormat: 'audio-24khz-48kbitrate-mono-mp3',
+    rate: '+0%',
+    pitch: '+0Hz',
+    timeout: 20_000,
+  });
+  const chunks = [];
+  let totalBytes = 0;
+  for await (const chunk of tts.streamAudio(text)) {
+    if (!Buffer.isBuffer(chunk)) continue;
+    totalBytes += chunk.length;
+    if (totalBytes > 2 * 1024 * 1024) throw Object.assign(new Error('Audio host terlalu besar.'), { statusCode: 502 });
+    chunks.push(chunk);
+  }
+  if (!totalBytes) throw Object.assign(new Error('Edge TTS tidak menghasilkan audio.'), { statusCode: 502 });
+  return Buffer.concat(chunks, totalBytes);
 }
 
 async function generateHostLine(input) {
@@ -257,7 +281,7 @@ const server = http.createServer((req, res) => {
 
   if (pathname === '/api/host/status') {
     if (req.method !== 'GET' && req.method !== 'HEAD') { res.writeHead(405, { Allow: 'GET, HEAD' }).end(); return; }
-    const body = JSON.stringify({ configured: Boolean(GROQ_API_KEY), model: GROQ_MODEL, textLanguage: 'id-ID', speech: 'browser-speechSynthesis' });
+    const body = JSON.stringify({ configured: Boolean(GROQ_API_KEY), model: GROQ_MODEL, textLanguage: 'id-ID', speech: 'edge-tts', voice: EDGE_TTS_VOICE, speechLanguage: EDGE_TTS_LANG });
     res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8', 'Cache-Control': 'no-store' });
     res.end(req.method === 'HEAD' ? undefined : body);
     return;
@@ -273,6 +297,25 @@ const server = http.createServer((req, res) => {
     }
     readJsonBody(req).then(generateHostLine).then(text => sendJson(res, 200, { text }))
       .catch(error => sendJson(res, error.statusCode || 502, { error: error.statusCode ? error.message : 'Gagal membuat sapaan AI.' }));
+    return;
+  }
+
+  if (pathname === '/api/host/speech') {
+    if (req.method !== 'POST') { res.writeHead(405, { Allow: 'POST' }).end(); return; }
+    if (!allowHostRequest(req)) { sendJson(res, 429, { error: 'Terlalu banyak permintaan host. Coba lagi sebentar.' }); return; }
+    const origin = req.headers.origin;
+    if (origin) {
+      try { if (new URL(origin).host !== req.headers.host) { sendJson(res, 403, { error: 'Origin tidak diizinkan.' }); return; } }
+      catch { sendJson(res, 403, { error: 'Origin tidak valid.' }); return; }
+    }
+    readJsonBody(req).then(body => {
+      const text = String(body?.text || '').replace(/[\u0000-\u001f\u007f]/g, ' ').replace(/\s+/g, ' ').trim();
+      if (!text || text.length > 220) throw Object.assign(new Error('Teks TTS harus berisi 1–220 karakter.'), { statusCode: 400 });
+      return synthesizeHostSpeech(text);
+    }).then(audio => {
+      res.writeHead(200, { 'Content-Type': 'audio/mpeg', 'Content-Length': audio.length, 'Cache-Control': 'no-store' });
+      res.end(audio);
+    }).catch(error => sendJson(res, error.statusCode || 502, { error: error.statusCode ? error.message : 'Edge TTS sedang tidak bisa dihubungi.' }));
     return;
   }
 
@@ -347,4 +390,4 @@ if (require.main === module) {
   });
 }
 
-module.exports = { server, startServer, handleTikTokComment, handleTikTokGift, handleTikTokMember, handleTikTokFollow, handleTikTokSocial, generateHostLine, eventClients, getBridgeState: () => ({ ...bridgeState }) };
+module.exports = { server, startServer, handleTikTokComment, handleTikTokGift, handleTikTokMember, handleTikTokFollow, handleTikTokSocial, generateHostLine, synthesizeHostSpeech, eventClients, getBridgeState: () => ({ ...bridgeState }) };

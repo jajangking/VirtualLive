@@ -129,6 +129,13 @@ test('host status endpoint reports readiness without exposing the API key', asyn
   const status = await response.json();
   assert.equal(typeof status.configured, 'boolean');
   assert.equal(status.textLanguage, 'id-ID');
-  assert.equal(status.speech, 'browser-speechSynthesis');
+  assert.equal(status.speech, 'edge-tts');
+  assert.equal(status.voice, 'en-US-BrianMultilingualNeural');
+  assert.equal(status.speechLanguage, 'id-ID');
   assert.equal(Object.hasOwn(status, 'apiKey'), false);
+  const rejectedSpeech = await fetch(`http://127.0.0.1:${address.port}/api/host/speech`, {
+    method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ text: '' }),
+  });
+  assert.equal(rejectedSpeech.status, 400);
+  assert.match((await rejectedSpeech.json()).error, /1–220/);
 });

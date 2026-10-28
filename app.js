@@ -32,7 +32,8 @@
   let phase='question',remaining=ROUND_SECONDS,resultRemaining=RESULT_SECONDS,firstCorrect=null,isPaused=false,announcementActive=false;
   let lastFrame=performance.now(),toastTimer;
   let audioContext=null,masterGain=null,bgmGain=null,sfxGain=null,bgmTimer=null,bgmStep=0,audioEnabled=false,lastCountdownSecond=ROUND_SECONDS,giftTimer=null;
-  let hostAudioEnabled=false,hostAiConfigured=false,hostJobs=[],hostQueueRunning=false,lastAutoHostAt=0,hostVoiceStatus='SUARA AKTIF';
+  let hostAudioEnabled=false,hostAiConfigured=false,hostJobs=[],hostQueueRunning=false,lastAutoHostAt=0,hostVoiceStatus='EDGE TTS · BRIAN';
+  let hostPlaybackContext=null,hostPlaybackSource=null;
   const seenHostEventKeys=new Map();
 
   const pageParams=new URLSearchParams(location.search);
@@ -385,27 +386,27 @@
   function loadHostStatus(){
     fetch('/api/host/status',{cache:'no-store'}).then(response=>response.ok?response.json():null).then(data=>{
       hostAiConfigured=Boolean(data?.configured);
+      $('#hostAudioToggle').title=`Edge TTS ${data?.voice||'en-US-BrianMultilingualNeural'} · sapaan AI memerlukan GROQ_API_KEY di server.`;
       if(!hostAiConfigured){
-        $('#hostAudioToggle').title='Suara TTS menggunakan voice browser id-ID bila tersedia. Sapaan otomatis memerlukan GROQ_API_KEY di server.';
         if(!hostAudioEnabled)setHostAvatarState('GROQ BELUM DIATUR');
       }else if(!hostAudioEnabled)setHostAvatarState('HOST SIAP');
     }).catch(()=>{hostAiConfigured=false;if(!hostAudioEnabled)setHostAvatarState('SERVER AI OFFLINE');});
   }
-  function speechVoice(){
-    if(!('speechSynthesis' in window))return null;
-    const voices=window.speechSynthesis.getVoices();
-    return voices.find(voice=>/^id([_-]|$)/i.test(voice.lang||''))||null;
-  }
-  function speakHostText(text){
-    return new Promise(resolve=>{
-      if(!hostAudioEnabled||!('speechSynthesis' in window)||typeof SpeechSynthesisUtterance==='undefined'){resolve();return;}
-      const utterance=new SpeechSynthesisUtterance(text);utterance.lang='id-ID';utterance.rate=1.02;utterance.pitch=1.02;
-      const voice=speechVoice();if(voice)utterance.voice=voice;
+  async function playHostSpeech(text){
+    if(!hostAudioEnabled||!hostPlaybackContext)return;
+    const response=await fetch('/api/host/speech',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({text})});
+    if(!response.ok){const data=await response.json().catch(()=>({}));throw new Error(data.error||'Edge TTS gagal membuat audio.');}
+    const encoded=await response.arrayBuffer();
+    if(!hostAudioEnabled)return;
+    await hostPlaybackContext.resume();
+    const audioBuffer=await hostPlaybackContext.decodeAudioData(encoded);
+    if(!hostAudioEnabled)return;
+    await new Promise((resolve,reject)=>{
+      const source=hostPlaybackContext.createBufferSource();source.buffer=audioBuffer;source.connect(hostPlaybackContext.destination);hostPlaybackSource=source;
       let finished=false;
-      const done=()=>{if(finished)return;finished=true;$('#aiHostAvatar')?.classList.remove('is-speaking');resolve();};
-      utterance.onstart=()=>setHostAvatarState('SEDANG BICARA',true);
-      utterance.onend=done;utterance.onerror=done;
-      try{window.speechSynthesis.speak(utterance);}catch(_){done();}
+      const done=()=>{if(finished)return;finished=true;if(hostPlaybackSource===source)hostPlaybackSource=null;$('#aiHostAvatar')?.classList.remove('is-speaking');try{source.disconnect();}catch(_){};resolve();};
+      source.onended=done;
+      try{setHostAvatarState('SEDANG BICARA',true);source.start();}catch(error){if(hostPlaybackSource===source)hostPlaybackSource=null;try{source.disconnect();}catch(_){};reject(error);}
     });
   }
   async function requestGeneratedHostLine(job){
@@ -419,18 +420,18 @@
     hostQueueRunning=true;
     try{
       while(hostAudioEnabled&&hostJobs.length){
-        const job=hostJobs.shift();let line;
-        try{line=job.kind==='moderator'?job.text:await requestGeneratedHostLine(job);}
-        catch(error){
+        const job=hostJobs.shift();
+        try{
+          const line=job.kind==='moderator'?job.text:await requestGeneratedHostLine(job);
+          if(!line)continue;
+          $('#hostSpeechText').textContent=line;
+          await playHostSpeech(line);
+          if(hostAudioEnabled)setHostAvatarState(hostVoiceStatus);
+        }catch(error){
           const message=String(error?.message||'AI host belum dapat digunakan.').slice(0,160);
           $('#hostSpeechText').textContent=message;
-          setHostAvatarState('AI SEDANG BERMASALAH');
-          continue;
+          if(hostAudioEnabled)setHostAvatarState('HOST TTS ERROR');
         }
-        if(!line)continue;
-        $('#hostSpeechText').textContent=line;
-        await speakHostText(line);
-        if(hostAudioEnabled)setHostAvatarState(hostVoiceStatus);
         await new Promise(resolve=>setTimeout(resolve,220));
       }
     }finally{hostQueueRunning=false;if(hostAudioEnabled&&hostJobs.length)void processHostQueue();}
@@ -449,15 +450,22 @@
     hostJobs.push({kind,username,giftName:String(event.giftName||'').slice(0,50),count:Math.min(9999,Math.max(1,Number(event.repeatCount)||1))});
     void processHostQueue();
   }
-  $('#hostAudioToggle').addEventListener('click',()=>{
-    if(hostAudioEnabled){hostAudioEnabled=false;hostJobs=[];window.speechSynthesis?.cancel();$('#hostAudioToggle').textContent='SUARA OFF';$('#hostAudioToggle').setAttribute('aria-pressed','false');setHostAvatarState(hostAiConfigured?'HOST SIAP':'GROQ BELUM DIATUR');return;}
-    if(!('speechSynthesis' in window)||typeof SpeechSynthesisUtterance==='undefined'){
-      $('#hostSpeechText').textContent='Browser ini tidak menyediakan fitur text-to-speech.';setHostAvatarState('TTS TIDAK TERSEDIA');return;
+  $('#hostAudioToggle').addEventListener('click',async()=>{
+    if(hostAudioEnabled){
+      hostAudioEnabled=false;hostJobs=[];
+      try{hostPlaybackSource?.stop();}catch(_){};hostPlaybackSource=null;
+      try{await hostPlaybackContext?.suspend();}catch(_){}
+      $('#hostAudioToggle').textContent='SUARA OFF';$('#hostAudioToggle').setAttribute('aria-pressed','false');setHostAvatarState(hostAiConfigured?'HOST SIAP':'GROQ BELUM DIATUR');return;
     }
+    const AudioContextClass=window.AudioContext||window.webkitAudioContext;
+    if(!AudioContextClass){
+      $('#hostSpeechText').textContent='Browser ini tidak mendukung pemutaran audio host.';setHostAvatarState('AUDIO TIDAK TERSEDIA');return;
+    }
+    try{hostPlaybackContext=hostPlaybackContext||new AudioContextClass();await hostPlaybackContext.resume();}
+    catch(_){$('#hostSpeechText').textContent='Audio host belum bisa dimulai di browser ini.';setHostAvatarState('AUDIO TIDAK TERSEDIA');return;}
     hostAudioEnabled=true;$('#hostAudioToggle').textContent='SUARA ON';$('#hostAudioToggle').setAttribute('aria-pressed','true');
-    const voice=speechVoice();
-    hostVoiceStatus=voice?'VOICE ID-ID AKTIF':'VOICE DEFAULT AKTIF';
-    $('#hostSpeechText').textContent=voice?`Suara host aktif menggunakan voice ${voice.name}.`:'Voice id-ID tidak terdeteksi; browser memakai suara default jika tersedia.';
+    hostVoiceStatus='EDGE TTS · BRIAN';
+    $('#hostSpeechText').textContent='Edge TTS Brian Multilingual siap menyapa penonton.';
     setHostAvatarState(hostVoiceStatus);
     hostJobs.push({kind:'moderator',text:'Host VirtualLive siap menyapa penonton.'});void processHostQueue();
   });
