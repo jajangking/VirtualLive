@@ -155,7 +155,7 @@ function describeEdgeTtsError(error) {
   const code = String(error?.code || error?.cause?.code || '');
   const detail = String(error?.message || '').replace(/(?:https?|wss?):\/\/[^\s]+/gi, '[upstream]').slice(0, 180);
   console.error(`[Edge TTS] ${code ? `${code}: ` : ''}${detail || error?.name || 'unknown error'}`);
-  if (code === 'EDGE_TTS_NOT_INSTALLED') return 'Python edge-tts belum terpasang di server. Jalankan instalasi dependency sesuai README.';
+  if (code === 'EDGE_TTS_NOT_INSTALLED') return 'Python edge-tts belum terpasang. VPS: jalankan sudo bash /opt/virtuallive/deploy/install-edge-tts.sh lalu restart virtuallive.service.';
   if (code === 'ENOENT') return 'Python 3 tidak ditemukan di server. Pasang Python 3 atau atur EDGE_TTS_PYTHON.';
   if (/ENOTFOUND|EAI_AGAIN|ENETUNREACH|EHOSTUNREACH|ECONNREFUSED|ECONNRESET|ETIMEDOUT/.test(code)) {
     return `Edge TTS tidak dapat tersambung dari server (${code}). Periksa DNS dan firewall koneksi keluar.`;

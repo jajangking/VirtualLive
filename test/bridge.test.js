@@ -153,6 +153,7 @@ test('Edge TTS errors explain network and upstream rejection cases', () => {
   const originalError = console.error;
   console.error = () => {};
   try {
+    assert.match(describeEdgeTtsError(Object.assign(new Error('module missing'), { code: 'EDGE_TTS_NOT_INSTALLED' })), /install-edge-tts\.sh/);
     assert.match(describeEdgeTtsError(Object.assign(new Error('socket hang up'), { code: 'ECONNRESET' })), /koneksi keluar/);
     assert.match(describeEdgeTtsError(new Error('WebSocket closed before turn.end (code 1008)')), /Periksa voice\/bahasa/);
     assert.match(describeEdgeTtsError(new Error('Unexpected server response: 200')), /HTTP 200/);
