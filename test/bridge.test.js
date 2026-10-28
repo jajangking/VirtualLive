@@ -2,7 +2,7 @@
 
 const test = require('node:test');
 const assert = require('node:assert/strict');
-const { handleTikTokComment, handleTikTokGift, eventClients } = require('../server');
+const { server, handleTikTokComment, handleTikTokGift, handleTikTokMember, handleTikTokFollow, handleTikTokSocial, eventClients } = require('../server');
 
 test('forwards a TikTok chat event as an SSE comment with the quiz fields', () => {
   const chunks = [];
@@ -78,4 +78,57 @@ test('waits for the final event in a TikTok combo gift streak', () => {
   } finally {
     eventClients.delete(client);
   }
+});
+
+
+test('forwards TikTok member join events for host greetings', () => {
+  const chunks = [];
+  const client = { write: chunk => chunks.push(chunk) };
+  eventClients.add(client);
+  try {
+    handleTikTokMember({ common: { msgId: 'mock-member-001' }, user: { nickname: 'New Viewer', id: 'viewer-17' } });
+    assert.equal(chunks.length, 1);
+    assert.match(chunks[0], /^event: host_event\ndata: /);
+    const data = JSON.parse(chunks[0].split('\n')[1].slice('data: '.length));
+    assert.equal(data.kind, 'member');
+    assert.equal(data.username, 'New Viewer');
+    assert.equal(data.userId, 'viewer-17');
+    assert.equal(data.eventId, 'mock-member-001');
+  } finally {
+    eventClients.delete(client);
+  }
+});
+
+test('forwards follow events and filters unrelated social activity', () => {
+  const chunks = [];
+  const client = { write: chunk => chunks.push(chunk) };
+  eventClients.add(client);
+  try {
+    handleTikTokFollow({ common: { msgId: 'mock-follow-001' }, user: { uniqueId: 'follower', nickname: 'New Follower' } });
+    handleTikTokSocial({ common: { msgId: 'mock-share-001' }, user: { nickname: 'Sharer' }, displayType: 'share' });
+    handleTikTokSocial({ common: { msgId: 'mock-follow-001' }, user: { nickname: 'New Follower' }, displayType: 'follow' });
+    assert.equal(chunks.length, 1);
+    const first = JSON.parse(chunks[0].split('\n')[1].slice('data: '.length));
+    assert.equal(first.kind, 'follow');
+    assert.equal(first.username, 'New Follower');
+  } finally {
+    eventClients.delete(client);
+  }
+});
+
+
+test('host status endpoint reports readiness without exposing the API key', async t => {
+  await new Promise((resolve, reject) => {
+    server.once('error', reject);
+    server.listen(0, '127.0.0.1', resolve);
+  });
+  t.after(() => new Promise(resolve => server.close(resolve)));
+  const address = server.address();
+  const response = await fetch(`http://127.0.0.1:${address.port}/api/host/status`);
+  assert.equal(response.status, 200);
+  const status = await response.json();
+  assert.equal(typeof status.configured, 'boolean');
+  assert.equal(status.textLanguage, 'id-ID');
+  assert.equal(status.speech, 'browser-speechSynthesis');
+  assert.equal(Object.hasOwn(status, 'apiKey'), false);
 });

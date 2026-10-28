@@ -32,6 +32,8 @@
   let phase='question',remaining=ROUND_SECONDS,resultRemaining=RESULT_SECONDS,firstCorrect=null,isPaused=false,announcementActive=false;
   let lastFrame=performance.now(),toastTimer;
   let audioContext=null,masterGain=null,bgmGain=null,sfxGain=null,bgmTimer=null,bgmStep=0,audioEnabled=false,lastCountdownSecond=ROUND_SECONDS,giftTimer=null;
+  let hostAudioEnabled=false,hostAiConfigured=false,hostJobs=[],hostQueueRunning=false,lastAutoHostAt=0,hostVoiceStatus='SUARA AKTIF';
+  const seenHostEventKeys=new Map();
 
   const pageParams=new URLSearchParams(location.search);
   if(pageParams.get('live')==='1'||pageParams.get('edit')==='1')document.body.classList.add('broadcast-mode');
@@ -376,6 +378,96 @@
     updateTimer();requestAnimationFrame(frame);
   }
 
+  function setHostAvatarState(text, speaking=false) {
+    const label=$('#hostAvatarState');if(label)label.textContent=text;
+    $('#aiHostAvatar')?.classList.toggle('is-speaking',speaking);
+  }
+  function loadHostStatus(){
+    fetch('/api/host/status',{cache:'no-store'}).then(response=>response.ok?response.json():null).then(data=>{
+      hostAiConfigured=Boolean(data?.configured);
+      if(!hostAiConfigured){
+        $('#hostAudioToggle').title='Suara TTS menggunakan voice browser id-ID bila tersedia. Sapaan otomatis memerlukan GROQ_API_KEY di server.';
+        if(!hostAudioEnabled)setHostAvatarState('GROQ BELUM DIATUR');
+      }else if(!hostAudioEnabled)setHostAvatarState('HOST SIAP');
+    }).catch(()=>{hostAiConfigured=false;if(!hostAudioEnabled)setHostAvatarState('SERVER AI OFFLINE');});
+  }
+  function speechVoice(){
+    if(!('speechSynthesis' in window))return null;
+    const voices=window.speechSynthesis.getVoices();
+    return voices.find(voice=>/^id([_-]|$)/i.test(voice.lang||''))||null;
+  }
+  function speakHostText(text){
+    return new Promise(resolve=>{
+      if(!hostAudioEnabled||!('speechSynthesis' in window)||typeof SpeechSynthesisUtterance==='undefined'){resolve();return;}
+      const utterance=new SpeechSynthesisUtterance(text);utterance.lang='id-ID';utterance.rate=1.02;utterance.pitch=1.02;
+      const voice=speechVoice();if(voice)utterance.voice=voice;
+      let finished=false;
+      const done=()=>{if(finished)return;finished=true;$('#aiHostAvatar')?.classList.remove('is-speaking');resolve();};
+      utterance.onstart=()=>setHostAvatarState('SEDANG BICARA',true);
+      utterance.onend=done;utterance.onerror=done;
+      try{window.speechSynthesis.speak(utterance);}catch(_){done();}
+    });
+  }
+  async function requestGeneratedHostLine(job){
+    const response=await fetch('/api/host/line',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(job)});
+    const data=await response.json().catch(()=>({}));
+    if(!response.ok)throw new Error(data.error||'Sapaan AI gagal dibuat.');
+    return String(data.text||'').trim();
+  }
+  async function processHostQueue(){
+    if(hostQueueRunning||!hostAudioEnabled)return;
+    hostQueueRunning=true;
+    try{
+      while(hostAudioEnabled&&hostJobs.length){
+        const job=hostJobs.shift();let line;
+        try{line=job.kind==='moderator'?job.text:await requestGeneratedHostLine(job);}
+        catch(error){
+          const message=String(error?.message||'AI host belum dapat digunakan.').slice(0,160);
+          $('#hostSpeechText').textContent=message;
+          setHostAvatarState('AI SEDANG BERMASALAH');
+          continue;
+        }
+        if(!line)continue;
+        $('#hostSpeechText').textContent=line;
+        await speakHostText(line);
+        if(hostAudioEnabled)setHostAvatarState(hostVoiceStatus);
+        await new Promise(resolve=>setTimeout(resolve,220));
+      }
+    }finally{hostQueueRunning=false;if(hostAudioEnabled&&hostJobs.length)void processHostQueue();}
+  }
+  function enqueueHostEvent(event){
+    if(!hostAudioEnabled)return;
+    const kind=event?.kind;if(!['member','follow','gift'].includes(kind))return;
+    if(!hostAiConfigured){setHostAvatarState('ATUR GROQ API KEY');$('#hostSpeechText').textContent='Sapaan otomatis perlu konfigurasi Groq pada server. Moderator tetap dapat mengetik ucapan.';return;}
+    const username=cleanName(event.username),identity=String(event.userId||username).toLocaleLowerCase('id-ID'),key=kind==='gift'&&event.eventId?`gift:${event.eventId}`:`${kind}:${identity}`,now=Date.now();
+    for(const [seenKey,at] of seenHostEventKeys)if(now-at>15*60_000)seenHostEventKeys.delete(seenKey);
+    if(seenHostEventKeys.has(key))return;
+    seenHostEventKeys.set(key,now);
+    if(kind!=='gift'&&now-lastAutoHostAt<5000)return;
+    if(hostJobs.filter(job=>job.kind!=='moderator').length>=4)return;
+    lastAutoHostAt=now;
+    hostJobs.push({kind,username,giftName:String(event.giftName||'').slice(0,50),count:Math.min(9999,Math.max(1,Number(event.repeatCount)||1))});
+    void processHostQueue();
+  }
+  $('#hostAudioToggle').addEventListener('click',()=>{
+    if(hostAudioEnabled){hostAudioEnabled=false;hostJobs=[];window.speechSynthesis?.cancel();$('#hostAudioToggle').textContent='SUARA OFF';$('#hostAudioToggle').setAttribute('aria-pressed','false');setHostAvatarState(hostAiConfigured?'HOST SIAP':'GROQ BELUM DIATUR');return;}
+    if(!('speechSynthesis' in window)||typeof SpeechSynthesisUtterance==='undefined'){
+      $('#hostSpeechText').textContent='Browser ini tidak menyediakan fitur text-to-speech.';setHostAvatarState('TTS TIDAK TERSEDIA');return;
+    }
+    hostAudioEnabled=true;$('#hostAudioToggle').textContent='SUARA ON';$('#hostAudioToggle').setAttribute('aria-pressed','true');
+    const voice=speechVoice();
+    hostVoiceStatus=voice?'VOICE ID-ID AKTIF':'VOICE DEFAULT AKTIF';
+    $('#hostSpeechText').textContent=voice?`Suara host aktif menggunakan voice ${voice.name}.`:'Voice id-ID tidak terdeteksi; browser memakai suara default jika tersedia.';
+    setHostAvatarState(hostVoiceStatus);
+    hostJobs.push({kind:'moderator',text:'Host VirtualLive siap menyapa penonton.'});void processHostQueue();
+  });
+  $('#hostSpeakForm').addEventListener('submit',event=>{
+    event.preventDefault();const text=$('#hostSpeakInput').value.trim().replace(/\s+/g,' ').slice(0,220);if(!text)return;
+    if(!hostAudioEnabled){$('#hostSpeechText').textContent='Aktifkan suara host terlebih dahulu sebelum mengirim ucapan.';setHostAvatarState('SUARA BELUM AKTIF');$('#hostAudioToggle').focus();return;}
+    if(hostJobs.length>=8){$('#hostSpeechText').textContent='Antrean host penuh. Tunggu ucapan sebelumnya selesai.';return;}
+    hostJobs.push({kind:'moderator',text});$('#hostSpeakInput').value='';void processHostQueue();
+  });
+
   function updateBridgeStatus(data){
     const status=data?.status||'connecting',username=String(data?.username||'disepillya').replace(/^@/,'').toUpperCase();
     document.body.classList.toggle('bridge-connected',status==='connected');
@@ -403,7 +495,10 @@
       try{const message=JSON.parse(event.data);receiveComment(message.username,message.comment,message.userId);}catch(_){/* Ignore malformed server events. */}
     });
     stream.addEventListener('gift',event=>{
-      try{showGiftReaction({...JSON.parse(event.data),isLiveGift:true});}catch(_){/* Ignore malformed server events. */}
+      try{const gift={...JSON.parse(event.data),isLiveGift:true};showGiftReaction(gift);enqueueHostEvent({...gift,kind:'gift'});}catch(_){/* Ignore malformed server events. */}
+    });
+    stream.addEventListener('host_event',event=>{
+      try{enqueueHostEvent(JSON.parse(event.data));}catch(_){/* Ignore malformed server events. */}
     });
     stream.onerror=()=>updateBridgeStatus({status:'reconnecting'});
   }
@@ -455,7 +550,7 @@
   if(document.body.classList.contains('broadcast-mode')&&window.innerWidth<561&&window.innerHeight<1000)setChatCollapsed(true);
 
   const layoutStorageKey='virtuallive.broadcast-layout.v1',layoutPanels=[...document.querySelectorAll('[data-layout-panel]')],appShell=$('.app-shell');
-  const minPanelSize={header:[160,54],leaderboard:[145,72],quiz:[220,165],chat:[145,64],moderator:[145,64],donors:[145,110],announcement:[160,24]};
+  const minPanelSize={header:[160,54],leaderboard:[145,72],quiz:[220,165],chat:[145,64],moderator:[145,64],donors:[145,110],announcement:[160,24],host:[130,80]};
   function layoutBounds(){const rect=appShell.getBoundingClientRect();return {left:rect.left,top:rect.top,width:rect.width,height:rect.height};}
   function applyPanelRect(panel,x,y,width,height){
     const bounds=layoutBounds(),min=minPanelSize[panel.dataset.layoutPanel]||[120,64];
@@ -533,6 +628,7 @@
   window.VirtualLiveQuiz={receiveComment};
   loadBabakState();renderBabakHistory();
   connectTikTokEventStream();
+  loadHostStatus();
   deck=shuffle(QUESTIONS.map((_,index)=>index));nextQuestion();
   addMessage('QUIZ MASTER','Quiz Arena berjalan otomatis. Jawab A, B, C, atau D sebelum timer habis.','system');
   updateTimer();requestAnimationFrame(frame);
