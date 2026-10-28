@@ -683,12 +683,12 @@
   async function requestGeneratedQuestionBatch(count,category,difficulty){
     const reserved=(Array.isArray(preparedAiQuestions)?preparedAiQuestions:[]).map(item=>String(item?.question||''));
     const recentQuestions=[...new Set([...readLocalQuestionHistory(),...reserved.map(questionFingerprint).filter(Boolean)])].slice(-20);
-    for(let attempt=0;attempt<2;attempt++){
-      const response=await fetch('/api/quiz/generate',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({count,category,difficulty,recentQuestions})});
+    for(let attempt=0;attempt<3;attempt++){
+      const response=await fetch('/api/quiz/generate',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({count,category,difficulty,recentQuestions,retryAttempt:attempt})});
       const data=await response.json().catch(()=>({}));
       if(!response.ok){
         const message=data.error||'Groq gagal membuat soal.';
-        if(attempt===0&&/mengulang soal|duplikat/i.test(message))continue;
+        if(attempt<2&&/mengulang soal|duplikat/i.test(message))continue;
         throw new Error(message);
       }
       if(!Array.isArray(data.questions)||data.questions.length!==count)throw new Error('Jumlah soal dari Groq tidak sesuai. Coba ulangi.');

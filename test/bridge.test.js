@@ -191,6 +191,7 @@ test('host status endpoint reports readiness without exposing the API key', asyn
         if (request.messages[0].content.includes('Pengetahuan Umum')) {
           assert.match(request.messages[0].content, /sains dan alam, geografi, sejarah Indonesia dan dunia/);
           assert.match(request.messages[0].content, /jangan fokus ke satu mata pelajaran atau kurikulum/i);
+          if (request.messages[0].content.includes('upaya ulang ke-1')) assert.match(request.messages[0].content, /buat seluruh batch baru dari nol/i);
         }
         const configuredModel = String(process.env.GROQ_MODEL || '').trim();
         assert.equal(request.model, !configuredModel || configuredModel === 'llama-3.1-8b-instant' ? 'openai/gpt-oss-120b' : configuredModel);
@@ -209,7 +210,7 @@ test('host status endpoint reports readiness without exposing the API key', asyn
       assert.equal(generated.status, 200);
       assert.deepEqual(await generated.json(), { questions: [{ category: 'Geografi', question: 'Apa ibu kota Jepang?', options: ['Tokyo', 'Osaka', 'Kyoto', 'Nara'], correct: 0 }] });
       const broadGenerated = await globalThis.fetch(`http://127.0.0.1:${address.port}/api/quiz/generate`, {
-        method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ count: 1, category: 'Pengetahuan Umum', difficulty: 'sedang', recentQuestions: ['Soal umum yang pernah dipakai'] }),
+        method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ count: 1, category: 'Pengetahuan Umum', difficulty: 'sedang', recentQuestions: ['Soal umum yang pernah dipakai'], retryAttempt: 1 }),
       });
       assert.equal(broadGenerated.status, 200);
     } finally { globalThis.fetch = originalFetch; }
