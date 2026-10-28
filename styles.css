@@ -883,3 +883,37 @@ body.broadcast-mode.layout-editing [data-layout-panel] input,body.broadcast-mode
   body.broadcast-mode .utility-button{width:21px;min-width:21px;font-size:12px}
   body.broadcast-mode .topbar-right{gap:2px}
 }
+
+/* Soft, staggered motion for a calm live-show feel. */
+@media (prefers-reduced-motion:no-preference){
+  body.broadcast-mode:not(.layout-editing) [data-layout-panel]{animation:panel-soft-arrive .9s cubic-bezier(.2,.8,.2,1) both}
+  body.broadcast-mode:not(.layout-editing) [data-layout-panel="leaderboard"]{animation-delay:90ms}
+  body.broadcast-mode:not(.layout-editing) [data-layout-panel="quiz"]{animation-delay:170ms}
+  body.broadcast-mode:not(.layout-editing) [data-layout-panel="chat"]{animation-delay:260ms}
+  body.broadcast-mode:not(.layout-editing) [data-layout-panel="moderator"]{animation-delay:330ms}
+  body.broadcast-mode:not(.layout-editing) [data-layout-panel="donors"]{animation-delay:400ms}
+  .question-content.question-arrive{animation:question-arrives .7s cubic-bezier(.2,.8,.2,1) both}
+  .quiz-panel .panel-heading.question-heading-arrive{animation:question-heading-arrives .55s cubic-bezier(.2,.8,.2,1) both}
+  .answer-option.answer-arrive{animation:answer-arrives .58s cubic-bezier(.2,.8,.2,1) both;animation-delay:var(--arrival-delay,0ms)}
+  .winner-banner.visible.winner-reveal{animation:winner-reveals .85s cubic-bezier(.16,1,.3,1) both}
+  .winner-banner.winner-reveal::after{content:"";position:absolute;inset:0;border-radius:inherit;pointer-events:none;background:linear-gradient(112deg,transparent 20%,#bffff01a 44%,#fff4 50%,#bffff01a 56%,transparent 78%);background-size:220% 100%;animation:winner-sheen 1.8s ease-out 1 both}
+  .winner-banner.winner-reveal>*{position:relative;z-index:1}
+  .winner-banner.winner-reveal .winner-crown{animation:crown-floats 3.4s ease-in-out infinite;box-shadow:0 0 20px #72efd333}
+  .winner-banner.winner-reveal #winnerName{text-shadow:0 0 18px #8af3d655}
+  body.broadcast-mode .answer-option.correct{animation:correct-soft-pulse 1.35s ease-in-out 2}
+  .score-row.recent-winner{animation:score-winner-arrives .9s cubic-bezier(.2,.8,.2,1) both;border-color:#7de8ca66}
+  .score-row.recent-winner .score-avatar{animation:avatar-glow 2.6s ease-in-out 2;border:1px solid #8cefd2}
+}
+@keyframes panel-soft-arrive{from{opacity:0;transform:translateY(8px) scale(.992);filter:blur(2px)}to{opacity:1;transform:translateY(0) scale(1);filter:blur(0)}}
+@keyframes question-arrives{from{opacity:0;transform:translateY(13px);filter:blur(3px)}to{opacity:1;transform:translateY(0);filter:blur(0)}}
+@keyframes question-heading-arrives{from{opacity:.25;transform:translateX(8px)}to{opacity:1;transform:translateX(0)}}
+@keyframes answer-arrives{from{opacity:0;transform:translateY(9px) scale(.99)}to{opacity:1;transform:translateY(0) scale(1)}}
+@keyframes winner-reveals{0%{opacity:0;transform:translate(-50%,-44%) scale(.9);filter:blur(3px)}65%{opacity:1;transform:translate(-50%,-51%) scale(1.015);filter:blur(0)}100%{opacity:1;transform:translate(-50%,-50%) scale(1);filter:blur(0)}}
+@keyframes winner-sheen{from{background-position:120% 0;opacity:0}25%{opacity:.8}to{background-position:-120% 0;opacity:0}}
+@keyframes crown-floats{0%,100%{transform:translateY(0)}50%{transform:translateY(-3px)}}
+@keyframes correct-soft-pulse{0%,100%{box-shadow:0 0 0 0 #72efd300}50%{box-shadow:0 0 22px 2px #72efd344}}
+@keyframes score-winner-arrives{from{opacity:.4;transform:translateX(-8px);background:#73efd21a}to{opacity:1;transform:translateX(0);background:transparent}}
+@keyframes avatar-glow{0%,100%{box-shadow:0 0 0 0 #8cefd200}50%{box-shadow:0 0 0 5px #8cefd222}}
+@media (prefers-reduced-motion:reduce){
+  *,*::before,*::after{animation-duration:.01ms!important;animation-iteration-count:1!important;scroll-behavior:auto!important;transition-duration:.01ms!important}
+}

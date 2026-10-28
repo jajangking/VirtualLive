@@ -178,6 +178,7 @@
     return array;
   }
   function nextQuestion(){
+    const animateTransition=roundNumber>0;
     if(deckPosition>=deck.length){
       const previous=deck.length?deck[deck.length-1]:-1;deck=shuffle(QUESTIONS.map((_,i)=>i));
       if(deck.length>1&&deck[0]===previous)[deck[0],deck[1]]=[deck[1],deck[0]];
@@ -189,12 +190,18 @@
     $('#questionText').textContent=currentQuestion.question;
     $('#questionTag').textContent=currentQuestion.category;
     $('#questionNumber').textContent=`· SOAL ${String(roundNumber).padStart(2,'0')}`;
-    $('#winnerBanner').classList.remove('visible','no-winner');
+    $('#winnerBanner').classList.remove('visible','no-winner','winner-reveal');
+    if(animateTransition){
+      const content=$('.question-content'),heading=$('.quiz-panel .panel-heading');
+      content.classList.remove('question-arrive');void content.offsetWidth;content.classList.add('question-arrive');
+      heading.classList.remove('question-heading-arrive');void heading.offsetWidth;heading.classList.add('question-heading-arrive');
+    }
     $('#winnerLabel').textContent='JAWABAN BENAR PERTAMA!';$('#winnerName').textContent='—';
     $('.winner-points').innerHTML='+1 <small>POIN</small>';
     const grid=$('#answerGrid');grid.replaceChildren();
     currentQuestion.options.forEach((option,index)=>{
-      const card=document.createElement('div');card.className='answer-option';card.dataset.index=String(index);
+      const card=document.createElement('div');card.className=`answer-option${animateTransition?' answer-arrive':''}`;card.dataset.index=String(index);
+      if(animateTransition)card.style.setProperty('--arrival-delay',`${index*85}ms`);
       const letter=document.createElement('span');letter.className='answer-letter';letter.textContent=LETTERS[index];
       const text=document.createElement('span');text.className='answer-text';text.textContent=option;
       card.append(letter,text);grid.append(card);
@@ -260,7 +267,7 @@
       saveScores();
       $('#winnerLabel').textContent='YANG PALING DULU MENJAWAB BENAR';$('#winnerName').textContent=firstCorrect.name;
       $('.winner-points').innerHTML=`+1 <small>${firstCorrect.elapsed.toFixed(1)} DETIK</small>`;
-      $('#winnerBanner').classList.remove('no-winner');$('#winnerBanner').classList.add('visible');
+      $('#winnerBanner').classList.remove('no-winner');$('#winnerBanner').classList.add('visible','winner-reveal');
       $('#timerStatus').textContent='HASIL AKHIR';
       addMessage('QUIZ MASTER',`🏆 ${firstCorrect.name} paling dulu menjawab benar! +1 poin.`, 'winner');
     }else{
@@ -278,7 +285,7 @@
     const root=$('#leaderboardRows'),empty=$('#leaderboardEmpty'),leaders=sortedScores();root.replaceChildren();
     empty.style.display=leaders.length?'none':'block';
     leaders.slice(0,8).forEach((player,index)=>{
-      const row=document.createElement('div');row.className='score-row';
+      const row=document.createElement('div');row.className=`score-row${phase==='result'&&firstCorrect&&scoreKey(player.name)===scoreKey(firstCorrect.name)?' recent-winner':''}`;
       const pos=document.createElement('span');pos.className=`score-pos ${index===0?'first':''}`;pos.textContent=String(index+1).padStart(2,'0');
       const user=document.createElement('div');user.className='score-user';
       const avatar=document.createElement('span');avatar.className='score-avatar';avatar.textContent=player.name.slice(0,1).toUpperCase();
