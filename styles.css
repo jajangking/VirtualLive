@@ -927,7 +927,7 @@ body.broadcast-mode.layout-editing [data-layout-panel] input,body.broadcast-mode
   .ticker-track{display:flex;width:max-content;align-items:center;gap:5vw;animation:ticker-scroll var(--ticker-duration,24s) linear infinite}
   .ticker-track span{flex:0 0 auto;color:#f2f8f8;font-size:clamp(11px,1.7vw,15px);font-weight:600;letter-spacing:.03em;white-space:nowrap}
   @keyframes ticker-scroll{from{transform:translateX(0)}to{transform:translateX(-50%)}}
-  body.broadcast-mode .moderator-panel{justify-content:flex-start;gap:clamp(4px,.45vh,8px);padding:2.5%}
+  body.broadcast-mode .moderator-panel{justify-content:flex-start;gap:clamp(3px,.35vh,6px);padding:2%}
   body.broadcast-mode .moderator-heading{flex:0 0 auto;min-height:0}
   body.broadcast-mode .announcement-form{display:flex;align-items:stretch;gap:5px;width:100%;height:clamp(26px,2.3vh,36px);flex:0 0 clamp(26px,2.3vh,36px);min-width:0}
   body.broadcast-mode .announcement-form input{min-width:0;flex:1;border:1px solid #3a5265;border-radius:5px;background:#0d1724;color:#f3fbff;padding:0 clamp(6px,1.2cqw,12px);outline:none;font:clamp(9px,2.4cqw,12px) 'Space Grotesk',sans-serif}
@@ -964,14 +964,57 @@ body.broadcast-mode.layout-editing [data-layout-panel] input,body.broadcast-mode
 }
 @container moderator (max-height: 120px){
   .moderator-panel{gap:3px!important;padding:2%!important}
+  .moderator-heading .panel-kicker{display:none!important}
   .moderator-heading h2{font-size:clamp(10px,3.2cqw,14px)!important}
   .moderator-indicator{font-size:clamp(6px,2cqw,8px)!important}
-  .announcement-form{height:23px!important;flex-basis:23px!important}
+  .announcement-form{height:20px!important;flex-basis:20px!important}
   .announcement-form input{font-size:clamp(8px,2.7cqw,10px)!important}
   .announcement-form button{min-width:40px!important;font-size:7px!important}
   .moderator-controls{gap:3px!important}
   .moderator-controls>span{font-size:clamp(7px,2.5cqw,9px)!important}
-  .pause-toggle{height:24px!important;min-width:38px!important;font-size:7px!important}
-  .moderator-controls .more-button{height:24px!important;width:24px!important;font-size:13px!important}
+  .pause-toggle{height:20px!important;min-width:36px!important;font-size:7px!important}
+  .moderator-controls .more-button{height:20px!important;width:20px!important;font-size:12px!important}
 }
 @media (prefers-reduced-motion:reduce){.ticker-track{animation:none!important}}
+
+/* Babak/prize controls and archive. */
+body.broadcast-mode .announcement-ticker[data-layout-panel]{container-name:announcement}
+body.broadcast-mode .announcement-ticker.editor-preview{border-style:dashed;opacity:.86}
+body.broadcast-mode .announcement-ticker.editor-preview .ticker-track{animation:none}
+body.broadcast-mode .announcement-ticker .ticker-track span{font-size:clamp(10px,2.3cqw,16px)}
+body.broadcast-mode .moderator-round-tools{display:flex;align-items:center;gap:clamp(3px,.6vw,7px);width:100%;min-width:0;min-height:24px;flex:0 0 auto}
+body.broadcast-mode .prize-input{display:flex;align-items:center;gap:3px;flex:0 1 clamp(58px,24cqw,88px);min-width:54px;color:#ffd68f;font:600 clamp(8px,2.3cqw,11px) 'DM Mono',monospace}
+body.broadcast-mode .prize-input input{width:100%;min-width:0;height:clamp(24px,3.1vh,32px);border:1px solid #6e5b3d;border-radius:5px;background:#171a20;color:#ffe7b3;padding:0 4px;font:600 clamp(9px,2.7cqw,13px) 'DM Mono',monospace}
+body.broadcast-mode .prize-input input::-webkit-inner-spin-button{opacity:.7}
+body.broadcast-mode .moderator-round-tools button{height:clamp(24px,3.1vh,32px);border:1px solid #66728a;border-radius:5px;background:#22283a;color:#e5eafa;padding:0 clamp(4px,1cqw,9px);font:600 clamp(7px,2cqw,10px) 'DM Mono',monospace;white-space:nowrap;cursor:pointer}
+body.broadcast-mode #newBabakButton{flex:1;min-width:0;border-color:#bd9453;background:#3a3020;color:#ffe2a8}
+body.broadcast-mode #babakHistoryButton{flex:0 0 clamp(25px,7cqw,34px);width:clamp(25px,7cqw,34px);padding:0;font-size:clamp(13px,3.4cqw,18px)}
+.control-dialog{width:min(90vw,430px);max-height:82vh;overflow:auto;padding:22px;border:1px solid #53697d;border-radius:14px;background:linear-gradient(145deg,#162337,#0f1724);color:#eef6ff;box-shadow:0 24px 80px #000a;font-family:'Space Grotesk',sans-serif}
+.control-dialog::backdrop{background:#030811bb;backdrop-filter:blur(5px)}
+.dialog-kicker{color:#8fe6d5;font:10px 'DM Mono',monospace;letter-spacing:.1em}
+.control-dialog h2{margin:7px 0 10px;font-size:clamp(19px,4vw,25px)}
+.control-dialog p{margin:0;color:#b8c7d8;font-size:14px;line-height:1.55}
+.dialog-actions{display:flex;justify-content:flex-end;gap:9px;margin-top:20px}
+.dialog-actions button,.history-heading button{min-height:38px;border:1px solid #465c70;border-radius:7px;background:#1b2939;color:#e5edf7;padding:0 12px;font:600 10px 'DM Mono',monospace;cursor:pointer}
+.dialog-actions button:last-child{border-color:#d3aa65;background:#4a3820;color:#ffe1a1}
+.history-heading{display:flex;align-items:center;justify-content:space-between}
+.history-heading button{width:34px;min-height:34px;padding:0;font-size:18px}
+.history-dialog ol{display:flex;flex-direction:column;gap:9px;max-height:55vh;overflow:auto;padding:0;margin:16px 0 0;list-style:none}
+.history-entry{padding:11px 12px;border:1px solid #293b50;border-radius:8px;background:#101b2a}
+.history-entry-top{display:flex;justify-content:space-between;gap:8px;color:#f1f5f9}
+.history-entry-top strong{font-size:13px}
+.history-entry-top time{color:#8799ad;font:9px 'DM Mono',monospace}
+.history-entry p{margin:7px 0;color:#c2cfdd;font-size:11px}
+.history-entry .history-prize{color:#ffd27b;font:10px 'DM Mono',monospace}
+.history-empty{text-align:center;padding:24px 8px;color:#aab8c6;font-size:13px}
+@container moderator (max-width:220px){
+  .moderator-round-tools{gap:3px}
+  .prize-input{flex-basis:56px;min-width:50px}
+  #newBabakButton{font-size:7px;padding:0 3px}
+  #babakHistoryButton{width:24px;flex-basis:24px}
+}
+@container moderator (max-height:120px){
+  .moderator-round-tools{min-height:20px;gap:3px}
+  .moderator-round-tools button,.prize-input input{height:20px}
+  .prize-input{flex-basis:54px;min-width:48px}
+}

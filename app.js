@@ -22,12 +22,12 @@
     { category:'BAHASA', question:'Lawan kata “optimis” adalah…', options:['Pesimis','Realistis','Praktis','Idealis'], correct:0 },
   ];
   const LETTERS=['A','B','C','D'];
-  const SCORE_KEY='virtuallive.quiz.scores.v1';
+  const SCORE_KEY='virtuallive.quiz.scores.v1',BABAK_KEY='virtuallive.quiz.babak.v1',BABAK_HISTORY_KEY='virtuallive.quiz.babak-history.v1',PRIZE_KEY='virtuallive.quiz.babak-prize.v1';
   const ROUND_SECONDS=30,RESULT_SECONDS=7;
   const $=selector=>document.querySelector(selector);
   const answerGate=window.VirtualLiveAnswerGate.createFirstAnswerGate();
   const feed=$('#chatFeed'),input=$('#commentInput'),toast=$('#toast');
-  let scores=loadScores(),deck=[],deckPosition=0,roundNumber=0,currentQuestion=null;
+  let scores=loadScores(),deck=[],deckPosition=0,roundNumber=0,currentQuestion=null,babakNumber=1,babakHistory=[],pendingBabakArchive=null,wasPausedBeforeBabakDialog=false;
   const donorTotals=new Map();
   let phase='question',remaining=ROUND_SECONDS,resultRemaining=RESULT_SECONDS,firstCorrect=null,isPaused=false,announcementActive=false;
   let lastFrame=performance.now(),toastTimer;
@@ -58,10 +58,56 @@
     try{localStorage.setItem(SCORE_KEY,JSON.stringify(scores));}
     catch(_){notify('Skor tampil, tetapi browser tidak bisa menyimpannya.',true);}
   }
+  function loadBabakState(){
+    try{
+      const storedBabak=Number(localStorage.getItem(BABAK_KEY));babakNumber=Number.isFinite(storedBabak)&&storedBabak>0?Math.floor(storedBabak):1;
+      const history=JSON.parse(localStorage.getItem(BABAK_HISTORY_KEY)||'[]');babakHistory=Array.isArray(history)?history.filter(record=>record&&typeof record==='object').slice(0,50):[];
+      const prize=Number(localStorage.getItem(PRIZE_KEY));if(Number.isFinite(prize)&&prize>=0)$('#prizeAmount').value=String(Math.floor(prize));
+    }catch(_){babakNumber=1;babakHistory=[];}
+  }
+  function saveBabakState(){
+    try{localStorage.setItem(BABAK_KEY,String(babakNumber));localStorage.setItem(BABAK_HISTORY_KEY,JSON.stringify(babakHistory));}
+    catch(_){notify('Riwayat babak tampil, tetapi tidak bisa disimpan browser.',true);}
+  }
+  function readPrizeAmount(){const amount=Math.floor(Number($('#prizeAmount').value));return Number.isFinite(amount)?Math.max(0,Math.min(amount,1000000000)):0;}
+  function renderBabakHistory(){
+    const list=$('#babakHistoryList');list.replaceChildren();
+    if(!babakHistory.length){const empty=document.createElement('li');empty.className='history-empty';empty.textContent='Belum ada babak yang diarsipkan.';list.append(empty);return;}
+    for(const record of babakHistory){
+      const item=document.createElement('li');item.className='history-entry';
+      const title=document.createElement('strong');title.textContent=`Babak ${String(record.number||0).padStart(2,'0')}`;
+      const date=document.createElement('time');date.textContent=record.archivedAt?new Date(record.archivedAt).toLocaleDateString('id-ID',{day:'2-digit',month:'short',year:'numeric'}):'';
+      const summary=document.createElement('p');
+      const podium=Array.isArray(record.podium)?record.podium.filter(player=>player&&typeof player==='object'):[];
+      summary.textContent=podium.length?podium.slice(0,3).map((player,index)=>`${index+1}. ${cleanName(player.name)} · ${player.points} poin`).join('  |  '):'Belum ada pemenang';
+      const prize=document.createElement('span');prize.className='history-prize';prize.textContent=record.winner?`Hadiah ${formatRupiah(record.prizeAmount)}`:'Tanpa hadiah';
+      const top=document.createElement('div');top.className='history-entry-top';top.append(title,date);item.append(top,summary,prize);list.append(item);
+    }
+  }
+  function openNewBabakDialog(){
+    const podium=sortedScores().slice(0,3).map(player=>({name:player.name,points:player.points,correct:player.correct}));
+    pendingBabakArchive={number:babakNumber,archivedAt:new Date().toISOString(),podium,prizeAmount:readPrizeAmount(),winner:podium[0]?.name||''};
+    try{localStorage.setItem(PRIZE_KEY,String(pendingBabakArchive.prizeAmount));}catch(_){/* The current prize remains active for this round. */}
+    const summary=podium[0]?`Juara 1: ${podium[0].name} (${podium[0].points} poin). Hadiah yang dicatat: ${formatRupiah(pendingBabakArchive.prizeAmount)}. Skor babak ini akan diarsipkan, lalu papan aktif direset.`:'Belum ada skor pada babak ini. Babak baru tetap dimulai dan papan skor aktif akan kosong.';
+    $('#newBabakSummary').textContent=summary;
+    wasPausedBeforeBabakDialog=isPaused;if(!isPaused)setPaused(true);
+    $('#newBabakDialog').showModal();
+  }
+  function closeNewBabakDialog(resume){
+    const dialog=$('#newBabakDialog');if(dialog.open)dialog.close();pendingBabakArchive=null;
+    if(resume&&!wasPausedBeforeBabakDialog&&isPaused)setPaused(false);
+  }
+  function beginNewBabak(){
+    if(!pendingBabakArchive)return;
+    babakHistory.unshift(pendingBabakArchive);babakHistory=babakHistory.slice(0,50);babakNumber++;
+    saveBabakState();scores={};saveScores();roundNumber=0;deck=shuffle(QUESTIONS.map((_,index)=>index));deckPosition=0;
+    closeNewBabakDialog(false);setPaused(false);nextQuestion();renderBabakHistory();
+  }
   function sortedScores(){return Object.values(scores).sort((a,b)=>b.points-a.points||a.name.localeCompare(b.name,'id-ID'));}
   function totalCorrect(){return Object.values(scores).reduce((sum,item)=>sum+item.points,0);}
   function timestamp(){return new Date().toLocaleTimeString('id-ID',{hour:'2-digit',minute:'2-digit'});}
   function formatClock(seconds){const n=Math.max(0,Math.ceil(seconds));return `${String(Math.floor(n/60)).padStart(2,'0')}:${String(n%60).padStart(2,'0')}`;}
+  function formatRupiah(value){return new Intl.NumberFormat('id-ID',{style:'currency',currency:'IDR',maximumFractionDigits:0}).format(Math.max(0,Math.floor(Number(value)||0)));}
 
   function addMessage(name,text,kind='comment',letter=''){
     if(kind!=='comment')return;
@@ -189,7 +235,7 @@
     feed.replaceChildren();updateAnswerCount();
     $('#questionText').textContent=currentQuestion.question;
     $('#questionTag').textContent=currentQuestion.category;
-    $('#questionNumber').textContent=`· SOAL ${String(roundNumber).padStart(2,'0')}`;
+    $('#questionNumber').textContent=`· BABAK ${String(babakNumber).padStart(2,'0')} · SOAL ${String(roundNumber).padStart(2,'0')}`;
     $('#winnerBanner').classList.remove('visible','no-winner','winner-reveal');
     if(animateTransition){
       const content=$('.question-content'),heading=$('.quiz-panel .panel-heading');
@@ -385,22 +431,31 @@
   $('#announcementForm').addEventListener('submit',event=>{
     event.preventDefault();
     if(announcementActive){
-      announcementActive=false;$('#announcementTicker').classList.remove('is-visible');$('#announcementTicker').setAttribute('aria-hidden','true');
+      announcementActive=false;
+      if(document.body.classList.contains('layout-editing'))setAnnouncementPreview(true);
+      else{$('#announcementTicker').classList.remove('is-visible','editor-preview');$('#announcementTicker').setAttribute('aria-hidden','true');}
       $('#announcementToggle').textContent='TAYANG';$('#announcementToggle').setAttribute('aria-pressed','false');return;
     }
     const text=$('#announcementInput').value.trim().replace(/\s+/g,' ').slice(0,90);
     if(!text){$('#announcementInput').focus();return;}
-    announcementActive=true;
+    announcementActive=true;$('#announcementTicker').classList.remove('editor-preview');
     const tickerText=`✦ ${text}　•　`,duration=Math.max(16,Math.min(36,text.length*.48));
     $('#announcementText').textContent=tickerText;$('#announcementTextClone').textContent=tickerText;
     $('#announcementTicker').style.setProperty('--ticker-duration',`${duration}s`);
     $('#announcementTicker').classList.add('is-visible');$('#announcementTicker').setAttribute('aria-hidden','false');
     $('#announcementToggle').textContent='HENTIKAN';$('#announcementToggle').setAttribute('aria-pressed','true');
   });
+  $('#prizeAmount').addEventListener('change',()=>{try{localStorage.setItem(PRIZE_KEY,String(readPrizeAmount()));}catch(_){/* Prize remains editable for this session. */}});
+  $('#newBabakButton').addEventListener('click',openNewBabakDialog);
+  $('#cancelBabakButton').addEventListener('click',()=>closeNewBabakDialog(true));
+  $('#confirmBabakButton').addEventListener('click',beginNewBabak);
+  $('#newBabakDialog').addEventListener('cancel',event=>{event.preventDefault();closeNewBabakDialog(true);});
+  $('#babakHistoryButton').addEventListener('click',()=>{renderBabakHistory();$('#babakHistoryDialog').showModal();});
+  $('#closeBabakHistory').addEventListener('click',()=>$('#babakHistoryDialog').close());
   if(document.body.classList.contains('broadcast-mode')&&window.innerWidth<561&&window.innerHeight<1000)setChatCollapsed(true);
 
   const layoutStorageKey='virtuallive.broadcast-layout.v1',layoutPanels=[...document.querySelectorAll('[data-layout-panel]')],appShell=$('.app-shell');
-  const minPanelSize={header:[160,54],leaderboard:[145,72],quiz:[220,165],chat:[145,64],moderator:[145,64],donors:[145,110]};
+  const minPanelSize={header:[160,54],leaderboard:[145,72],quiz:[220,165],chat:[145,64],moderator:[145,64],donors:[145,110],announcement:[160,24]};
   function layoutBounds(){const rect=appShell.getBoundingClientRect();return {left:rect.left,top:rect.top,width:rect.width,height:rect.height};}
   function applyPanelRect(panel,x,y,width,height){
     const bounds=layoutBounds(),min=minPanelSize[panel.dataset.layoutPanel]||[120,64];
@@ -420,7 +475,7 @@
   }
   function saveLayout(){
     const bounds=layoutBounds(),saved={};
-    for(const panel of layoutPanels){const rect=panel.getBoundingClientRect();saved[panel.dataset.layoutPanel]={x:(rect.left-bounds.left)/bounds.width,y:(rect.top-bounds.top)/bounds.height,w:rect.width/bounds.width,h:rect.height/bounds.height};}
+    for(const panel of layoutPanels){const rect=panel.getBoundingClientRect();if(!rect.width||!rect.height)continue;saved[panel.dataset.layoutPanel]={x:(rect.left-bounds.left)/bounds.width,y:(rect.top-bounds.top)/bounds.height,w:rect.width/bounds.width,h:rect.height/bounds.height};}
     try{localStorage.setItem(layoutStorageKey,JSON.stringify(saved));}catch(_){notify('Layout tampil, tetapi tidak bisa disimpan browser.',true);}
   }
   function installLayoutHandles(){
@@ -450,12 +505,18 @@
   });
   function endLayoutGesture(event){if(!layoutGesture||(event?.pointerId!==undefined&&event.pointerId!==layoutGesture.pointerId))return;layoutGesture=null;saveLayout();}
   document.addEventListener('pointerup',endLayoutGesture);document.addEventListener('pointercancel',endLayoutGesture);
+  function setAnnouncementPreview(enabled){
+    const ticker=$('#announcementTicker');
+    if(enabled&&!announcementActive){$('#announcementText').textContent='✦ PREVIEW PENGUMUMAN　•　';$('#announcementTextClone').textContent='✦ PREVIEW PENGUMUMAN　•　';ticker.classList.add('editor-preview','is-visible');ticker.setAttribute('aria-hidden','true');}
+    else if(!enabled&&ticker.classList.contains('editor-preview')){ticker.classList.remove('editor-preview','is-visible');ticker.setAttribute('aria-hidden','true');}
+  }
   function setLayoutEditing(enabled){
     if(!document.body.classList.contains('broadcast-mode'))return;
     document.body.classList.toggle('layout-editing',enabled);
     $('#editLayoutToggle').setAttribute('aria-pressed',String(enabled));
     $('#layoutEditToolbar').setAttribute('aria-hidden',String(!enabled));
-    if(enabled)installLayoutHandles();else{for(const panel of layoutPanels)panel.classList.remove('is-selected');saveLayout();}
+    if(enabled){setAnnouncementPreview(true);installLayoutHandles();}
+    else{for(const panel of layoutPanels)panel.classList.remove('is-selected');saveLayout();setAnnouncementPreview(false);}
   }
   restoreLayout();
   $('#editLayoutToggle').addEventListener('click',()=>setLayoutEditing(!document.body.classList.contains('layout-editing')));
@@ -470,6 +531,7 @@
 
   // Add ?live=1 for a clean portrait-friendly broadcast screen (question, timer and scoreboard only).
   window.VirtualLiveQuiz={receiveComment};
+  loadBabakState();renderBabakHistory();
   connectTikTokEventStream();
   deck=shuffle(QUESTIONS.map((_,index)=>index));nextQuestion();
   addMessage('QUIZ MASTER','Quiz Arena berjalan otomatis. Jawab A, B, C, atau D sebelum timer habis.','system');
