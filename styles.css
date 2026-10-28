@@ -917,3 +917,61 @@ body.broadcast-mode.layout-editing [data-layout-panel] input,body.broadcast-mode
 @media (prefers-reduced-motion:reduce){
   *,*::before,*::after{animation-duration:.01ms!important;animation-iteration-count:1!important;scroll-behavior:auto!important;transition-duration:.01ms!important}
 }
+
+/* Moderator announcement ticker and pause controls stay inside the broadcast canvas. */
+.announcement-ticker{display:none}
+@media (orientation:portrait){
+  .announcement-ticker.is-visible{position:absolute;top:15.3vh;left:1.5vw;z-index:8;width:97vw;height:2.2vh;min-height:24px;display:flex;align-items:center;gap:10px;overflow:hidden;padding:0 clamp(8px,1.5vw,18px);border:1px solid #3d766f;border-radius:7px;background:linear-gradient(100deg,#0c1a25f5,#12302ff2 48%,#111b29f5);box-shadow:0 4px 18px #0005;color:#ddfff6}
+  .announcement-label{flex:0 0 auto;color:#86f0d8;font:clamp(8px,1.1vw,10px) 'DM Mono',monospace;letter-spacing:.08em}
+  .ticker-window{min-width:0;flex:1;overflow:hidden;mask-image:linear-gradient(90deg,transparent,#000 3%,#000 97%,transparent)}
+  .ticker-track{display:flex;width:max-content;align-items:center;gap:5vw;animation:ticker-scroll var(--ticker-duration,24s) linear infinite}
+  .ticker-track span{flex:0 0 auto;color:#f2f8f8;font-size:clamp(11px,1.7vw,15px);font-weight:600;letter-spacing:.03em;white-space:nowrap}
+  @keyframes ticker-scroll{from{transform:translateX(0)}to{transform:translateX(-50%)}}
+  body.broadcast-mode .moderator-panel{justify-content:flex-start;gap:clamp(4px,.45vh,8px);padding:2.5%}
+  body.broadcast-mode .moderator-heading{flex:0 0 auto;min-height:0}
+  body.broadcast-mode .announcement-form{display:flex;align-items:stretch;gap:5px;width:100%;height:clamp(26px,2.3vh,36px);flex:0 0 clamp(26px,2.3vh,36px);min-width:0}
+  body.broadcast-mode .announcement-form input{min-width:0;flex:1;border:1px solid #3a5265;border-radius:5px;background:#0d1724;color:#f3fbff;padding:0 clamp(6px,1.2cqw,12px);outline:none;font:clamp(9px,2.4cqw,12px) 'Space Grotesk',sans-serif}
+  body.broadcast-mode .announcement-form input:focus{border-color:#79e8d1;box-shadow:0 0 0 2px #79e8d122}
+  body.broadcast-mode .announcement-form button{flex:0 0 auto;min-width:clamp(46px,14cqw,62px);border:1px solid #66d9bf;border-radius:5px;background:#173c3a;color:#cffff3;padding:0 6px;font:600 clamp(7px,2cqw,10px) 'DM Mono',monospace;letter-spacing:.03em;cursor:pointer}
+  body.broadcast-mode .announcement-form button[aria-pressed="true"]{border-color:#b77b72;background:#462b2b;color:#ffd8d0}
+  body.broadcast-mode .moderator-controls{min-height:0;flex:1;gap:clamp(3px,.7vw,8px)}
+  body.broadcast-mode .moderator-controls>span{min-width:0;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:clamp(8px,2.3cqw,12px)}
+  body.broadcast-mode .pause-toggle{flex:0 0 auto;min-width:clamp(42px,13cqw,58px);height:clamp(28px,4vh,38px);border:1px solid #52647c;border-radius:6px;background:#20273a;color:#eee2bc;padding:0 5px;font:600 clamp(8px,2.2cqw,11px) 'DM Mono',monospace;cursor:pointer}
+  body.broadcast-mode .pause-toggle[aria-pressed="true"]{border-color:#edc274;background:#47391f;color:#ffe3a2;box-shadow:0 0 14px #edc27425}
+  body.broadcast-mode .moderator-controls .more-button{width:clamp(28px,4.4vw,38px);height:clamp(28px,4.4vw,38px);font-size:clamp(15px,2.4vw,21px)}
+  .pause-indicator{display:none}
+  body.quiz-paused .pause-indicator{display:inline-flex;align-items:center;gap:5px;padding:5px 8px;border:1px solid #d8ad60;border-radius:20px;background:#332819;color:#ffdfa0;font:600 clamp(8px,1.1vw,10px) 'DM Mono',monospace;white-space:nowrap}
+  body.quiz-paused .quiz-panel{border-color:#a7844b;box-shadow:0 0 22px #d8ad601c}
+  body.quiz-paused .timer-fill{filter:saturate(.45);}
+  body.quiz-paused .announcement-ticker{border-color:#a7844b}
+  body.broadcast-mode .announcement-ticker.is-visible{top:15.3vh}
+}
+@media (orientation:portrait) and (max-width:560px){
+  body.broadcast-mode .announcement-ticker.is-visible{top:9.5vh;height:2vh;min-height:20px;padding:0 6px;gap:5px}
+  .announcement-label{font-size:7px}
+  .ticker-track span{font-size:clamp(9px,2.7vw,12px)}
+  body.broadcast-mode .moderator-panel{gap:3px;padding:2%}
+  body.broadcast-mode .moderator-heading h2{font-size:clamp(10px,3vw,13px)}
+  body.broadcast-mode .moderator-indicator{font-size:clamp(6px,1.8vw,8px)}
+  body.broadcast-mode .announcement-form{height:24px;flex-basis:24px;gap:3px}
+  body.broadcast-mode .announcement-form input{font-size:9px;padding:0 5px}
+  body.broadcast-mode .announcement-form button{min-width:42px;font-size:7px}
+  body.broadcast-mode .moderator-controls{gap:3px}
+  body.broadcast-mode .moderator-controls>span{font-size:8px}
+  body.broadcast-mode .pause-toggle{min-width:40px;height:25px;font-size:8px}
+  body.broadcast-mode .moderator-controls .more-button{width:25px;height:25px;font-size:14px}
+  body.quiz-paused .pause-indicator{padding:3px 5px;font-size:7px}
+}
+@container moderator (max-height: 120px){
+  .moderator-panel{gap:3px!important;padding:2%!important}
+  .moderator-heading h2{font-size:clamp(10px,3.2cqw,14px)!important}
+  .moderator-indicator{font-size:clamp(6px,2cqw,8px)!important}
+  .announcement-form{height:23px!important;flex-basis:23px!important}
+  .announcement-form input{font-size:clamp(8px,2.7cqw,10px)!important}
+  .announcement-form button{min-width:40px!important;font-size:7px!important}
+  .moderator-controls{gap:3px!important}
+  .moderator-controls>span{font-size:clamp(7px,2.5cqw,9px)!important}
+  .pause-toggle{height:24px!important;min-width:38px!important;font-size:7px!important}
+  .moderator-controls .more-button{height:24px!important;width:24px!important;font-size:13px!important}
+}
+@media (prefers-reduced-motion:reduce){.ticker-track{animation:none!important}}

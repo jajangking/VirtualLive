@@ -29,7 +29,7 @@
   const feed=$('#chatFeed'),input=$('#commentInput'),toast=$('#toast');
   let scores=loadScores(),deck=[],deckPosition=0,roundNumber=0,currentQuestion=null;
   const donorTotals=new Map();
-  let phase='question',remaining=ROUND_SECONDS,resultRemaining=RESULT_SECONDS,firstCorrect=null;
+  let phase='question',remaining=ROUND_SECONDS,resultRemaining=RESULT_SECONDS,firstCorrect=null,isPaused=false,announcementActive=false;
   let lastFrame=performance.now(),toastTimer;
   let audioContext=null,masterGain=null,bgmGain=null,sfxGain=null,bgmTimer=null,bgmStep=0,audioEnabled=false,lastCountdownSecond=ROUND_SECONDS,giftTimer=null;
 
@@ -243,7 +243,7 @@
 
   // Accept and display only the first A–D answer from each participant in a round.
   function receiveComment(username,comment,userId=''){
-    if(phase!=='question')return;
+    if(phase!=='question'||isPaused)return;
     const author=cleanName(username),text=String(comment||'').trim(),letter=parseAnswer(text);if(!letter)return;
     const participantKey=String(userId||scoreKey(author));
     if(!answerGate.accept(participantKey))return;
@@ -314,16 +314,18 @@
   }
   function frame(now){
     const dt=Math.min((now-lastFrame)/1000,.1);lastFrame=now;
-    if(phase==='question'){
-      remaining=Math.max(0,remaining-dt);
-      const countdownSecond=Math.ceil(remaining);
-      if(countdownSecond!==lastCountdownSecond&&countdownSecond<=5&&countdownSecond>0)playSfx('tick');
-      lastCountdownSecond=countdownSecond;
-      if(remaining===0)finishQuestion();
-    }else{
-      resultRemaining=Math.max(0,resultRemaining-dt);
-      $('#autoAdvanceText').textContent=`Soal baru otomatis dalam ${Math.ceil(resultRemaining)} detik`;
-      if(resultRemaining===0)nextQuestion();
+    if(!isPaused){
+      if(phase==='question'){
+        remaining=Math.max(0,remaining-dt);
+        const countdownSecond=Math.ceil(remaining);
+        if(countdownSecond!==lastCountdownSecond&&countdownSecond<=5&&countdownSecond>0)playSfx('tick');
+        lastCountdownSecond=countdownSecond;
+        if(remaining===0)finishQuestion();
+      }else{
+        resultRemaining=Math.max(0,resultRemaining-dt);
+        $('#autoAdvanceText').textContent=`Soal baru otomatis dalam ${Math.ceil(resultRemaining)} detik`;
+        if(resultRemaining===0)nextQuestion();
+      }
     }
     updateTimer();requestAnimationFrame(frame);
   }
@@ -366,10 +368,35 @@
     $('#chatPanel').classList.toggle('is-collapsed',isCollapsed);
     const label=isCollapsed?'Buka live chat':'Ciutkan live chat';
     for(const button of [$('#collapseChat'),$('#moderatorChatToggle')]){button.setAttribute('aria-expanded',String(!isCollapsed));button.setAttribute('aria-label',label);button.textContent=isCollapsed?'+':'−';}
-    $('#moderatorChatState').textContent=isCollapsed?'Chat diciutkan':'Chat sedang ditampilkan';
+    $('#moderatorChatState').textContent=`${isPaused?'Jeda aktif · ':''}${isCollapsed?'Chat diciutkan':'Chat tampil'}`;
+  }
+  function setPaused(paused){
+    isPaused=paused;document.body.classList.toggle('quiz-paused',isPaused);
+    const button=$('#pauseToggle');button.setAttribute('aria-pressed',String(isPaused));button.textContent=isPaused?'▶ LANJUT':'Ⅱ JEDA';
+    $('#pauseIndicator').hidden=!isPaused;
+    if(isPaused){$('#timerStatus').textContent='DIJEDA MODERATOR';$('#autoAdvanceText').textContent='Timer dan pergantian soal dijeda';}
+    else if(phase==='question'){$('#timerStatus').textContent=firstCorrect?'JAWABAN BENAR TERCATAT':'MENUNGGU JAWABAN';$('#autoAdvanceText').textContent=firstCorrect?'Ada jawaban benar — hasil saat timer habis':'Hasil diumumkan saat timer habis';}
+    else{$('#timerStatus').textContent='HASIL AKHIR';$('#autoAdvanceText').textContent=`Soal baru otomatis dalam ${Math.ceil(resultRemaining)} detik`;}
+    setChatCollapsed($('#chatPanel').classList.contains('is-collapsed'));
   }
   $('#collapseChat').addEventListener('click',()=>setChatCollapsed(!$('#chatPanel').classList.contains('is-collapsed')));
   $('#moderatorChatToggle').addEventListener('click',()=>setChatCollapsed(!$('#chatPanel').classList.contains('is-collapsed')));
+  $('#pauseToggle').addEventListener('click',()=>setPaused(!isPaused));
+  $('#announcementForm').addEventListener('submit',event=>{
+    event.preventDefault();
+    if(announcementActive){
+      announcementActive=false;$('#announcementTicker').classList.remove('is-visible');$('#announcementTicker').setAttribute('aria-hidden','true');
+      $('#announcementToggle').textContent='TAYANG';$('#announcementToggle').setAttribute('aria-pressed','false');return;
+    }
+    const text=$('#announcementInput').value.trim().replace(/\s+/g,' ').slice(0,90);
+    if(!text){$('#announcementInput').focus();return;}
+    announcementActive=true;
+    const tickerText=`✦ ${text}　•　`,duration=Math.max(16,Math.min(36,text.length*.48));
+    $('#announcementText').textContent=tickerText;$('#announcementTextClone').textContent=tickerText;
+    $('#announcementTicker').style.setProperty('--ticker-duration',`${duration}s`);
+    $('#announcementTicker').classList.add('is-visible');$('#announcementTicker').setAttribute('aria-hidden','false');
+    $('#announcementToggle').textContent='HENTIKAN';$('#announcementToggle').setAttribute('aria-pressed','true');
+  });
   if(document.body.classList.contains('broadcast-mode')&&window.innerWidth<561&&window.innerHeight<1000)setChatCollapsed(true);
 
   const layoutStorageKey='virtuallive.broadcast-layout.v1',layoutPanels=[...document.querySelectorAll('[data-layout-panel]')],appShell=$('.app-shell');
