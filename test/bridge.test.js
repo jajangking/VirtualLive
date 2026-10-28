@@ -2,7 +2,7 @@
 
 const test = require('node:test');
 const assert = require('node:assert/strict');
-const { server, handleTikTokComment, handleTikTokGift, handleTikTokMember, handleTikTokFollow, handleTikTokSocial, eventClients } = require('../server');
+const { server, handleTikTokComment, handleTikTokGift, handleTikTokMember, handleTikTokFollow, handleTikTokSocial, isTrustedRequestOrigin, eventClients } = require('../server');
 
 test('forwards a TikTok chat event as an SSE comment with the quiz fields', () => {
   const chunks = [];
@@ -138,4 +138,12 @@ test('host status endpoint reports readiness without exposing the API key', asyn
   });
   assert.equal(rejectedSpeech.status, 400);
   assert.match((await rejectedSpeech.json()).error, /1–220/);
+});
+
+
+test('accepts forwarded same-site origins but rejects cross-site origins', () => {
+  assert.equal(isTrustedRequestOrigin({ headers: { origin: 'https://live.example', host: '127.0.0.1:3000', 'x-forwarded-host': 'live.example' } }), true);
+  assert.equal(isTrustedRequestOrigin({ headers: { origin: 'https://live.example', host: '127.0.0.1:3000', 'sec-fetch-site': 'same-origin' } }), true);
+  assert.equal(isTrustedRequestOrigin({ headers: { origin: 'https://attacker.example', host: 'live.example', 'sec-fetch-site': 'cross-site' } }), false);
+  assert.equal(isTrustedRequestOrigin({ headers: { origin: 'not a url', host: 'live.example' } }), false);
 });

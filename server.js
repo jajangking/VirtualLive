@@ -121,6 +121,22 @@ function sendJson(res, statusCode, payload) {
   res.end(body);
 }
 
+function isTrustedRequestOrigin(req) {
+  const origin = req.headers.origin;
+  if (!origin) return true;
+  let originUrl;
+  try { originUrl = new URL(origin); }
+  catch { return false; }
+  if (originUrl.protocol !== 'http:' && originUrl.protocol !== 'https:') return false;
+  const candidateHosts = [req.headers.host, req.headers['x-forwarded-host'], req.headers['x-original-host']]
+    .filter(Boolean)
+    .flatMap(value => String(value).split(',').map(host => host.trim().toLowerCase()));
+  if (candidateHosts.includes(originUrl.host.toLowerCase())) return true;
+  // Reverse proxies may replace Host with their internal upstream address. Fetch Metadata
+  // still reflects the browser-visible URL and safely distinguishes cross-site requests.
+  return ['same-origin', 'same-site', 'none'].includes(String(req.headers['sec-fetch-site'] || '').toLowerCase());
+}
+
 function allowHostRequest(req) {
   const ip = req.socket.remoteAddress || 'unknown';
   const now = Date.now();
@@ -290,11 +306,7 @@ const server = http.createServer((req, res) => {
   if (pathname === '/api/host/line') {
     if (req.method !== 'POST') { res.writeHead(405, { Allow: 'POST' }).end(); return; }
     if (!allowHostRequest(req)) { sendJson(res, 429, { error: 'Terlalu banyak permintaan host. Coba lagi sebentar.' }); return; }
-    const origin = req.headers.origin;
-    if (origin) {
-      try { if (new URL(origin).host !== req.headers.host) { sendJson(res, 403, { error: 'Origin tidak diizinkan.' }); return; } }
-      catch { sendJson(res, 403, { error: 'Origin tidak valid.' }); return; }
-    }
+    if (!isTrustedRequestOrigin(req)) { sendJson(res, 403, { error: 'Origin tidak diizinkan.' }); return; }
     readJsonBody(req).then(generateHostLine).then(text => sendJson(res, 200, { text }))
       .catch(error => sendJson(res, error.statusCode || 502, { error: error.statusCode ? error.message : 'Gagal membuat sapaan AI.' }));
     return;
@@ -303,11 +315,7 @@ const server = http.createServer((req, res) => {
   if (pathname === '/api/host/speech') {
     if (req.method !== 'POST') { res.writeHead(405, { Allow: 'POST' }).end(); return; }
     if (!allowHostRequest(req)) { sendJson(res, 429, { error: 'Terlalu banyak permintaan host. Coba lagi sebentar.' }); return; }
-    const origin = req.headers.origin;
-    if (origin) {
-      try { if (new URL(origin).host !== req.headers.host) { sendJson(res, 403, { error: 'Origin tidak diizinkan.' }); return; } }
-      catch { sendJson(res, 403, { error: 'Origin tidak valid.' }); return; }
-    }
+    if (!isTrustedRequestOrigin(req)) { sendJson(res, 403, { error: 'Origin tidak diizinkan.' }); return; }
     readJsonBody(req).then(body => {
       const text = String(body?.text || '').replace(/[\u0000-\u001f\u007f]/g, ' ').replace(/\s+/g, ' ').trim();
       if (!text || text.length > 220) throw Object.assign(new Error('Teks TTS harus berisi 1–220 karakter.'), { statusCode: 400 });
@@ -390,4 +398,4 @@ if (require.main === module) {
   });
 }
 
-module.exports = { server, startServer, handleTikTokComment, handleTikTokGift, handleTikTokMember, handleTikTokFollow, handleTikTokSocial, generateHostLine, synthesizeHostSpeech, eventClients, getBridgeState: () => ({ ...bridgeState }) };
+module.exports = { server, startServer, handleTikTokComment, handleTikTokGift, handleTikTokMember, handleTikTokFollow, handleTikTokSocial, generateHostLine, synthesizeHostSpeech, isTrustedRequestOrigin, eventClients, getBridgeState: () => ({ ...bridgeState }) };
